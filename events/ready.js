@@ -20,7 +20,7 @@ client.user.setActivity('activity', { type: 'COMPETING' });*/
     /*client.user.setStatus('online');
 client.user.setStatus('idle');
 client.user.setStatus('dnd');
-client.user.setStatus('invisible');*/ client.channels.cache.get(config.logch.ready).send("Discordログインしました！");
+client.user.setStatus('invisible');*/ client.channels.cache.get(client.conf.logch.ready).send("Discordログインしました！");
     console.log(`[${client.func.timeToJST(Date.now(), true)}] Logged in as ${client.user.tag}!`);
   }
 }
