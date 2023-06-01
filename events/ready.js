@@ -6,7 +6,7 @@ module.exports = {
     });
     let log = JSON.parse(jsonR);*/
     const add = require(`../system/add.js`);
-    add.addCmd(client.config);
+    add.addCmd(client.conf);
     /*if (log.onoff == 'on') {
       client.user.setActivity(log.playing);
       client.user.setStatus(log.status);
