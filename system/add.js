@@ -41,7 +41,7 @@ module.exports = {
 
         for (const folder of commandFolders) {
             console.log(`\u001b[32m===${folder} commands===\u001b[0m`);
-            const commandFiles = fs.readdirSync(`../commands/${folder}`).filter(file => file.endsWith(".js"));
+            const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith(".js"));
             for (const file of commandFiles) {
                 const command = require(`../commands/${folder}/${file}`);
                 if (command.adminGuildOnly) {
