@@ -13,7 +13,7 @@ module.exports = {
         let command_int = 0;
         const globalCommands = [];
         const adminGuildCommands = [];
-        const commandFolders = fs.readdirSync(`../commands`);
+        const commandFolders = fs.readdirSync(`../commands/`);
 
         function cmdToArray(array, command, file, notice = "") {
             try {
