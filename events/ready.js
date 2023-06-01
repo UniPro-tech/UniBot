@@ -1,10 +1,10 @@
 module.exports = {
   name: "ready", // イベント名
   async execute(client) {
-    let jsonR = client.fs.readFileSync(`/home/runner/Bot/log/maintenance.log`, "utf8", function(err, result) {
+    /*let jsonR = client.fs.readFileSync(`/home/runner/Bot/log/maintenance.log`, "utf8", function(err, result) {
       if (err) throw err;
     });
-    let log = JSON.parse(jsonR);
+    let log = JSON.parse(jsonR);*/
     const add = require(`../system/add.js`);
     add.addCmd(client.config);
     /*if (log.onoff == 'on') {
