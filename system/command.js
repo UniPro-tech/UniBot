@@ -8,12 +8,7 @@ module.exports = {
             const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith(".js"));
             for (const file of commandFiles) {
                 console.log(`dir:${folder},file:${file}`);
-                try{
-                    const command = require(`../commands/${folder}/${file}`);
-                }
-                catch{
-                    console.log("error!!");
-                }
+                const command = require(`../commands/${folder}/${file}`);
                 try {
                     client.commands.set(command.data.name, command);
                     console.log(`${command.data.name} がロードされました。`);
