@@ -36,7 +36,7 @@ exports.timeToJST = function (timestamp, format = false) {
 */
 const fs = require('fs');
 exports.loging = (post_data, api_name) => {
-    const URI = `https://untitledbot-1-m4920103.deta.app/v1/${api_name}`;
+    const URI = `https://${URI_base}/${api_name}`;
     if (post_data == "err") {
         throw post_data;
     }
