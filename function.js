@@ -1,3 +1,5 @@
+const URI_base = process.env.LOGING_URI_BASE;
+
 //タイムスタンプをJSTタイムスタンプに変換
 function timeToJSTTimestamp(timestamp) {
     var dt = new Date(); //Date オブジェクトを作成
@@ -13,7 +15,7 @@ exports.timeToJSTTimestamp = timeToJSTTimestamp;
 exports.timeToJST = function (timestamp, format = false) {
     const dt = timeToJSTTimestamp(timestamp);
     const year = dt.getFullYear();
-    const month = dt.getMonth() + 1;
+    const month = dt.getMonth() + 1
     const date = dt.getDate();
     const hour = dt.getHours();
     const minute = dt.getMinutes();
@@ -27,14 +29,25 @@ exports.timeToJST = function (timestamp, format = false) {
     }
     return return_str;
 }
+
+/*LogingAPIにポストして、DBにプッシュする。
+*post_data = ポストするためのjson(object)
+*api_name = URI
+*/
 const fs = require('fs');
-exports.loging = (data, cmdName) => {
-    if (data == "err") {
-        throw data;
+exports.loging = (post_data, api_name) => {
+    const URI = `https://${URI_base}/${api_name}`;
+    if (post_data == "err") {
+        throw post_data;
     }
     // 書き込み
-    fs.writeFile(`log/${cmdName}.log`, data, (err) => {
-        if (err) throw err;
-        console.log('正常に書き込みが完了しました');
+    request.post({
+        uri: URI,
+        headers: { "Content-type": "application/json" },
+        json: post_data
+    }, (err, res, post) => {
+        console.log(`ERR:${err}
+        RES:${res},
+        POST:${post}`);
     });
 }

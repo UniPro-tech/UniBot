@@ -24,7 +24,6 @@ const functions = require("./function.js");
 
 client.conf = config;
 client.func = functions;
-const loging = functions.loging;
 client.fs = fs;
 
 const cmdH = require(`./system/command.js`);
@@ -67,7 +66,6 @@ client.on("interactionCreate", async i => {
 
   // 実行
   try {
-    loging(await command.execute(i, client), i.commandName);
     const log = new EmbedBuilder()
       .setTitle("コマンド実行ログ")
       .setDescription(`${i.user.tag}(${i.user.id}) がコマンドを実行しました。`)
