@@ -9,7 +9,6 @@ module.exports = {
 
   async execute(i, client) {
     const cmdPing = new Date() - i.createdAt;
-    console.log('ping is working');
     const embed = new Discord.EmbedBuilder()
       .setTitle("Ping")
       .setDescription("Pong!")
