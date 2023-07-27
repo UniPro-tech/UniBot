@@ -10,7 +10,7 @@ module.exports = {
     .addUserOption((option) =>
       option.setName("target").setDescription("ここにユーザーを指定してそのユーザーのアイコンのURLを取得します。")
     ),
-  async execute(i) {
+  async execute(i,client) {
     const user = i.options.getUser("target");
     if (user){
       const embed = new Discord.EmbedBuilder()
