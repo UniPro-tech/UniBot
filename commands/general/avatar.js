@@ -6,19 +6,14 @@ module.exports = {
   data: new SlashCommandBuilder() // スラッシュコマンド登録のため
     .setName("avatar")
     .setDescription("Show Avatar(Beta)")
-    .addChannelOption((option) =>
+    .addUserOption((option) =>
       option
         // optionの名前
-        .setName("channel")
+        .setName("Users(Not Enable yet)")
         // optionの説明
-        .setDescription("The channel to join")
+        .setDescription("User")
         // optionが必須かどうか
         .setRequired(false)
-        .addUserOption((option) =>
-          option
-            .setName("User")
-            .setDescription("SetUser")
-        )
     ),
 
   async execute(i, client) {
