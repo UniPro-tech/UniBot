@@ -16,16 +16,16 @@ module.exports = {
       const embed = new Discord.EmbedBuilder()
       .setTitle(`${user.username}'s Avatar`)
       .setDescription(`URL:${user.displayAvatarURL({ dynamic: true })}`)
-      .setImage('https://i.imgur.com/AfFp7pu.png')
+      .setImage(user.displayAvatarURL({ dynamic: true }))
       .setColor(client.conf.color.s)
       .setTimestamp();
       i.reply({ embeds: [embed] });
     }
     else{
       const embed = new Discord.EmbedBuilder()
-      .setTitle(`${user.username}'s Avatar`)
-      .setDescription(`URL:${user.displayAvatarURL({ dynamic: true })}`)
-      .setImage(`${user.displayAvatarURL({ dynamic: true })}`)
+      .setTitle(`Your Avatar`)
+      .setDescription(`URL:${i.user.displayAvatarURL({ dynamic: true })}`)
+      .setImage(`${i.user.displayAvatarURL({ dynamic: true })}`)
       .setColor(client.conf.color.s)
       .setTimestamp();
       i.reply({ embeds: [embed] });
