@@ -1,23 +1,23 @@
-const { SlashCommandBuilder, ChannelType } = require("discord.js");
-const Discord = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
-  guildOnly: true, // サーバー専用コマンドかどうか
-  data: new SlashCommandBuilder() // スラッシュコマンド登録のため
+  data: new SlashCommandBuilder()
     .setName("avatar")
-    .setDescription("Show Avatar(Beta)")
-    /*.addUserOption((option) =>
-      option
-        // optionの名前
-        .setName("Users(Not Enable yet)")
-        // optionの説明
-        .setDescription("User")
-        // optionが必須かどうか
-        .setRequired(false)
-    )*/,
-
-  async execute(i, client) {
-    await i.reply(i.author.avatarURL());
-    return `No Data`;
+    .setDescription(
+      "Get the avatar URL of the selected user, or your own avatar."
+    )
+    .addUserOption((option) =>
+      option.setName("target").setDescription("The user's avatar to show")
+    ),
+  async execute(interaction) {
+    const user = interaction.options.getUser("target");
+    if (user)
+      return interaction.reply(
+        `${user.username}'s avatar: ${user.displayAvatarURL({ dynamic: true })}`
+      );
+    interaction.reply(
+      `Your avatar: ${interaction.user.displayAvatarURL()}`
+    );
+    return `No data`;
   },
 };
