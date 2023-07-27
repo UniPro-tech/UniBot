@@ -6,7 +6,7 @@ module.exports = {
   data: new SlashCommandBuilder() // スラッシュコマンド登録のため
     .setName("avatar")
     .setDescription("Show Avatar(Beta)")
-    .addUserOption((option) =>
+    /*.addUserOption((option) =>
       option
         // optionの名前
         .setName("Users(Not Enable yet)")
@@ -14,7 +14,7 @@ module.exports = {
         .setDescription("User")
         // optionが必須かどうか
         .setRequired(false)
-    ),
+    )*/,
 
   async execute(i, client) {
     await i.reply(i.author.avatarURL());
