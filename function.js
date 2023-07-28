@@ -34,73 +34,30 @@ exports.timeToJST = function (timestamp, format = false) {
 *post_data = ポストするためのjson(object)
 *api_name = URI
 */
-const fs = require('fs');
+const axios = require('axios');
 const https = require('https');
-exports.readLog = (api_name) => {
+exports.readLog = async (api_name) => {
     const URI = `https://${URI_base}/${api_name}`;
-    https.get(URI, function (res) {
-        res.on('data', function (chunk) {
-            data.push(chunk);
-        }).on('end', function () {
 
-            var events = Buffer.concat(data);
-            var r = JSON.parse(events);
+    try {
+        const response = await axios.get(URI);
+        console.log('レスポンス:', response.data);
+        return JSON.parse(response.data);
+    } catch (error) {
+        console.error('エラー:', error.message);
+    }
 
-            console.log(r);
-            return r;
-
-        });
-    });
 }
 const http = require('http')
 
-if (require.main === module) {
-    main()
-}
-
-exports.loging = async(post_data, api_name) => {
+exports.loging = async (post_data, api_name) => {
     try {
-        const res = await new Promise((resolve, reject) => {
-            try {
-                const port = process.env.PORT || '8080'
-                const url = `http://${URI_base}/${api_name}`
-                const content = post_data
-                const req = http.request(url, { // <1>
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Content-Length': '' + content.length,
-                        'X-Header': 'X-Header',
-                    },
-                })
+        const url = `https://${URI_base}/${api_name}`;
 
-                req.on('response', resolve) // <2>
-                req.on('error', reject) // <3>
-                req.write(content) // <4>
-                req.end() // <5>
-            } catch (err) {
-                reject(err)
-            }
-        })
+        const response = await axios.post(url, post_data);
 
-        const chunks = await new Promise((resolve, reject) => {
-            try {
-                const chunks = []
-
-                res.on('data', (chunk) => chunks.push(chunk)) // <6>
-                res.on('end', () => resolve(chunks)) // <7>
-                res.on('error', reject) // <8>
-            } catch (err) {
-                reject(err)
-            }
-        })
-
-        const buffer = Buffer.concat(chunks) // <9>
-        const body = JSON.parse(buffer)
-
-        console.info(JSON.stringify(body, null, 2))
-        return body;
-    } catch (err) {
-        console.error(err)
+        console.log('Response:', response.data);
+    } catch (error) {
+        console.error('Error:', error.message);
     }
 }
