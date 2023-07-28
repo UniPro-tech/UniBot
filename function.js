@@ -48,7 +48,7 @@ exports.loging = (post_data, api_name) => {
             "Content-Type": "application/json",
         },
     };
-    const request = https.request(url, options);
+    const request = https.request(URI, options);
     request.write(post_data);
     request.end();
 }
