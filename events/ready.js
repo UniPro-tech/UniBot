@@ -1,7 +1,7 @@
 module.exports = {
   name: "ready", // イベント名
   async execute(client) {
-    const log = client.func.readLog("conf/status");
+    const log = client.func.readLog("v1/conf/status");
     const add = require(`../system/add.js`);
     add.addCmd(client.conf);
     if (log.onoff == 'on') {
