@@ -35,19 +35,40 @@ exports.timeToJST = function (timestamp, format = false) {
 *api_name = URI
 */
 const fs = require('fs');
+const http = require('http');
 exports.loging = (post_data, api_name) => {
     const URI = `https://${URI_base}/${api_name}`;
     if (post_data == "err") {
         throw post_data;
     }
     // 書き込み
-    request.post({
-        uri: URI,
-        headers: { "Content-type": "application/json" },
-        json: post_data
-    }, (err, res, post) => {
-        console.log(`ERR:${err}
-        RES:${res},
-        POST:${post}`);
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    };
+    const request = https.request(url, options);
+    request.write(post_data);
+    request.end();
+}
+
+exports.readLog = (api_name) => {
+    const URI = `https://${URI_base}/${api_name}`;
+    http.get(URL, (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+
+        res.on('data', (chunk) => {
+            body += chunk;
+        });
+
+        res.on('end', (res) => {
+            res = JSON.parse(body);
+            console.log(res);
+            return res;
+        });
+    }).on('error', (e) => {
+        console.log(e.message); //エラー時
     });
 }
