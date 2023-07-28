@@ -35,7 +35,7 @@ exports.timeToJST = function (timestamp, format = false) {
 *api_name = URI
 */
 const fs = require('fs');
-const http = require('http');
+const https = require('https');
 exports.loging = (post_data, api_name) => {
     const URI = `https://${URI_base}/${api_name}`;
     if (post_data == "err") {
@@ -48,27 +48,23 @@ exports.loging = (post_data, api_name) => {
             "Content-Type": "application/json",
         },
     };
-    const request = http.request(url, options);
+    const request = https.request(url, options);
     request.write(post_data);
     request.end();
 }
-'use strict';
 exports.readLog = (api_name) => {
     const URI = `https://${URI_base}/${api_name}`;
-    http.get(URL, (res) => {
-        let body = '';
-        res.setEncoding('utf8');
+    https.get(URI, function (res) {
+        res.on('data', function (chunk) {
+            data.push(chunk);
+        }).on('end', function () {
 
-        res.on('data', (chunk) => {
-            body += chunk;
-        });
+            var events = Buffer.concat(data);
+            var r = JSON.parse(events);
 
-        res.on('end', (res) => {
-            res = JSON.parse(body);
-            console.log(res);
-            return res;
+            console.log(r);
+            return r;
+
         });
-    }).on('error', (e) => {
-        console.log(e.message); //エラー時
     });
 }
