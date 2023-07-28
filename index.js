@@ -15,6 +15,20 @@ const client = new Client({
   ],
   partials: [Partials.Channel],
 });
+const { exec } = require("child_process");
+const cron = require('node-cron');
+cron.schedule('0 */5 * * * *', () => {
+  console.log('3時間おきの実行');
+  exec("curl -v https://discord.com/api/v10", (err, stdout, stderr) => {
+    if(err){
+      throw err;
+    }else{
+      if(stdout.match(/1015/)){
+        exec("sudo kill 1");
+      }
+    }
+  });
+});
 
 const fs = require("fs");
 
@@ -100,6 +114,7 @@ client.login(config.token);
 
 // APIサーバー
 const express = require("express");
+const { stdout, stderr } = require("process");
 const app = express();
 
 // ルーティングの設定
