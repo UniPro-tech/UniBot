@@ -18,7 +18,7 @@ const client = new Client({
 const { exec } = require("child_process");
 const cron = require('node-cron');
 cron.schedule('0 */5 * * * *', () => {
-  console.log('3時間おきの実行');
+  console.log('Ratecheck');
   exec("curl -v https://discord.com/api/v10", (err, stdout, stderr) => {
     if(err){
       throw err;
