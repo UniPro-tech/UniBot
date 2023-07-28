@@ -24,7 +24,7 @@ module.exports = {
                     .setTimestamp();
 
                 i.reply({ embeds: [embed] });
-                client.func.loging(JSON.stringify({ onoff:"on",status: status, playing: playing }), "v1/conf/status");
+                client.func.loging({ onoff:"on",status: status, playing: playing }, "v1/conf/status");
                 return `{ "onoff":"on","status": "${status}", "playing": "${playing}" }`;
             } else {
                 const embed = new Discord.EmbedBuilder()
