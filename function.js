@@ -49,7 +49,8 @@ exports.loging = (post_data, api_name) => {
         },
     };
     const request = https.request(URI, options);
-    request.write(post_data);
+    const data = JSON.stringify(post_data);
+    request.write(data);
     request.end();
 }
 exports.readLog = (api_name) => {
