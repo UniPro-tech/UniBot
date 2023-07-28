@@ -36,23 +36,6 @@ exports.timeToJST = function (timestamp, format = false) {
 */
 const fs = require('fs');
 const https = require('https');
-exports.loging = (post_data, api_name) => {
-    const URI = `https://${URI_base}/${api_name}`;
-    if (post_data == "err") {
-        throw post_data;
-    }
-    // 書き込み
-    const options = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-    };
-    const request = https.request(URI, options);
-    const data = JSON.stringify(post_data);
-    request.write(data);
-    request.end();
-}
 exports.readLog = (api_name) => {
     const URI = `https://${URI_base}/${api_name}`;
     https.get(URI, function (res) {
@@ -68,4 +51,56 @@ exports.readLog = (api_name) => {
 
         });
     });
+}
+const http = require('http')
+
+if (require.main === module) {
+    main()
+}
+
+exports.loging = async(post_data, api_name) => {
+    try {
+        const res = await new Promise((resolve, reject) => {
+            try {
+                const port = process.env.PORT || '8080'
+                const url = `http://${URI_base}/${api_name}`
+                const content = post_data
+                const req = http.request(url, { // <1>
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': '' + content.length,
+                        'X-Header': 'X-Header',
+                    },
+                })
+
+                req.on('response', resolve) // <2>
+                req.on('error', reject) // <3>
+                req.write(content) // <4>
+                req.end() // <5>
+            } catch (err) {
+                reject(err)
+            }
+        })
+
+        const chunks = await new Promise((resolve, reject) => {
+            try {
+                const chunks = []
+
+                res.on('data', (chunk) => chunks.push(chunk)) // <6>
+                res.on('end', () => resolve(chunks)) // <7>
+                res.on('error', reject) // <8>
+            } catch (err) {
+                reject(err)
+            }
+        })
+
+        const buffer = Buffer.concat(chunks) // <9>
+        const body = JSON.parse(buffer)
+
+        console.info(JSON.stringify(body, null, 2))
+        return body;
+    } catch (err) {
+        console.error(err)
+    }
 }
