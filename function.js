@@ -38,11 +38,12 @@ const axios = require('axios');
 const https = require('https');
 exports.readLog = async (api_name) => {
     const URI = `https://${URI_base}/${api_name}`;
-
     try {
         const response = await axios.get(URI);
         const ret = JSON.stringify(response.data);
         console.log('レスポンス:', response.data);
+        console.log('ret:',ret);
+        console.log('parse:',JSON.parse(ret));
         return JSON.parse(ret);
     } catch (error) {
         console.error('エラー:', error.message);
