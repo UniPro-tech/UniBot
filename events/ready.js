@@ -4,6 +4,7 @@ module.exports = {
     const log = client.func.readLog("v1/conf/status");
     const add = require(`../system/add.js`);
     add.addCmd(client.conf);
+    console.log(`on:${log.onoff},play:${log.playing}`);
     if (log.onoff == 'on') {
       client.user.setActivity(log.playing);
       client.user.setStatus(log.status);
