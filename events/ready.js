@@ -9,7 +9,7 @@ module.exports = {
       client.user.setActivity(log.playing);
       client.user.setStatus(log.status);
     } else {
-      client.user.setActivity(`Servers: ${client.guilds.size}`);
+      client.user.setActivity(`Servers: ${client.guilds.cache.size}`);
       client.user.setStatus('online');
     }
     /*client.user.setActivity('activity', { type: 'WATCHING' });
