@@ -4,12 +4,12 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("reload")
     .setDescription("Reloads a command.")
-    .addStringOption((option) =>
+    /*.addStringOption((option) =>
       option
         .setName("command")
         .setDescription("The command to reload.")
         .setRequired(true)
-    ),
+    */,
   async execute(i,client) {
     const add = require(`../../system/add.js`);
     add.addCmd(client.conf);
