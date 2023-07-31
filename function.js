@@ -34,20 +34,30 @@ exports.timeToJST = function (timestamp, format = false) {
 *post_data = ポストするためのjson(object)
 *api_name = URI
 */
-const fs = require('fs');
-exports.loging = (post_data, api_name) => {
+const axios = require('axios');
+const https = require('https');
+exports.readLog = async (api_name) => {
     const URI = `https://${URI_base}/${api_name}`;
-    if (post_data == "err") {
-        throw post_data;
+    try {
+        const response = await axios.get(URI);
+        const ret = JSON.stringify(response.data);
+        console.log('レスポンス:', response.data);
+        return JSON.parse(ret);
+    } catch (error) {
+        console.error('エラー:', error.message);
     }
-    // 書き込み
-    request.post({
-        uri: URI,
-        headers: { "Content-type": "application/json" },
-        json: post_data
-    }, (err, res, post) => {
-        console.log(`ERR:${err}
-        RES:${res},
-        POST:${post}`);
-    });
+
+}
+const http = require('http')
+
+exports.loging = async (post_data, api_name) => {
+    try {
+        const url = `https://${URI_base}/${api_name}`;
+
+        const response = await axios.post(url, post_data);
+
+        console.log('Response:', response.data);
+    } catch (error) {
+        console.error('Error:', error.message);
+    }
 }
