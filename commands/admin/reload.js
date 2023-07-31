@@ -16,7 +16,7 @@ module.exports = {
       .setTitle("ReloadCommands!!")
       .setColor(client.conf.color.s)
       .setTimestamp();
-    i.reply({ embeds: [embed] });
+    await i.reply({ embeds: [embed] });
     add.addCmd(client.conf);
     return null;
   },
