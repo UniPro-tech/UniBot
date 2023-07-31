@@ -12,11 +12,12 @@ module.exports = {
     */,
   async execute(i, client) {
     const add = require(`../../system/add.js`);
-    add.addCmd(client.conf);
     const embed = new EmbedBuilder()
       .setTitle("ReloadCommands!!")
       .setColor(client.conf.color.s)
       .setTimestamp();
     i.reply({ embeds: [embed] });
+    add.addCmd(client.conf);
+    return null;
   },
 };
