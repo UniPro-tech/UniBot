@@ -40,7 +40,7 @@ exports.readLog = async (api_name) => {
     const URI = `https://${URI_base}/${api_name}`;
 
     try {
-        const response = await axios.get(URI);
+        const response = JSON.stringify(await axios.get(URI));
         console.log('レスポンス:', response.data);
         return JSON.parse(response.data);
     } catch (error) {
