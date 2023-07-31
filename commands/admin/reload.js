@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,10 +10,10 @@ module.exports = {
         .setDescription("The command to reload.")
         .setRequired(true)
     */,
-  async execute(i,client) {
+  async execute(i, client) {
     const add = require(`../../system/add.js`);
     add.addCmd(client.conf);
-    const embed = new Discord.EmbedBuilder()
+    const embed = new EmbedBuilder()
       .setTitle("ReloadCommands!!")
       .setColor(client.conf.color.s)
       .setTimestamp();
