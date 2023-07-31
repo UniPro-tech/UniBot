@@ -27,12 +27,15 @@ module.exports = {
                 client.func.loging({ onoff:"on",status: status, playing: playing }, "v1/conf/status");
                 return `{ "onoff":"on","status": "${status}", "playing": "${playing}" }`;
             } else {
+                client.user.setActivity(`Servers: ${client.guilds.cache.size}`);
+                client.user.setStatus("online");
                 const embed = new Discord.EmbedBuilder()
                     .setTitle("ok")
-                    .setColor(client.config.color.s)
+                    .setColor(client.conf.color.s)
                     .setTimestamp();
 
                 i.reply({ embeds: [embed] });
+                client.func.loging({ onoff:"off"}, "v1/conf/status");
                 return `{ "onoff":"off"}`;
             }
         } catch (e) {
