@@ -31,7 +31,7 @@ module.exports = {
                 client.user.setStatus("online");
                 const embed = new Discord.EmbedBuilder()
                     .setTitle("ok")
-                    .setColor(client.config.color.s)
+                    .setColor(client.conf.color.s)
                     .setTimestamp();
 
                 i.reply({ embeds: [embed] });
