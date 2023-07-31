@@ -20,11 +20,11 @@ module.exports = {
                 client.user.setStatus(status);
                 const embed = new Discord.EmbedBuilder()
                     .setTitle("ok")
-                    .setColor(client.config.color.s)
+                    .setColor(client.conf.color.s)
                     .setTimestamp();
 
                 i.reply({ embeds: [embed] });
-                client.func.loging({ status: "status", playing: "playing" }, "conf/maintenance");
+                client.func.loging({ onoff:"on",status: status, playing: playing }, "v1/conf/status");
                 return `{ "onoff":"on","status": "${status}", "playing": "${playing}" }`;
             } else {
                 const embed = new Discord.EmbedBuilder()
