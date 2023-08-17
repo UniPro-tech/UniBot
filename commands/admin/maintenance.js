@@ -83,7 +83,7 @@ module.exports = {
 
                 i.reply({ embeds: [embed] });
                 client.func.loging({ onoff: "on", status: status, playing: playing, type: activityStr }, "v1/conf/status");
-                return `{ "onoff":"on","status": "${status}", "playing": "${playing}", "type": "${activity}" }`;
+                return `{ "onoff":"on","status": "${status}", "playing": "${playing}", "type": "${activityStr}" }`;
             } else {
                 client.shard.fetchClientValues('guilds.cache.size')
                     .then(result => {
