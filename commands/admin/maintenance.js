@@ -42,7 +42,7 @@ module.exports = {
             if (onoff == 'on') {
                 const status = i.options.getString('status');
                 const playing = i.options.getString('playing');
-                const activity = i.options.getString('actuvuty');
+                const activity = i.options.getString('activity');
                 /*
                 if (status == 'Discord Android') {
                     client.ws = { properties: { "$os": "Untitled OS", "$browser": "Discord Android", "$device": "Replit Container" } };
@@ -61,7 +61,7 @@ module.exports = {
 
                 i.reply({ embeds: [embed] });
                 client.func.loging({ onoff: "on", status: status, playing: playing }, "v1/conf/status");
-                return `{ "onoff":"on","status": "${status}", "playing": "${playing}" }`;
+                return `{ "onoff":"on","status": "${status}", "playing": "${playing}", "activity": "${activity}" }`;
             } else {
                 client.shard.fetchClientValues('guilds.cache.size')
                     .then(result => {
