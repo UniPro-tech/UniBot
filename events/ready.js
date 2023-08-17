@@ -13,9 +13,10 @@ module.exports = {
         client.user.setStatus(log.status);
       }
     } else {
-      let size;
-      size = client.shard.fetchClientValues('guilds.cache.size')
-      client.user.setActivity(`Servers: ${size}`);
+      client.shard.fetchClientValues('guilds.cache.size')
+      .then(result => {
+        client.user.setActivity(`Servers: ${result}`);
+      })
       client.user.setStatus('online');
     }
     /*client.user.setActivity('activity', { type: 'WATCHING' });
