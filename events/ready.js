@@ -1,3 +1,4 @@
+const Discord = require("discord.js");
 module.exports = {
   name: "ready", // イベント名
   async execute(client) {

@@ -15,7 +15,7 @@ module.exports = {
             .setRequired(true))
         .addStringOption(option =>
             option.setName('playing')
-                .setDescription('プレイ中に表示するやつ'))
+                .setDescription('プレイ中に表示するやつ(Stream、WatchingはURLでもok)'))
         .addStringOption(option =>
             option.setName('status')
                 .setDescription('すてーたす')
@@ -34,7 +34,8 @@ module.exports = {
                     { name: 'プレイ中', value: 'PLAYING' },
                     { name: '参戦中', value: 'COMPETING' },
                     { name: '再生中(聞く)', value: 'LISTENING' },
-                    { name: '配信中', value: 'STREAMING' })),
+                    { name: '配信中', value: 'STREAMING' },
+                    { name: 'カスタム', value: 'CUSTOM' })),
 
     async execute(i, client, command) {
         try {
@@ -60,6 +61,9 @@ module.exports = {
                     case "STREAMING":
                         activityOpt.type = Discord.ActivityType.Streaming;
                         break;
+
+                    case "CUSTOM":
+                        activityOpt.type = Discord.ActivityType.Custom;
 
                     default:
                         activityOpt.type = Discord.ActivityType.Playing;
