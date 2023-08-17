@@ -7,9 +7,19 @@ module.exports = {
     console.log(`on:${log.onoff},play:${log.playing},status:${log.status}`);
     if (log.onoff == 'on') {
       client.user.setActivity(log.playing);
-      client.user.setStatus(log.status);
+      if (log.status == 'Phone') {
+        client.ws = { properties: { $browser: 'Discord Android' } };
+      } else {
+        client.user.setStatus(log.status);
+      }
     } else {
-      client.user.setActivity(`Servers: ${client.guilds.cache.size}`);
+      let size;
+      client.shard.fetchClientValues('guilds.cache.size')
+        .then(results => {
+          size = `Server count: ${results.reduce((acc, guildCount) => acc + guildCount, 0)}`;
+        })
+        .catch(console.error);
+      client.user.setActivity(`Servers: ${size}`);
       client.user.setStatus('online');
     }
     /*client.user.setActivity('activity', { type: 'WATCHING' });
