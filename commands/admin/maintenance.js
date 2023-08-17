@@ -23,8 +23,9 @@ module.exports = {
                     { name: 'オンライン', value: 'online' },
                     { name: '取り込み中', value: 'dnd' },
                     { name: 'スリープ', value: 'idle' },
-                    { name: 'オンライン隠し', value: 'invisible' },
-                    { name: 'スマホでオンライン', value: 'Discord Android' }))
+                    //{ name: 'スマホでオンライン', value: 'Discord Android' },
+                    { name: 'オンライン隠し', value: 'invisible' }
+                    ))
         .addStringOption(option =>
             option.setName('activity')
                 .setDescription('あくてぃびてぃ')
@@ -42,14 +43,14 @@ module.exports = {
                 const status = i.options.getString('status');
                 const playing = i.options.getString('playing');
                 const activity = i.options.getString('actuvuty');
-
+                /*
                 if (status == 'Discord Android') {
                     client.ws = { properties: { "$os": "Untitled OS", "$browser": "Discord Android", "$device": "Replit Container" } };
                     client.user.setStatus('online');
-                } else {
-                    client.ws = () => { return { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } }; }
+                } else {*/
+                //    client.ws = () => { return { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } }; }
                     client.user.setStatus(status);
-                }
+                //}
 
                 client.user.setActivity(playing, { type: activity });
 
@@ -66,7 +67,7 @@ module.exports = {
                     .then(result => {
                         client.user.setActivity(`Servers: ${result}`);
                     });
-                client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
+                //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
                 client.user.setStatus("online");
                 const embed = new Discord.EmbedBuilder()
                     .setTitle("ok")

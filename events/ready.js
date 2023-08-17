@@ -7,7 +7,7 @@ module.exports = {
     console.log(`on:${log.onoff},play:${log.playing},status:${log.status}`);
     if (log.onoff == 'on') {
       client.user.setActivity(log.playing, { type: log.activity });
-      if (log.status == 'Phone') {
+      if (log.status == 'Discord Android') {
         client.ws = { properties: { $browser: 'Discord Android' } };
       } else {
         //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
