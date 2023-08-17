@@ -75,10 +75,10 @@ module.exports = {
                     client.user.setStatus('online');
                 } else {*/
                 //    client.ws = () => { return { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } }; }
-                client.user.setStatus(status);
                 //}
 
                 client.user.setActivity(playing, activityOpt);
+                client.user.setStatus(status);
 
                 const embed = new Discord.EmbedBuilder()
                     .setTitle("ok")
