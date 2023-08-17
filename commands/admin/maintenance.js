@@ -25,16 +25,16 @@ module.exports = {
                     { name: 'スリープ', value: 'idle' },
                     //{ name: 'スマホでオンライン', value: 'Discord Android' },
                     { name: 'オンライン隠し', value: 'invisible' }
-                    ))
+                ))
         .addStringOption(option =>
             option.setName('activity')
                 .setDescription('あくてぃびてぃ')
                 .setChoices(
                     { name: '視聴中', value: 'WATCHING' },
                     { name: 'プレイ中', value: 'PLAYING' },
-                    { name: '競争する？', value: 'COMPETING' },
+                    { name: '参戦中', value: 'COMPETING' },
                     { name: '再生中(聞く)', value: 'LISTENING' },
-                    { name: '配信中？', value: 'STREAMING' })),
+                    { name: '配信中', value: 'STREAMING' })),
 
     async execute(i, client, command) {
         try {
@@ -42,17 +42,39 @@ module.exports = {
             if (onoff == 'on') {
                 const status = i.options.getString('status');
                 const playing = i.options.getString('playing');
-                const activity = i.options.getString('activity');
+                const activityStr = i.options.getString('activity');
+                let activityOpt;
+                switch (activityStr) {
+                    case "WATCHING":
+                        activityOpt.type = Discord.ActivityType.Watching;
+                        break;
+
+                    case "COMPETING":
+                        activityOpt.type = Discord.ActivityType.Competing;
+                        break
+
+                    case "LISTENING":
+                        activityOpt.type = Discord.ActivityType.Listening;
+                        break;
+
+                    case "STREAMING":
+                        activityOpt.type = Discord.ActivityType.Streaming;
+                        break;
+
+                    default:
+                        activityOpt.type = Discord.ActivityType.Playing;
+                        break;
+                }
                 /*
                 if (status == 'Discord Android') {
                     client.ws = { properties: { "$os": "Untitled OS", "$browser": "Discord Android", "$device": "Replit Container" } };
                     client.user.setStatus('online');
                 } else {*/
                 //    client.ws = () => { return { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } }; }
-                    client.user.setStatus(status);
+                client.user.setStatus(status);
                 //}
 
-                client.user.setActivity(playing, { type: activity });
+                client.user.setActivity(playing, activityOpt);
 
                 const embed = new Discord.EmbedBuilder()
                     .setTitle("ok")
@@ -60,8 +82,8 @@ module.exports = {
                     .setTimestamp();
 
                 i.reply({ embeds: [embed] });
-                client.func.loging({ onoff: "on", status: status, playing: playing }, "v1/conf/status");
-                return `{ "onoff":"on","status": "${status}", "playing": "${playing}", "activity": "${activity}" }`;
+                client.func.loging({ onoff: "on", status: status, playing: playing, type: activityStr }, "v1/conf/status");
+                return `{ "onoff":"on","status": "${status}", "playing": "${playing}", "type": "${activity}" }`;
             } else {
                 client.shard.fetchClientValues('guilds.cache.size')
                     .then(result => {
