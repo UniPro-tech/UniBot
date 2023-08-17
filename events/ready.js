@@ -9,7 +9,7 @@ module.exports = {
 
     if (log.onoff == 'on') {
 
-      let activityOpt;
+      let activityOpt = {};
       switch (log.type) {
         case "WATCHING":
           activityOpt.type = Discord.ActivityType.Watching;
