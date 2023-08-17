@@ -10,7 +10,7 @@ module.exports = {
       if (log.status == 'Phone') {
         client.ws = { properties: { $browser: 'Discord Android' } };
       } else {
-        client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
+        //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
         client.user.setStatus(log.status);
       }
     } else {
@@ -18,7 +18,7 @@ module.exports = {
         .then(result => {
           client.user.setActivity(`Servers: ${result}`);
         });
-      client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
+      //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
       client.user.setStatus('online');
     }
     /*client.user.setActivity('activity', { type: 'WATCHING' });
