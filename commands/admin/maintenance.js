@@ -43,7 +43,7 @@ module.exports = {
                 const status = i.options.getString('status');
                 const playing = i.options.getString('playing');
                 const activityStr = i.options.getString('activity');
-                let activityOpt;
+                let activityOpt = {};
                 switch (activityStr) {
                     case "WATCHING":
                         activityOpt.type = Discord.ActivityType.Watching;
