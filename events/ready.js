@@ -14,11 +14,7 @@ module.exports = {
       }
     } else {
       let size;
-      client.shard.fetchClientValues('guilds.cache.size')
-        .then(results => {
-          size = `Server count: ${results.reduce((acc, guildCount) => acc + guildCount, 0)}`;
-        })
-        .catch(console.error);
+      size = client.shard.fetchClientValues('guilds.cache.size')
       client.user.setActivity(`Servers: ${size}`);
       client.user.setStatus('online');
     }
