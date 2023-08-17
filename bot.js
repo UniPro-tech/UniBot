@@ -14,6 +14,7 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
   ],
   partials: [Partials.Channel],
+  ws: { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } }
 });
 const { exec } = require("child_process");
 const cron = require('node-cron');

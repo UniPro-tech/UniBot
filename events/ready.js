@@ -6,17 +6,19 @@ module.exports = {
     add.addCmd(client.conf);
     console.log(`on:${log.onoff},play:${log.playing},status:${log.status}`);
     if (log.onoff == 'on') {
-      client.user.setActivity(log.playing);
+      client.user.setActivity(log.playing, { type: log.activity });
       if (log.status == 'Phone') {
         client.ws = { properties: { $browser: 'Discord Android' } };
       } else {
+        client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
         client.user.setStatus(log.status);
       }
     } else {
       client.shard.fetchClientValues('guilds.cache.size')
-      .then(result => {
-        client.user.setActivity(`Servers: ${result}`);
-      })
+        .then(result => {
+          client.user.setActivity(`Servers: ${result}`);
+        });
+      client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
       client.user.setStatus('online');
     }
     /*client.user.setActivity('activity', { type: 'WATCHING' });
