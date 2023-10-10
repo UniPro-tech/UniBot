@@ -19,7 +19,7 @@ module.exports = {
             //.setURL('https://discord.js.org/')
             .setAuthor(client.conf.author)
             .setDescription(client.conf.description)
-            .setThumbnail(client.user.displayAvatarURL)
+            .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
             .addFields(
                 { name: 'Version', value: client.conf.version },
                 { name: 'Author', value: client.conf.author.name },
