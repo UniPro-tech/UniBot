@@ -8,7 +8,11 @@ module.exports = {
             "アイコンのURLを取得します。"
         ),
     async execute(i, client) {
-        let size = client.shard.fetchClientValues('guilds.cache.size');
+        let size;
+        client.shard.fetchClientValues('guilds.cache.size')
+            .then(result => {
+                size = result;
+            });
         const embed = new Discord.EmbedBuilder()
             .setColor(0x0099FF)
             .setTitle(`About ${client.conf.productname}`)
