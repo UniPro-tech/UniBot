@@ -23,7 +23,7 @@ module.exports = {
             .addFields(
                 { name: 'Version', value: client.conf.version },
                 { name: 'Author', value: client.conf.author.name },
-                { name: 'Guild Count', value: `${result}` }
+                { name: 'Guild Count', value: `${size}` }
             )
             .setTimestamp();
         i.reply({ embeds: [embed] });
