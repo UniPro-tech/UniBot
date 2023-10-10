@@ -8,11 +8,7 @@ module.exports = {
             "アイコンのURLを取得します。"
         ),
     async execute(i, client) {
-        let size;
-        client.shard.fetchClientValues('guilds.cache.size')
-            .then(result => {
-                size = result;
-            });
+        let size = client.shard.fetchClientValues('guilds.cache.size');
         const embed = new Discord.EmbedBuilder()
             .setColor(0x0099FF)
             .setTitle(`About ${client.conf.productname}`)
@@ -23,7 +19,7 @@ module.exports = {
             .addFields(
                 { name: 'Version', value: client.conf.version },
                 { name: 'Author', value: client.conf.author.name },
-                { name: 'Guild Count', value: result }
+                { name: 'Guild Count', value: size }
             )
             .setTimestamp();
         i.reply({ embeds: [embed] });
