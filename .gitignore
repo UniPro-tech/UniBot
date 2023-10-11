@@ -2,3 +2,4 @@
 .space
 Spacefile
 config.js
+.env
