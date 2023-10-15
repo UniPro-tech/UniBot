@@ -9,17 +9,25 @@
   "author": "Yuito_it",
   "license": "MIT",
   "dependencies": {
+    "@discord-player/extractor": "^4.4.4",
+    "@discordjs/opus": "^0.9.0",
     "@discordjs/rest": "^1.7.1",
     "@discordjs/voice": "^0.16.0",
-    "axios": "^1.4.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "axios": "^1.5.1",
     "child_process": "^1.0.2",
-    "cron": "^2.4.0",
-    "discord-api-types": "^0.37.43",
-    "discord.js": "^14.11.0",
-    "dotenv": "^16.0.3",
+    "cron": "^2.4.4",
+    "discord-api-types": "^0.37.60",
+    "discord-player": "^6.6.4",
+    "discord-voip": "^0.1.3",
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "isomorphic-unfetch": "^4.0.2",
+    "mediaplex": "^0.0.8",
     "node-cron": "^3.0.2",
     "request": "^2.88.2",
-    "require-dir": "^1.2.0"
+    "require-dir": "^1.2.0",
+    "youtube-ext": "^1.1.14"
   }
 }

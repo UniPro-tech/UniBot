@@ -1,4 +1,6 @@
-const URI_base = process.env.LOGING_URI_BASE;
+const conf = require("./config");
+
+const URI_base = conf.URI_base;
 
 //タイムスタンプをJSTタイムスタンプに変換
 function timeToJSTTimestamp(timestamp) {
@@ -35,7 +37,6 @@ exports.timeToJST = function (timestamp, format = false) {
 *api_name = URI
 */
 const axios = require('axios');
-const https = require('https');
 exports.readLog = async (api_name) => {
     const URI = `https://${URI_base}/${api_name}`;
     try {
@@ -46,9 +47,7 @@ exports.readLog = async (api_name) => {
     } catch (error) {
         console.error('エラー:', error.message);
     }
-
 }
-const http = require('http')
 
 exports.loging = async (post_data, api_name) => {
     try {

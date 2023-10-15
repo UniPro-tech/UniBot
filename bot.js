@@ -11,7 +11,7 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildVoiceStates
   ],
   partials: [Partials.Channel],
   ws: { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } }
@@ -21,15 +21,25 @@ const cron = require('node-cron');
 cron.schedule('0 */5 * * * *', () => {
   console.log('Ratecheck');
   exec("curl -v https://discord.com/api/v10", (err, stdout, stderr) => {
-    if(err){
+    if (err) {
       throw err;
-    }else{
-      if(stdout.match(/1015/)){
+    } else {
+      if (stdout.match(/1015/)) {
         exec("sudo kill 1");
       }
     }
   });
 });
+
+const { Player } = require('discord-player');
+
+// this is the entrypoint for discord-player based application
+const player = new Player(client);
+
+// Now, lets load all the default extractors, except 'YouTubeExtractor'. You can remove the filter if you want to load all the extractors.
+player.extractors.loadDefault();
+
+client.player = player;
 
 const fs = require("fs");
 
@@ -44,8 +54,8 @@ client.fs = fs;
 const cmdH = require(`./system/command.js`);
 cmdH.handling(client, fs, Collection, config);
 // イベントハンドリング
-const eventFiles = fs.readdirSync("./events").filter(file => file.endsWith(".js"));
-for (const file of eventFiles) {
+const systemEventFiles = fs.readdirSync("./events").filter(file => file.endsWith(".js"));
+for (const file of systemEventFiles) {
   const event = require(`./events/${file}`);
   if (event.once) {
     try {
@@ -75,7 +85,7 @@ client.on("interactionCreate", async i => {
       .setTitle("エラー")
       .setDescription("このコマンドはDMでは実行できません。")
       .setColor(config.color.e);
-    i.reply({ embeds: [embed] })
+    i.reply({ embeds: [embed] });
     return;
   }
 
