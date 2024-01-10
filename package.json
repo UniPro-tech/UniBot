@@ -18,7 +18,7 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "node-cron": "^3.0.2",
+    "node-cron": "^3.0.3",
     "request": "^2.88.2",
     "require-dir": "^1.2.0"
   }
