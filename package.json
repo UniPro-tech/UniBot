@@ -9,7 +9,7 @@
   "author": "Yuito_it",
   "license": "MIT",
   "dependencies": {
-    "@discordjs/rest": "^1.7.1",
+    "@discordjs/rest": "^2.2.0",
     "@discordjs/voice": "^0.16.0",
     "axios": "^1.6.3",
     "child_process": "^1.0.2",
