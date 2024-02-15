@@ -16,7 +16,7 @@
     "cron": "^2.4.0",
     "discord-api-types": "^0.37.69",
     "discord.js": "^14.14.1",
-    "dotenv": "^16.4.1",
+    "dotenv": "^16.4.4",
     "express": "^4.18.2",
     "node-cron": "^3.0.3",
     "request": "^2.88.2",
