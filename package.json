@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "@discordjs/rest": "^2.2.0",
-    "@discordjs/voice": "^0.16.0",
+    "@discordjs/voice": "^0.16.1",
     "axios": "^1.6.7",
     "child_process": "^1.0.2",
     "cron": "^3.1.6",
