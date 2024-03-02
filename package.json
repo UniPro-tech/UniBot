@@ -13,7 +13,7 @@
     "@discordjs/voice": "^0.16.1",
     "axios": "^1.6.7",
     "child_process": "^1.0.2",
-    "cron": "^2.4.0",
+    "cron": "^3.1.6",
     "discord-api-types": "^0.37.71",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
