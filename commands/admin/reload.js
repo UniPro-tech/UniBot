@@ -11,13 +11,7 @@ module.exports = {
         .setRequired(true)
     */,
   async execute(i, client) {
-    const add = require(`../../system/add.js`);
-    const embed = new EmbedBuilder()
-      .setTitle("ReloadCommands!!")
-      .setColor(client.conf.color.s)
-      .setTimestamp();
-    await i.reply({ embeds: [embed] });
-    add.addCmd(client.conf);
-    return null;
+    i.reply("Now rebooting...");
+    process.exit(1);
   },
 };
