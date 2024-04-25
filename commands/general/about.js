@@ -5,7 +5,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("about")
         .setDescription(
-            "アイコンのURLを取得します。"
+            "このBotについての情報を表示します。"
         ),
     async execute(i, client) {
         let size;
@@ -16,7 +16,7 @@ module.exports = {
         const embed = new Discord.EmbedBuilder()
             .setColor(0x0099FF)
             .setTitle(`About ${client.conf.productname}`)
-            //.setURL('https://discord.js.org/')
+            .setURL('https://uniproject-tech.net/UniBot/')
             .setAuthor(client.conf.author)
             .setDescription(client.conf.description)
             .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
