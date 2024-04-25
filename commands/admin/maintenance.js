@@ -20,7 +20,7 @@ module.exports = {
                     { name: 'オンライン隠し', value: 'invisible' }
                 ))
         .addStringOption(option =>
-            option.setName('activityType')
+            option.setName('activitytype')
                 .setDescription('あくてぃびてぃ')
                 .setChoices(
                     { name: '視聴中', value: 'WATCHING' },
@@ -36,7 +36,7 @@ module.exports = {
             if (onoff == 'on') {
                 const status = i.options.getString('status');
                 const statusDescription = i.options.getString('statusdiscription');
-                const activityType = i.options.getString('activityType');
+                const activityType = i.options.getString('activitytype');
                 let activityOpt;
                 switch (activityType) {
                     case "WATCHING":
