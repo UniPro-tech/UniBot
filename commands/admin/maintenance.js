@@ -7,7 +7,7 @@ module.exports = {
         .setName("maintenance")
         .setDescription("メンテモード")
         .addStringOption(option =>
-            option.setName('statusDiscription')
+            option.setName('statusdiscription')
                 .setDescription('プレイ中に表示するやつ(Stream、WatchingはURLでもok)'))
         .addStringOption(option =>
             option.setName('status')
@@ -35,7 +35,7 @@ module.exports = {
             const onoff = i.options.getString('enable');
             if (onoff == 'on') {
                 const status = i.options.getString('status');
-                const statusDescription = i.options.getString('statusDescription');
+                const statusDescription = i.options.getString('statusdiscription');
                 const activityType = i.options.getString('activityType');
                 let activityOpt;
                 switch (activityType) {
