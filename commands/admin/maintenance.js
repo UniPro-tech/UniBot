@@ -6,15 +6,8 @@ module.exports = {
     data: new SlashCommandBuilder() // スラッシュコマンド登録のため
         .setName("maintenance")
         .setDescription("メンテモード")
-        .addStringOption(option => option.setName('enablet')
-            .setDescription('on/off')
-            .setChoices(
-                { name: 'on', value: 'on' },
-                { name: 'off', value: 'off' }
-            )
-            .setRequired(true))
         .addStringOption(option =>
-            option.setName('playing')
+            option.setName('statusDiscription')
                 .setDescription('プレイ中に表示するやつ(Stream、WatchingはURLでもok)'))
         .addStringOption(option =>
             option.setName('status')
@@ -25,9 +18,9 @@ module.exports = {
                     { name: 'スリープ', value: 'idle' },
                     //{ name: 'スマホでオンライン', value: 'Discord Android' },
                     { name: 'オンライン隠し', value: 'invisible' }
-                ))
+                ).require(true))
         .addStringOption(option =>
-            option.setName('activity')
+            option.setName('activityType')
                 .setDescription('あくてぃびてぃ')
                 .setChoices(
                     { name: '視聴中', value: 'WATCHING' },
@@ -39,13 +32,13 @@ module.exports = {
 
     async execute(i, client, command) {
         try {
-            const onoff = i.options.getString('enablet');
+            const onoff = i.options.getString('enable');
             if (onoff == 'on') {
                 const status = i.options.getString('status');
-                const playing = i.options.getString('playing');
-                const activityStr = i.options.getString('activity');
-                let activityOpt = {};
-                switch (activityStr) {
+                const statusDescription = i.options.getString('statusDescription');
+                const activityType = i.options.getString('activityType');
+                let activityOpt;
+                switch (activityType) {
                     case "WATCHING":
                         activityOpt.type = Discord.ActivityType.Watching;
                         break;
@@ -77,7 +70,7 @@ module.exports = {
                 //    client.ws = () => { return { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } }; }
                 //}
 
-                client.user.setActivity(playing, activityOpt);
+                client.user.setActivity(statusDescription, activityOpt);
                 client.user.setStatus(status);
 
                 const embed = new Discord.EmbedBuilder()
@@ -86,8 +79,8 @@ module.exports = {
                     .setTimestamp();
 
                 i.reply({ embeds: [embed] });
-                client.func.loging({ onoff: "on", status: status, playing: playing, type: activityStr }, "v1/conf/status");
-                return `{ "onoff":"on","status": "${status}", "playing": "${playing}", "type": "${activityStr}" }`;
+                client.func.loging({ onoff: "on", status: status, playing: statusDescription, type: activityType }, "v1/conf/status");
+                return `{ "onoff":"on","status": "${status}", "statusDesc": "${statusDescription}", "type": "${activityType}" }`;
             } else {
                 client.shard.fetchClientValues('guilds.cache.size')
                     .then(result => {
