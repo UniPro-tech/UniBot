@@ -1,0 +1,51 @@
+#!/bin/bash
+ COMMIT_MSG=$1
+ prefix=$(head -n 1 $COMMIT_MSG | awk '{ print $1 }')
+ emoji=""
+ case $prefix in
+ "fix:")
+ emoji=":bug:"
+ ;;
+ "feat:")
+ emoji=":sparkles:"
+ ;;
+ "hammer:")
+ emoji=":hammer:"
+ ;;
+ "delete:")
+ emoji=":zap:"
+ ;;
+ "uppkg:")
+ emoji=":arrow_up:"
+ ;;
+ "docs:")
+ emoji=":memo:"
+ ;;
+ "style:")
+ emoji=":art:"
+ ;;
+ "refactor:")
+ emoji=":recycle:"
+ ;;
+ "chore:")
+ emoji=":hammer:"
+ ;;
+ "tag:")
+ emoji=":bookmark:"
+ ;;
+ "typo:")
+ emoji=":pencil2:"
+ ;;
+ "revert:" | "Revert")
+ emoji=":rewind:"
+ ;;
+ *)
+ echo "The specified prefix is undefined.";
+ exit 1
+ ;;
+ esac
+ 
+ sed -i "s/$prefix/$emoji/" $COMMIT_MSG
+ 
+ echo $prefix 
+ exit 0
