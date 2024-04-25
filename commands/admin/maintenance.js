@@ -18,7 +18,7 @@ module.exports = {
                     { name: 'スリープ', value: 'idle' },
                     //{ name: 'スマホでオンライン', value: 'Discord Android' },
                     { name: 'オンライン隠し', value: 'invisible' }
-                ).require(true))
+                ))
         .addStringOption(option =>
             option.setName('activityType')
                 .setDescription('あくてぃびてぃ')
