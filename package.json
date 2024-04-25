@@ -14,7 +14,7 @@
     "axios": "^1.6.7",
     "child_process": "^1.0.2",
     "cron": "^3.1.6",
-    "discord-api-types": "^0.37.76",
+    "discord-api-types": "^0.37.82",
     "discord.js": "^14.12.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.1",
