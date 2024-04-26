@@ -8,8 +8,7 @@ module.exports = {
     add.addCmd(client.conf);
     console.log(`on:${log.onoff},play:${log.playing},status:${log.status}`);
 
-    if (log.onoff == 'on') {
-
+    if (log.onoff == "on") {
       let activityOpt = {};
       switch (log.type) {
         case "WATCHING":
@@ -18,7 +17,7 @@ module.exports = {
 
         case "COMPETING":
           activityOpt.type = Discord.ActivityType.Competing;
-          break
+          break;
 
         case "LISTENING":
           activityOpt.type = Discord.ActivityType.Listening;
@@ -34,21 +33,26 @@ module.exports = {
       }
 
       client.user.setActivity(log.playing, activityOpt);
-      if (log.status == 'Discord Android') {
-        client.ws = { properties: { $browser: 'Discord Android' } };
+      if (log.status == "Discord Android") {
+        client.ws = { properties: { $browser: "Discord Android" } };
       } else {
         //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
         client.user.setStatus(log.status);
       }
     } else {
-      client.shard.fetchClientValues('guilds.cache.size')
-        .then(result => {
-          client.user.setActivity(`Servers: ${result}`);
-        });
+      client.shard.fetchClientValues("guilds.cache.size").then((result) => {
+        client.user.setActivity(`Servers: ${result}`);
+      });
       //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
-      client.user.setStatus('online');
+      client.user.setStatus("online");
     }
-    client.channels.cache.get(client.conf.logch.ready).send("Discordログインしました!");
-    console.log(`[${client.func.timeToJST(Date.now(), true)}] Logged in as ${client.user.tag}!`);
-  }
-}
+    client.channels.cache
+      .get(client.conf.logch.ready)
+      .send("Discordログインしました!");
+    console.log(
+      `[${client.func.timeToJST(Date.now(), true)}] Logged in as ${
+        client.user.tag
+      }!`
+    );
+  },
+};
