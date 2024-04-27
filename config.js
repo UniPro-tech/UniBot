@@ -24,7 +24,5 @@ module.exports = {
     guildCreate: "1228574771856543835",
     guildDelete: "1228574771856543835",
   },
-  api: {
-    URI_base: process.env.URI_BASE,
-  },
+  URI_base: process.env.URI_BASE,
 };
