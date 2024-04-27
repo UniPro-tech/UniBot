@@ -3,7 +3,7 @@ module.exports = {
   author: {
     name: "UR name",
     url: "UR url",
-    iconURL: "UR icon"
+    iconURL: "UR icon",
   },
   version: "v1.0.0",
   productname: "UR product name",
@@ -14,15 +14,14 @@ module.exports = {
   },
   token: "Your token",
 
-
   dev: {
-    testGuild: "Guild ID"
+    testGuild: "Guild ID",
   },
   logch: {
     ready: logChId,
     command: "logChId",
     error: "logChId",
     guildCreate: "logChId",
-    guildDelete: "logChId"
-  }
-}
+    guildDelete: "logChId",
+  },
+};
