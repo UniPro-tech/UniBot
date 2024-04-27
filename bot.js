@@ -140,25 +140,6 @@ client.on("interactionCreate", async (i) => {
 });
 client.login(config.token);
 
-// APIサーバー
-const express = require("express");
-const { stdout, stderr } = require("process");
-const app = express();
-
-// ルーティングの設定
-app.get("/", (req, res) => {
-  const data = {
-    Status: "OK",
-  };
-  res.json(data);
-});
-
-app.listen(process.env.PORT, () => {
-  console.log("listen");
-});
-
-app.timeout = 1000 * 60 * 5; // 5min
-
 // エラー処理 (これ入れないとエラーで落ちる。本当は良くないかもしれない)
 process.on("uncaughtException", (error) => {
   console.error(`[${functions.timeToJST(Date.now(), true)}] ${error.stack}`);
