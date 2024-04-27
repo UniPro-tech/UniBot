@@ -1,4 +1,4 @@
-const URI_base = process.env.LOGING_URI_BASE;
+const { URI_base } = require("./config");
 
 //タイムスタンプをJSTタイムスタンプに変換
 function timeToJSTTimestamp(timestamp) {
