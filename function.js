@@ -44,7 +44,7 @@ exports.timeToJST = function (timestamp, format = false) {
 const axios = require("axios");
 const https = require("https");
 exports.readLog = async (api_name) => {
-  const URI = `https://${URI_base}/${api_name}`;
+  const URI = `${URI_base}/${api_name}`;
   try {
     const response = await axios.get(URI);
     const ret = JSON.stringify(response.data);
@@ -57,9 +57,9 @@ exports.readLog = async (api_name) => {
 const http = require("http");
 
 exports.loging = async (post_data, api_name) => {
+  const url = `${URI_base}/${api_name}`;
+  console.log("URI:", url);
   try {
-    const url = `https://${URI_base}/${api_name}`;
-
     const response = await axios.post(url, post_data);
 
     console.log("Response:", response.data);
