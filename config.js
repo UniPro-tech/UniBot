@@ -18,11 +18,11 @@ module.exports = {
     testGuild: process.env.ADMIN_GUILD,
   },
   logch: {
-    ready: Number(process.env.LOG_READY_ID),
-    command: Number(process.env.LOG_COMMAND_ID),
-    error: Number(process.env.LOG_ERROR_ID),
-    guildCreate: Number(process.env.LOG_GUILD_JOIN_ID),
-    guildDelete: Number(process.env.LOG_GUID_LEAVE_ID),
+    ready: parseFloat(process.env.LOG_READY_ID),
+    command: parseFloat(process.env.LOG_COMMAND_ID),
+    error: parseFloat(process.env.LOG_ERROR_ID),
+    guildCreate: parseFloat(process.env.LOG_GUILD_JOIN_ID),
+    guildDelete: parseFloat(process.env.LOG_GUID_LEAVE_ID),
   },
   URI_base: process.env.URI_BASE,
 };
