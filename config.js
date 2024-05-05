@@ -1,29 +1,28 @@
 module.exports = {
   author: {
-    name: "YuitoAkatsukiJP",
-    url: "https://x.com/UniProject_digital",
-    iconURL: "https://cdn.discordapp.com/avatars/95711041089.webp",
+    name: process.env.AUTHOR_NAME,
+    url: process.env.AUTHOR_URL,
+    iconURL: process.env.AUTHOR_ICON_URL,
   },
-  description:
-    "UntitledBotはデジタルサークルUniProjectが作った多機能Botです。現時点ではまだ機能は全然ありませんが、温かい目で見ていただければ幸いです。",
-  version: "v1.1.0",
-  productname: "UntitledBot",
-  clientId: "1110163628222591107",
-  adminRoleId: "1231998525299097742",
+  description: process.env.DESCRIPTION,
+  version: process.env.npm_package_version,
+  productname: process.env.PRODUCTNAME,
+  clientId: process.env.ID,
+  adminRoleId: process.env.ADOMIN,
   color: {
     s: 0x1bff49,
     e: 0xff0000,
   },
   token: process.env.DISCORD_TOKEN,
   dev: {
-    testGuild: "1191346186880286770",
+    testGuild: process.env.ADMIN_GUILD,
   },
   logch: {
-    ready: "1228574771856543835",
-    command: "1228574771856543835",
-    error: "1228574771856543835",
-    guildCreate: "1228574771856543835",
-    guildDelete: "1228574771856543835",
+    ready: process.env.LOG_READY_ID,
+    command: process.env.LOG_COMMAND_ID,
+    error: process.env.LOG_ERROR_ID,
+    guildCreate: process.env.LOG_GUILD_JOIN_ID,
+    guildDelete: process.env.LOG_GUID_LEAVE_ID,
   },
   URI_base: process.env.URI_BASE,
 };
