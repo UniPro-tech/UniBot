@@ -1,12 +1,12 @@
 {
   "name": "untitledbot",
   "version": "1.2.0",
-  "description": "",
+  "description": "The Discord Bot made by UniProject.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "boot": "node index.js"
   },
-  "author": "Yuito_it",
+  "author": "Akatsuki Yuito",
   "license": "MIT",
   "dependencies": {
     "@discordjs/rest": "^2.2.0",
