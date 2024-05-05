@@ -44,6 +44,10 @@ module.exports = {
     ),
 
   async execute(i, client, command) {
+    if (!i.member.roles.cache.has(client.conf.adminRoleId)) {
+      i.reply("権限がありません");
+      return;
+    }
     try {
       const onoff = i.options.getString("enable");
       if (onoff == "on") {

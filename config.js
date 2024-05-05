@@ -9,6 +9,7 @@ module.exports = {
   version: "v1.1.0",
   productname: "UntitledBot",
   clientId: "1110163628222591107",
+  adminRoleId: "1231998525299097742",
   color: {
     s: 0x1bff49,
     e: 0xff0000,
