@@ -117,9 +117,8 @@ client.on("interactionCreate", async (i) => {
         },
       ])
       .setFooter({ text: String(i.id) });
-    client.channels
-      .fetch(config.logch.command)
-      .then((c) => c.send({ embeds: [log] }));
+    const channel = client.channels.cache.get(client.conf.logch.command);
+    channel.send({ embeds: [log] });
   } catch (error) {
     console.error(error);
     const logEmbed = new EmbedBuilder()
