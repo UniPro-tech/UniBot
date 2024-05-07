@@ -7,7 +7,6 @@ module.exports = {
 
     add.addCmd(client.conf);
     console.log(`on:${log.onoff},play:${log.playing},status:${log.status}`);
-
     if (log.onoff == "on") {
       let activityOpt = {};
       switch (log.type) {
@@ -46,9 +45,8 @@ module.exports = {
       //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
       client.user.setStatus("online");
     }
-    client.channels.cache
-      .get(client.conf.logch.ready)
-      .send("Discordログインしました!");
+    const channel = client.channels.cache.get(client.conf.logch.ready);
+    channel.send("Discordログインしました!");
     console.log(
       `[${client.func.timeToJST(Date.now(), true)}] Logged in as ${
         client.user.tag
