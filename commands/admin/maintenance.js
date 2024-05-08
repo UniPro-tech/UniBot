@@ -44,10 +44,6 @@ module.exports = {
     ),
 
   async execute(i, client, command) {
-    if (!i.member.roles.cache.has(client.conf.adminRoleId)) {
-      i.reply("権限がありません");
-      return;
-    }
     try {
       const onoff = i.options.getString("enable");
       if (onoff == "on") {
@@ -105,7 +101,7 @@ module.exports = {
           },
           "v1/conf/status"
         );
-        return `{ "onoff":"on","status": "${status}", "statusDesc": "${statusDescription}", "type": "${activityType}" }`;
+        return `{ onoff:"on",status: "${status}", statusDesc: "${statusDescription}", type: "${activityType}" }`;
       } else {
         client.shard.fetchClientValues("guilds.cache.size").then((result) => {
           client.user.setActivity(`Servers: ${result}`);
@@ -119,7 +115,7 @@ module.exports = {
 
         i.reply({ embeds: [embed] });
         client.func.loging({ onoff: "off" }, "v1/conf/status");
-        return `{ "onoff":"off"}`;
+        return `{ onoff:"off"}`;
       }
     } catch (e) {
       throw e;

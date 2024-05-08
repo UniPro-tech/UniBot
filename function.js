@@ -1,4 +1,5 @@
 const { URI_base } = require("./config");
+const fs = require("fs");
 
 //タイムスタンプをJSTタイムスタンプに変換
 function timeToJSTTimestamp(timestamp) {
@@ -37,33 +38,36 @@ exports.timeToJST = function (timestamp, format = false) {
   return return_str;
 };
 
-/*LogingAPIにポストして、DBにプッシュする。
- *post_data = ポストするためのjson(object)
- *api_name = URI
- */
-const axios = require("axios");
-const https = require("https");
 exports.readLog = async (api_name) => {
-  const URI = `${URI_base}/${api_name}`;
+  const URI = `./log/${api_name}/`;
   try {
-    const response = await axios.get(URI);
-    const ret = JSON.stringify(response.data);
-    console.log("レスポンス:", response.data);
-    return JSON.parse(ret);
+    const jsonString = fs.readFileSync(URI + ".log");
+    const data = JSON.parse(jsonString);
+    return data;
   } catch (error) {
     console.error("エラー:", error.message);
   }
 };
-const http = require("http");
 
 exports.loging = async (post_data, api_name) => {
-  const url = `${URI_base}/${api_name}`;
-  console.log("URI:", url);
+  const URI = `./log/${api_name}/`;
   try {
-    const response = await axios.post(url, post_data);
-
-    console.log("Response:", response.data);
-  } catch (error) {
-    console.error("Error:", error.message);
+    if (!fs.existsSync(URI)) {
+      fs.promises.mkdir(URI, { recursive: true });
+    }
+    const data = JSON.stringify(post_data);
+    await fs.writeFile(`${URI}.log`, data, (err) => {
+      // 書き出しに失敗した場合
+      if (err) {
+        console.log("エラーが発生しました。" + err);
+        throw err;
+      }
+      // 書き出しに成功した場合
+      else {
+        console.log("ファイルが正常に書き出しされました");
+      }
+    });
+  } catch (e) {
+    console.log(e);
   }
 };
