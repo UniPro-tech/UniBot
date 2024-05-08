@@ -1,26 +1,28 @@
 module.exports = {
   author: {
-    name: "YuitoAkatsukiJP",
-    url: "https://x.com/yuito_it_",
-    iconURL: "https://cdn.discordapp.com/avatars/95711041089.webp"
+    name: process.env.AUTHOR_NAME,
+    url: process.env.AUTHOR_URL,
+    iconURL: process.env.AUTHOR_ICON_URL,
   },
-  description: "UntitledBotは曙唯人が作った多機能Botです。現時点ではまだ機能は全然ありませんが、温かい目で見ていただければ幸いです。",
-  version: "v1.0.0",
-  productname: "UntitledBot",
-  clientId: "1110163628222591107",
+  description: process.env.DESCRIPTION,
+  version: process.env.npm_package_version,
+  productname: process.env.PRODUCTNAME,
+  clientId: process.env.ID,
+  adminRoleId: process.env.ADOMIN,
   color: {
     s: 0x1bff49,
     e: 0xff0000,
   },
   token: process.env.DISCORD_TOKEN,
   dev: {
-    testGuild: "957110890828820500"
+    testGuild: process.env.ADMIN_GUILD,
   },
   logch: {
-    ready: "1111590903015030785",
-    command: "1111590903015030785",
-    error: "1111590903015030785",
-    guildCreate: "1111590903015030785",
-    guildDelete: "1111590903015030785"
-  }
-}
+    ready: process.env.LOG_READY_ID,
+    command: process.env.LOG_COMMAND_ID,
+    error: process.env.LOG_ERROR_ID,
+    guildCreate: process.env.LOG_GUILD_JOIN_ID,
+    guildDelete: process.env.LOG_GUID_LEAVE_ID,
+  },
+  URI_base: process.env.URI_BASE,
+};
