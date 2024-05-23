@@ -12,7 +12,7 @@
     "@discordjs/rest": "^2.2.0",
     "@discordjs/voice": "^0.17.0",
     "child_process": "^1.0.2",
-    "discord-api-types": "^0.37.83",
+    "discord-api-types": "^0.37.85",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
     "node-cron": "^3.0.3"
