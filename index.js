@@ -1,10 +1,10 @@
-const {
+import {
   Client,
   GatewayIntentBits,
   Collection,
   Partials,
   EmbedBuilder,
-} = require("discord.js");
+} from "discord.js";
 
 const client = new Client({
   intents: [
@@ -33,6 +33,7 @@ client.func = functions;
 client.fs = fs;
 
 const cmdH = require(`./system/command.js`);
+client.commands = new Collection(); // Add this line to define the client.commands object
 cmdH.handling(client, fs, Collection, config);
 // イベントハンドリング
 const eventFiles = fs
@@ -112,7 +113,7 @@ client.on("interactionCreate", async (i) => {
       .setDescription("```\n" + error + "\n```")
       .setColor(config.color.e)
       .setTimestamp();
-    client.channels.fetch(config.logch.error).then({ embeds: [logEmbed] });
+    client.channels.fetch(config.logch.error).then((c) => c.send({ embeds: [logEmbed] }));
     const iEmbed = new EmbedBuilder()
       .setTitle("すみません、エラーが発生しました...")
       .setDescription("```\n" + error + "\n```")

@@ -40,7 +40,7 @@ module.exports = {
         client.user.setStatus(logFile.status);
       }
     } else {
-      client.shard.fetchClientValues("guilds.cache.size").then((result) => {
+      client.guilds.cache.size("guilds.cache.size").then((result) => {
         client.user.setActivity(`Servers: ${result}`);
       });
       //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
