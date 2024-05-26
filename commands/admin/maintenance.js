@@ -103,9 +103,7 @@ module.exports = {
         );
         return `{ onoff:"on",status: "${status}", statusDesc: "${statusDescription}", type: "${activityType}" }`;
       } else {
-        client.guilds.cache.size("guilds.cache.size").then((result) => {
-          client.user.setActivity(`Servers: ${result}`);
-        });
+        client.user.setActivity(`Servers: ${client.guilds.cache.size}`);
         //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
         client.user.setStatus("online");
         const embed = new Discord.EmbedBuilder()

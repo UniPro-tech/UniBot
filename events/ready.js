@@ -7,7 +7,9 @@ module.exports = {
     const add = require(`../system/add.js`);
 
     add.addCmd(client.conf);
-    console.log(`on:${logFile.onoff},play:${logFile.playing},status:${logFile.status}`);
+    console.log(
+      `on:${logFile.onoff},play:${logFile.playing},status:${logFile.status}`
+    );
     if (logFile.onoff == "on") {
       let activityOpt = {};
       switch (logFile.type) {
@@ -40,9 +42,7 @@ module.exports = {
         client.user.setStatus(logFile.status);
       }
     } else {
-      client.guilds.cache.size("guilds.cache.size").then((result) => {
-        client.user.setActivity(`Servers: ${result}`);
-      });
+      client.user.setActivity(`Servers: ${client.guilds.cache.size}`);
       //client.ws = { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } };
       client.user.setStatus("online");
     }
