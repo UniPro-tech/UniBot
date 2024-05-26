@@ -1,10 +1,10 @@
-import {
+const {
   Client,
   GatewayIntentBits,
   Collection,
   Partials,
   EmbedBuilder,
-} from "discord.js";
+} = require("discord.js");
 
 const client = new Client({
   intents: [
@@ -113,7 +113,9 @@ client.on("interactionCreate", async (i) => {
       .setDescription("```\n" + error + "\n```")
       .setColor(config.color.e)
       .setTimestamp();
-    client.channels.fetch(config.logch.error).then((c) => c.send({ embeds: [logEmbed] }));
+    client.channels
+      .fetch(config.logch.error)
+      .then((c) => c.send({ embeds: [logEmbed] }));
     const iEmbed = new EmbedBuilder()
       .setTitle("すみません、エラーが発生しました...")
       .setDescription("```\n" + error + "\n```")
