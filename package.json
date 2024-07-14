@@ -11,6 +11,7 @@
   "dependencies": {
     "@discordjs/rest": "^2.2.0",
     "@discordjs/voice": "^0.17.0",
+    "axios": "^1.7.2",
     "child_process": "^1.0.2",
     "discord-api-types": "^0.37.90",
     "discord.js": "^14.15.3",
