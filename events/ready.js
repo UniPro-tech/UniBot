@@ -7,10 +7,8 @@ module.exports = {
     const add = require(`../system/add.js`);
 
     add.addCmd(client.conf);
-    console.log(
-      `on:${logFile.onoff},play:${logFile.playing},status:${logFile.status}`
-    );
-    if (logFile.onoff == "on") {
+    console.log(`on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
+    if (logFile?.onoff == "on") {
       let activityOpt = {};
       switch (logFile.type) {
         case "WATCHING":
@@ -49,9 +47,7 @@ module.exports = {
     const channel = client.channels.cache.get(client.conf.logch.ready);
     channel.send("Discordログインしました!");
     console.log(
-      `[${client.func.timeToJST(Date.now(), true)}] Logged in as ${
-        client.user.tag
-      }!`
+      `[${client.func.timeToJST(Date.now(), true)}] Logged in as ${client.user.tag}!`
     );
   },
 };
