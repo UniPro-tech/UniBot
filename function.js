@@ -1,7 +1,10 @@
-const { URI_base } = require("./config");
 const fs = require("fs");
 
-//タイムスタンプをJSTタイムスタンプに変換
+/**
+ * Converts a timestamp to JST (Japan Standard Time) timestamp.
+ * @param {number} timestamp - The timestamp to convert.
+ * @returns {Date} - The converted JST timestamp.
+ */
 function timeToJSTTimestamp(timestamp) {
   var dt = new Date(); //Date オブジェクトを作成
   var tz = dt.getTimezoneOffset(); //サーバーで設定されているタイムゾーンの世界標準時からの時差（分）
@@ -12,7 +15,12 @@ function timeToJSTTimestamp(timestamp) {
 }
 exports.timeToJSTTimestamp = timeToJSTTimestamp;
 
-//JSTタイムスタンプから日付
+/**
+ * Converts a JST (Japan Standard Time) timestamp to a formatted date string or an object with individual date components.
+ * @param {number} timestamp - The JST timestamp to convert.
+ * @param {boolean} [format=false] - Determines whether to return a formatted date string or an object with individual date components. Default is false.
+ * @returns {string|Object} - The formatted date string or an object with individual date components.
+ */
 exports.timeToJST = function (timestamp, format = false) {
   const dt = timeToJSTTimestamp(timestamp);
   const year = dt.getFullYear();
@@ -38,6 +46,11 @@ exports.timeToJST = function (timestamp, format = false) {
   return return_str;
 };
 
+/**
+ * Reads a log file for a specific directory.
+ * @param {string} api_name - The name of the path.
+ * @returns {Promise<Object>} - The parsed log data.
+ */
 exports.readLog = async (api_name) => {
   const URI = `./log/${api_name}/`;
   try {
@@ -49,6 +62,11 @@ exports.readLog = async (api_name) => {
   }
 };
 
+/**
+ * Writs a log file for a specific directory.
+ * @param {string} api_name - The name of the path.
+ * @returns {Promise<Object>} - The parsed log data.
+ */
 exports.loging = async (post_data, api_name) => {
   const URI = `./log/${api_name}/`;
   try {
@@ -57,12 +75,10 @@ exports.loging = async (post_data, api_name) => {
     }
     const data = JSON.stringify(post_data);
     await fs.writeFile(`${URI}.log`, data, (err) => {
-      // 書き出しに失敗した場合
       if (err) {
         console.log("エラーが発生しました。" + err);
         throw err;
       }
-      // 書き出しに成功した場合
       else {
         console.log("ファイルが正常に書き出しされました");
       }

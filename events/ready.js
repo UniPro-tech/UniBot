@@ -4,7 +4,7 @@ module.exports = {
   async execute(client) {
     const logFile = await client.func.readLog("v1/conf/status");
     console.log(logFile);
-    const add = require(`../system/add.js`);
+    const add = require(`../system/commandRegister`);
 
     add.addCmd(client.conf);
     console.log(`on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
