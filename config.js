@@ -1,5 +1,3 @@
-const dotenv = require('dotenv');
-dotenv.config();
 module.exports = {
   author: {
     name: process.env.AUTHOR_NAME,
