@@ -26,13 +26,13 @@ const client = new Client({
 const fs = require("fs");
 
 const config = require("./config.js");
-const functions = require("./function.js");
+const functions = { timeUtils: require("./lib/timeUtils.js"),logUtils: require("./lib/logUtils.js") };
 
 client.conf = config;
 client.func = functions;
 client.fs = fs;
 
-const cmdH = require(`./system/command.js`);
+const cmdH = require(`./lib/commandUtils.js`);
 client.commands = new Collection(); // Add this line to define the client.commands object
 cmdH.handling(client, fs, Collection, config);
 // イベントハンドリング
@@ -46,7 +46,7 @@ for (const file of eventFiles) {
       client.once(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${yuika.timeToJST(Date.now(), true)}]\u001b[0m\n`,
+        `\u001b[31m[${functions.timeUtils.timeToJST(Date.now(), true)}]\u001b[0m\n`,
         error
       );
     }
@@ -55,7 +55,7 @@ for (const file of eventFiles) {
       client.on(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${yuika.timeToJST(Date.now(), true)}]\u001b[0m\n`,
+        `\u001b[31m[${functions.timeUtils.timeToJST(Date.now(), true)}]\u001b[0m\n`,
         error
       );
     }
@@ -66,7 +66,7 @@ client.login(config.token);
 
 // エラー処理 (これ入れないとエラーで落ちる。本当は良くないかもしれない)
 process.on("uncaughtException", (error) => {
-  console.error(`[${functions.timeToJST(Date.now(), true)}] ${error.stack}`);
+  console.error(`[${functions.timeUtils.timeToJST(Date.now(), true)}] ${error.stack}`);
   const embed = new EmbedBuilder()
     .setTitle("ERROR - uncaughtException")
     .setDescription("```\n" + error.stack + "\n```")
@@ -79,7 +79,7 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error(
-    `\u001b[31m[${functions.timeToJST(Date.now(), true)}] ${reason}\u001b[0m\n`,
+    `\u001b[31m[${functions.timeUtils.timeToJST(Date.now(), true)}] ${reason}\u001b[0m\n`,
     promise
   );
   const embed = new EmbedBuilder()

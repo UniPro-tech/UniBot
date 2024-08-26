@@ -2,9 +2,9 @@ const Discord = require("discord.js");
 module.exports = {
   name: "ready", // イベント名
   async execute(client) {
-    const logFile = await client.func.readLog("v1/conf/status");
+    const logFile = await client.func.logUtils.readLog("v1/conf/status");
     console.log(logFile);
-    const add = require(`../system/commandRegister`);
+    const add = require(`../lib/commandUtils.js`);
 
     add.addCmd(client);
     console.log(`on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
@@ -47,7 +47,7 @@ module.exports = {
     const channel = client.channels.cache.get(client.conf.logch.ready);
     channel.send("Discordログインしました!");
     console.log(
-      `[${client.func.timeToJST(Date.now(), true)}] Logged in as ${client.user.tag}!`
+      `[${client.func.timeUtils.timeToJST(Date.now(), true)}] Logged in as ${client.user.tag}!`
     );
   },
 };
