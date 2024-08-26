@@ -1,13 +1,4 @@
 module.exports = {
-  author: {
-    name: process.env.AUTHOR_NAME,
-    url: process.env.AUTHOR_URL,
-    iconURL: process.env.AUTHOR_ICON_URL,
-  },
-  description: process.env.DESCRIPTION,
-  version: process.env.npm_package_version,
-  productname: process.env.PRODUCTNAME,
-  clientId: process.env.ID,
   adminRoleId: process.env.ADOMIN,
   color: {
     s: 0x1bff49,
@@ -18,11 +9,10 @@ module.exports = {
     testGuild: process.env.ADMIN_GUILD,
   },
   logch: {
-    ready: process.env.LOG_READY_ID,
-    command: process.env.LOG_COMMAND_ID,
+    ready: process.env.LOG_SUCCESS_ID,
+    command: process.env.LOG_SUCCESS_ID,
     error: process.env.LOG_ERROR_ID,
-    guildCreate: process.env.LOG_GUILD_JOIN_ID,
-    guildDelete: process.env.LOG_GUID_LEAVE_ID,
+    guildCreate: process.env.LOG_GUILD_ID,
+    guildDelete: process.env.LOG_GUID_ID,
   },
-  URI_base: process.env.URI_BASE,
 };

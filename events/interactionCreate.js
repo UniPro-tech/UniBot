@@ -55,7 +55,7 @@ module.exports = {
                 const logEmbed = new EmbedBuilder()
                     .setTitle("ERROR - cmd")
                     .setDescription("```\n" + error.toString() + "\n```")
-                    .setColor(interaction.conf.color.e)
+                    .setColor(client.conf.color.e)
                     .setTimestamp();
 
                 const channel = await GetErrorChannel(interaction);
