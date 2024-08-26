@@ -14,12 +14,12 @@ spec:
       containers:
       - name: unibot
         image: localhost:32000/unibot:3.0.0-2
-      envFrom:
-      - secretRef:
-          name: unibot-env
-      volumeMounts:
-      - name: log
-        mountPath: /app/log
+        envFrom:
+        - secretRef:
+            name: unibot-env
+        volumeMounts:
+        - name: log
+          mountPath: /app/log
       volumes:
       - name: log
         persistentVolumeClaim:
