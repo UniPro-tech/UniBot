@@ -1,18 +1,11 @@
 //It is Exsample!!
 module.exports = {
-  author: {
-    name: "UR name",
-    url: "UR url",
-    iconURL: "UR icon",
-  },
-  version: "v1.0.0",
-  productname: "UR product name",
+  adminRoleId: "Admin Role ID",
   color: {
     s: 0x1bff49,
     e: 0xff0000,
   },
   token: "Your token",
-
   dev: {
     testGuild: "Guild ID",
   },

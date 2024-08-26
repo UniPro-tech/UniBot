@@ -1,12 +1,4 @@
 module.exports = {
-  author: {
-    name: process.env.AUTHOR_NAME,
-    url: process.env.AUTHOR_URL,
-    iconURL: process.env.AUTHOR_ICON_URL,
-  },
-  description: process.env.npm_package_description,
-  version: process.env.npm_package_version,
-  productname: process.env.npm_package_name,
   adminRoleId: process.env.ADOMIN,
   color: {
     s: 0x1bff49,
