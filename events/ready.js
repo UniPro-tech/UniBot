@@ -6,7 +6,7 @@ module.exports = {
     console.log(logFile);
     const add = require(`../system/commandRegister`);
 
-    add.addCmd(client.conf);
+    add.addCmd(client);
     console.log(`on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
     if (logFile?.onoff == "on") {
       let activityOpt = {};

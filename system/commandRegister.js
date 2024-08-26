@@ -1,13 +1,17 @@
 const { REST } = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");
+const { Client } = require("discord.js");
 const fs = require("fs");
 
 module.exports = {
-  async addCmd(config) {
+  /**
+   * @param {Client} client
+   */
+  async addCmd(client) {
+    const config = client.config;
     const token = config.token;
     const rest = new REST({ version: "9" }).setToken(token);
 
-    const clientId = config.clientId;
     const testGuild = config.dev.testGuild;
 
     let command_int = 0;
@@ -29,11 +33,14 @@ module.exports = {
 
     async function putToDiscord(array, guild = false) {
       if (guild) {
-        await rest.put(Routes.applicationGuildCommands(clientId, guild), {
-          body: array,
-        });
+        await rest.put(
+          Routes.applicationGuildCommands(client.application.id, guild),
+          {
+            body: array,
+          }
+        );
       } else {
-        await rest.put(Routes.applicationCommands(clientId), { body: array });
+        await rest.put(Routes.applicationCommands(client.application.id), { body: array });
       }
     }
 
