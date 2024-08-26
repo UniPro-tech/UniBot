@@ -1,13 +1,21 @@
 const Discord = require("discord.js");
 module.exports = {
   name: "ready", // イベント名
+  /**
+   * Event handler for the "ready" event.
+   *
+   * @param {Discord.Client} client - The Discord client object.
+   * @returns {Promise<void>} - A promise that resolves when the execution is complete.
+   */
   async execute(client) {
     const logFile = await client.func.logUtils.readLog("v1/conf/status");
     console.log(logFile);
     const add = require(`../lib/commandUtils.js`);
 
     add.addCmd(client);
-    console.log(`on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
+    console.log(
+      `on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`
+    );
     if (logFile?.onoff == "on") {
       let activityOpt = {};
       switch (logFile.type) {
@@ -45,9 +53,13 @@ module.exports = {
       client.user.setStatus("online");
     }
     const channel = client.channels.cache.get(client.conf.logch.ready);
-    channel.send("Discordログインしました!");
+    if (channel) {
+      channel.send("Discordログインしました!");
+    }
     console.log(
-      `[${client.func.timeUtils.timeToJST(Date.now(), true)}] Logged in as ${client.user.tag}!`
+      `[${client.func.timeUtils.timeToJST(Date.now(), true)}] Logged in as ${
+        client.user.tag
+      }!`
     );
   },
 };
