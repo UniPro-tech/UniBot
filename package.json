@@ -1,6 +1,6 @@
 {
   "name": "unibot",
-  "version": "3.0.0-1",
+  "version": "3.0.0-2",
   "description": "The Discord Bot made by UniProject.",
   "main": "index.js",
   "scripts": {
@@ -12,10 +12,14 @@
   },
   "bugs": {
     "url": "https://github.com/UniPro-tech/UniBot/issues",
-    "email" : "yuito@mail.uniproject-tech.net"
+    "email": "yuito@mail.uniproject-tech.net"
   },
   "contributors": [
-    { "name": "YuitoAkatsuki", "email": "yuito@mail.uniproject-tech.net", "url": "https://github.com/yuito-it" }
+    {
+      "name": "YuitoAkatsuki",
+      "email": "yuito@mail.uniproject-tech.net",
+      "url": "https://github.com/yuito-it"
+    }
   ],
   "license": "MIT",
   "dependencies": {
