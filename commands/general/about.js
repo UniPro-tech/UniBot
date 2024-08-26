@@ -36,7 +36,7 @@ module.exports = {
     if (package_data.contributors) { 
       let temp = new Array();
       for(let i = 0; i < package_data.contributors.length; i++) {
-        temp[i] = `[${ package_data.contributors[i].name + package_data.contributors[i].email }](${ package_data.contributors[i].url })`;
+        temp[i] = `[${ package_data.contributors[i].name} <${package_data.contributors[i].email }>](${ package_data.contributors[i].url })`;
       }
       embed.addFields({name: "Contributors", value: temp.join("\n")});
     }
