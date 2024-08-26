@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, Activity } = require("discord.js");
 const Discord = require("discord.js");
 module.exports = {
-  guildOnly: false, // サーバー専用コマンドかどうか
+  guildOnly: false,
   adminGuildOnly: true,
-  data: new SlashCommandBuilder() // スラッシュコマンド登録のため
+  data: new SlashCommandBuilder()
     .setName("maintenance")
     .setDescription("メンテモード")
     .addStringOption((option) =>
@@ -92,7 +92,7 @@ module.exports = {
           .setTimestamp();
 
         i.reply({ embeds: [embed] });
-        client.func.loging(
+        client.func.logUtils.loging(
           {
             onoff: "on",
             status: status,
@@ -112,7 +112,7 @@ module.exports = {
           .setTimestamp();
 
         i.reply({ embeds: [embed] });
-        client.func.loging({ onoff: "off" }, "v1/conf/status");
+        client.func.logUtils.loging({ onoff: "off" }, "v1/conf/status");
         return `{ onoff:"off"}`;
       }
     } catch (e) {
