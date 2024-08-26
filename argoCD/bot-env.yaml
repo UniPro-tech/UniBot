@@ -1,0 +1,16 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: unibot-env
+  namespace: unibot
+spec:
+  encryptedData:
+    DISCORD_TOKEN: AgAmJvInlHsHiAq/jerXP8JTq+q3c6XexnlcImxtCI3K7er/2K8GmH/dSTTm3zgdw8QWhyduzvhXwpXVkD1g6qad4mxOqskcyMV6N9p9U5lA6k1iVAtIe7PqZScEYR2TB7PpuCIVLsRxlgiCep1beOVbeznEZEWlKQtTvopbdV3G34p0+UXfJnBknXTiMwV6iM76x3j1HgDSOFvuBMl8CQnXkiOj2rzqDoo68BMMf6qOC2DegfPcBfm9FfgKTDNmt1Vc9p51kqBFTkMNSlHqhTqhHYIw979trbnfs3uDiEBBZkvA6U0aspTRadCqFcP4FUb/FQi9VAb+1nWf2aw7GPsARv0ZUbfpZ9pfeBssFBChlrN8cQqQoBj/TzF251D7kyOSjbjMbykA0l3ogAo9w3dRDZUtzBgbwe9ewWd+gS1Dz4g8LaEZRQhE9eSRmg2OD19i8lqLhBMaceWF3BNUU38Wh0kM5O2Nd5RIbdiNE9+LxSuCmkU9MSh/G0DrdTpKJ0etvGAbzQPnIofYBQCDBubFIQOX9m3c9BIxCak3g2uF4RWo9Op+ecoB7bLhvdaFkAs1RmWn9H7goKeQmh160hQ8NsufdfsFvlJwSI/MipudJ1jr+4J6fWCaRmaw6eOjpN6A7Qk2cttL+9Z6clBY6rFuiik2Pe2gHgtncgbTRXhx1onHoCF360l/RbWl2AbkPPUmCUW4DvdKA2G6erpQ6ur2XuForMG8NX9Ch8Njk3Sr7PW9pFI7JRWmtUB5aGlusfmw4pl05MmSDijwnLIs/KoRUaEjXN1iu10=
+  template:
+    metadata:
+      creationTimestamp: null
+      name: unibot-env
+      namespace: unibot
+    type: Opaque
