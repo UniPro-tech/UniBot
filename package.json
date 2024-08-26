@@ -1,5 +1,5 @@
 {
-  "name": "untitledbot",
+  "name": "unibot",
   "version": "2.2.2",
   "description": "The Discord Bot made by UniProject.",
   "main": "index.js",
@@ -16,6 +16,7 @@
     "discord-api-types": "^0.37.90",
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",
+    "install": "^0.13.0",
     "node-cron": "^3.0.3"
   }
 }
