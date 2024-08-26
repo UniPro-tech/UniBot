@@ -17,6 +17,7 @@ spec:
       envFrom:
       - secretRef:
           name: unibot-env
+          optional: true
       volumeMounts:
       - name: log
         mountPath: /app/log
