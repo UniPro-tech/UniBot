@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, Activity } = require("discord.js");
+const { ActivityType } = require("discord-api-types/v9");
 const Discord = require("discord.js");
 module.exports = {
   guildOnly: false,
@@ -42,7 +43,7 @@ module.exports = {
           { name: "オフ", value: "off" }
         )
     ),
-  
+
   /**
    * Executes the maintenance command.
    *
@@ -59,31 +60,36 @@ module.exports = {
         const status = i.options.getString("status");
         const statusDescription = i.options.getString("statusdiscription");
         const activityType = i.options.getString("activitytype");
-        let activityOpt = { type: null };
+        let activityOpt = { type: null, name: statusDescription };
         switch (activityType) {
           case "WATCHING":
-            activityOpt.type = Activity.Watching;
+            activityOpt.type = ActivityType.Watching;
             break;
 
           case "COMPETING":
-            activityOpt.type = Activity.Competing;
+            activityOpt.type = ActivityType.Competing;
             break;
 
           case "LISTENING":
-            activityOpt.type = Activity.Listening;
+            activityOpt.type = ActivityType.Listening;
             break;
 
           case "STREAMING":
-            activityOpt.type = Activity.Streaming;
+            activityOpt.type = ActivityType.Streaming;
+            activityOpt.url = statusDescription;
+            activityOpt.name = "Youtube";
             break;
 
           case "CUSTOM":
-            activityOpt.type = Activity.Custom;
+            activityOpt.type = ActivityType.Custom;
+            console.log("custom");
+            break;
 
           default:
-            activityOpt.type = Activity.Playing;
+            activityOpt.type = ActivityType.Playing;
             break;
         }
+        console.log(activityOpt.type);
         /*
                 if (status == 'Discord Android') {
                     client.ws = { properties: { "$os": "Untitled OS", "$browser": "Discord Android", "$device": "Replit Container" } };
@@ -92,7 +98,7 @@ module.exports = {
         //    client.ws = () => { return { properties: { "$os": "Untitled OS", "$browser": "Untitled Browser", "$device": "Replit Container" } }; }
         //}
 
-        client.user.setActivity(statusDescription, activityOpt);
+        client.user.setActivity(activityOpt);
         client.user.setStatus(status);
 
         const embed = new Discord.EmbedBuilder()
