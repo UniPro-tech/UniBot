@@ -1,10 +1,9 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandSubcommandBuilder } = require("discord.js");
 const { ActivityType } = require("discord-api-types/v9");
 const Discord = require("discord.js");
+const config = require("../../../config");
 module.exports = {
-  guildOnly: false,
-  adminGuildOnly: true,
-  data: new SlashCommandBuilder()
+  data: new SlashCommandSubcommandBuilder()
     .setName("setstatus")
     .setDescription("メンテモード")
     .addStringOption((option) =>
@@ -43,7 +42,6 @@ module.exports = {
           { name: "オフ", value: "off" }
         )
     ),
-
   /**
    * Executes the maintenance command.
    *
@@ -53,7 +51,7 @@ module.exports = {
    * @throws {Error} - If an error occurs during execution.
    */
   async execute(i) {
-    if (!i.member.roles.cache.has(conf.adminRoleId)) {
+    if (!i.member.roles.cache.has(config.adminRoleId)) {
       i.reply("権限がありません");
       return;
     }
@@ -86,14 +84,12 @@ module.exports = {
 
           case "CUSTOM":
             activityOpt.type = ActivityType.Custom;
-            console.log("custom");
             break;
 
           default:
             activityOpt.type = ActivityType.Playing;
             break;
         }
-        console.log(activityOpt.type);
         /*
                 if (status == 'Discord Android') {
                     client.ws = { properties: { "$os": "Untitled OS", "$browser": "Discord Android", "$device": "Replit Container" } };

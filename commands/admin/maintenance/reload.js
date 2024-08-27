@@ -1,12 +1,11 @@
-const { SlashCommandBuilder } = require("discord.js");
-const conf = require("../../config.js");
-const { addCmd, handling } = require("../../lib/commandUtils.js");
+const { SlashCommandSubcommandBuilder } = require("discord.js");
+const conf = require(`${process.cwd()}/config.js`);
+const { addCmd, handling } = require(`${process.cwd()}/lib/commandUtils.js`);
 
 module.exports = {
-  data: new SlashCommandBuilder()
+  data: new SlashCommandSubcommandBuilder()
     .setName("reload")
     .setDescription("Reloads a command."),
-  adminGuildOnly: true,
   /**
    * Executes the reload command.
    *
