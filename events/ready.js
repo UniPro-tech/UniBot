@@ -9,7 +9,6 @@ module.exports = {
    */
   async execute(client) {
     const logFile = await client.func.logUtils.readLog("v1/conf/status");
-    console.log(logFile);
     const add = require(`../lib/commandUtils.js`);
 
     add.addCmd(client);
