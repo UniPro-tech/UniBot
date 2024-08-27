@@ -53,6 +53,10 @@ module.exports = {
    * @throws {Error} - If an error occurs during execution.
    */
   async execute(i) {
+    if (!i.member.roles.cache.has(conf.adminRoleId)) {
+      i.reply("権限がありません");
+      return;
+    }
     const client = i.client;
     try {
       const onoff = i.options.getString("enable");
