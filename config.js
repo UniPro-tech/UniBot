@@ -1,5 +1,5 @@
 module.exports = {
-  adminRoleId: process.env.ADOMIN,
+  adminRoleId: process.env.ROLE_ADMIN,
   color: {
     s: 0x1bff49,
     e: 0xff0000,

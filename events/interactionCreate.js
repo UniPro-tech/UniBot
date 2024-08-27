@@ -1,4 +1,6 @@
 const { Events, EmbedBuilder } = require("discord.js");
+const config = require("../config");
+const { GetLogChannel, GetErrorChannel } = require(`../lib/channelUtils`);
 
 module.exports = {
     name: Events.InteractionCreate,
@@ -26,7 +28,7 @@ module.exports = {
                 const logEmbed = new EmbedBuilder()
                     .setTitle("コマンド実行ログ")
                     .setDescription(`${interaction.user} がコマンドを実行しました。`)
-                    .setColor(interaction.client.conf.color.s)
+                    .setColor(config.color.s)
                     .setTimestamp()
                     .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
                     .addFields([
@@ -55,7 +57,7 @@ module.exports = {
                 const logEmbed = new EmbedBuilder()
                     .setTitle("ERROR - cmd")
                     .setDescription("```\n" + error.toString() + "\n```")
-                    .setColor(client.conf.color.e)
+                    .setColor(config.color.e)
                     .setTimestamp();
 
                 const channel = await GetErrorChannel(interaction);
@@ -65,7 +67,7 @@ module.exports = {
                 const messageEmbed = new EmbedBuilder()
                     .setTitle("すみません、エラーが発生しました...")
                     .setDescription("```\n" + error + "\n```")
-                    .setColor(interaction.conf.color.e)
+                    .setColor(config.color.e)
                     .setTimestamp();
 
                 await interaction.reply(messageEmbed);
@@ -76,14 +78,4 @@ module.exports = {
             }
         }
     }
-};
-
-const GetLogChannel = async (interaction) => {
-    const channel = await interaction.client.channels.fetch(interaction.client.conf.logch.command).catch((error) => null);
-    return channel;
-};
-
-const GetErrorChannel = async (interaction) => {
-    const channel = await interaction.client.channels.fetch(interaction.client.conf.logch.error).catch((error) => null);
-    return channel;
 };
