@@ -13,14 +13,14 @@ module.exports = {
     async execute(interaction) {
         if (interaction.isChatInputCommand()) {
             console.log(
-              `[${client.func.timeUtils.timeToJST(Date.now(), true)} info] ->${
+              `[${interaction.client.func.timeUtils.timeToJST(Date.now(), true)} info] ->${
                 interaction.commandName
               }`
             );
             const command = interaction.client.commands.get(interaction.commandName);
             if (!command) {
                 console.log(
-                  `[${client.func.timeUtils.timeToJST(
+                  `[${interaction.client.func.timeUtils.timeToJST(
                     Date.now(),
                     true
                   )} info] Not Found: ${interaction.commandName}`
@@ -34,7 +34,7 @@ module.exports = {
                     .setColor(interaction.client.config.color.e);
                 interaction.reply({ embeds: [embed] });
                 console.log(
-                  `[${client.func.timeUtils.timeToJST(Date.now(), true)} info] DM Only: ${interaction.commandName}`
+                  `[${interaction.client.func.timeUtils.timeToJST(Date.now(), true)} info] DM Only: ${interaction.commandName}`
                 );
                 return;
             }
@@ -42,7 +42,7 @@ module.exports = {
             try {
                 await command.execute(interaction);
                 console.log(
-                  `[${client.func.timeUtils.timeToJST(Date.now(), true)} run] ${
+                  `[${interaction.client.func.timeUtils.timeToJST(Date.now(), true)} run] ${
                     interaction.commandName
                   }`
                 );
@@ -76,7 +76,7 @@ module.exports = {
                 }
             } catch (error) {
                 console.error(
-                  `[${client.func.timeUtils.timeToJST(
+                  `[${interaction.client.func.timeUtils.timeToJST(
                     Date.now(),
                     true
                   )} error]An Error Occured in ${
