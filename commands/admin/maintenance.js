@@ -42,8 +42,17 @@ module.exports = {
           { name: "オフ", value: "off" }
         )
     ),
-
-  async execute(i, client, command) {
+  
+  /**
+   * Executes the maintenance command.
+   *
+   * @param {Interaction} i - The interaction object.
+   * @param {Client} client - The Discord client object.
+   * @returns {string} - The result of the execution.
+   * @throws {Error} - If an error occurs during execution.
+   */
+  async execute(i) {
+    const client = i.client;
     try {
       const onoff = i.options.getString("enable");
       if (onoff == "on") {
