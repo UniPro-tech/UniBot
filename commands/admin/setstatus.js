@@ -5,12 +5,12 @@ module.exports = {
   guildOnly: false,
   adminGuildOnly: true,
   data: new SlashCommandBuilder()
-    .setName("maintenance")
+    .setName("setstatus")
     .setDescription("メンテモード")
     .addStringOption((option) =>
       option
         .setName("statusdiscription")
-        .setDescription("プレイ中に表示するやつ(Stream、WatchingはURLでもok)")
+        .setDescription("プレイ中に表示するやつ(StreamはURLでもok)")
     )
     .addStringOption((option) =>
       option.setName("status").setDescription("すてーたす").setChoices(
