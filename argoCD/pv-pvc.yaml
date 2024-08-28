@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: unibot-log
+  name: unibot-logs
 spec:
   capacity:
     storage: 5Gi
@@ -9,16 +9,16 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    path: /nfs/unibot/logs
+    path: /nfs/infra/unibot/logs
     server: 172.16.110.199
   claimRef:
     namespace: unibot
-    name: log
+    name: logs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: log
+  name: logs
   labels:
     app: unibot
 spec:
@@ -27,4 +27,4 @@ spec:
       storage: 5Gi
   accessModes:
     - ReadWriteMany
-  volumeName: unibot-log
+  volumeName: unibot-logs
