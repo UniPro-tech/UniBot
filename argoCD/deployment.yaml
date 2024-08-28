@@ -23,4 +23,4 @@ spec:
       volumes:
       - name: log
         persistentVolumeClaim:
-          claimName: log
+          claimName: logs
