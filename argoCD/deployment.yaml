@@ -20,6 +20,9 @@ spec:
         volumeMounts:
         - name: log
           mountPath: /app/log
+        env:
+          - name: TZ
+            value: Asia/Tokyo
       volumes:
       - name: log
         persistentVolumeClaim:
