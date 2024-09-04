@@ -28,7 +28,7 @@
     "axios": "^1.7.7",
     "child_process": "^1.0.2",
     "discord-api-types": "^0.37.98",
-    "discord.js": "^14.15.3",
+    "discord.js": "^14.16.1",
     "dotenv": "^16.4.5",
     "install": "^0.13.0",
     "node-cron": "^3.0.3"
