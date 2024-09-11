@@ -10,7 +10,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   nfs:
     path: /nfs/infra/unibot/logs
-    server: 172.16.110.199
+    server: nfs.unipro.infra
   claimRef:
     namespace: unibot
     name: logs
