@@ -32,6 +32,12 @@ module.exports = {
 
         case "STREAMING":
           activityOpt.type = Discord.ActivityType.Streaming;
+          activityOpt.url = statusDescription;
+          activityOpt.name = "Youtube";
+          break;
+
+        case "CUSTOM":
+          activityOpt.type = ActivityType.Custom;
           break;
 
         default:
