@@ -1,6 +1,6 @@
 {
   "name": "unibot",
-  "version": "3.2.5",
+  "version": "3.2.6",
   "description": "The Discord Bot made by UniProject.",
   "main": "index.js",
   "scripts": {
