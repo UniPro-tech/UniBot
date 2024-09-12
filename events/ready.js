@@ -37,7 +37,7 @@ module.exports = {
           break;
 
         case "CUSTOM":
-          activityOpt.type = ActivityType.Custom;
+          activityOpt.type = Discord.ActivityType.Custom;
           break;
 
         default:
