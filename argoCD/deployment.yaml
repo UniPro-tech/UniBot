@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: unibot
-        image: localhost:32000/unibot:3.2.6
+        image: localhost:32000/unibot:3.2.7
         envFrom:
         - secretRef:
             name: unibot-env
