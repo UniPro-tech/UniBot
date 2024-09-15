@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const Discord = require("discord.js");
+const config = require("../../config");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -16,7 +17,7 @@ module.exports = {
         .setTitle(`${user.username}'s Avatar`)
         .setDescription(`URL:${user.displayAvatarURL({ dynamic: true })}`)
         .setImage(user.displayAvatarURL({ dynamic: true }))
-        .setColor(client.conf.color.s)
+        .setColor(config.color.s)
         .setTimestamp();
       i.reply({ embeds: [embed] });
     }
@@ -25,7 +26,7 @@ module.exports = {
         .setTitle(`Your Avatar`)
         .setDescription(`URL:${i.user.displayAvatarURL({ dynamic: true })}`)
         .setImage(`${i.user.displayAvatarURL({ dynamic: true })}`)
-        .setColor(client.conf.color.s)
+        .setColor(config.color.s)
         .setTimestamp();
       i.reply({ embeds: [embed] });
     }
