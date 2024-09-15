@@ -15,8 +15,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Extract tag name
-        run: |
-          tagname=${GITHUB_REF#refs/*/} && echo "TAG_NAME=${tagname#v}" >> $GITHUB_ENV
+        run: tagname=${GITHUB_REF#refs/*/} && echo "TAG_NAME=${tagname#v}" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: docker build -t ${{ secrets.K8S_DOCKER_REGISTHOST }}/unibot:${{ env.TAG_NAME }} .
@@ -45,8 +44,7 @@ jobs:
           path: .
 
       - name: Extract tag name
-        run: |
-          tagname=${GITHUB_REF#refs/*/} && echo "TAG_NAME=${tagname#v}" >> $GITHUB_ENV
+        run: tagname=${GITHUB_REF#refs/*/} && echo "TAG_NAME=${tagname#v}" >> $GITHUB_ENV
 
       - name: Load Docker image from file
         run: docker load -i image-file.tar
