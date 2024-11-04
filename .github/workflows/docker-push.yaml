@@ -27,6 +27,7 @@ jobs:
         with:
           name: container-image
           path: image-file.tar
+          retention-days: 1
 
   push:
     runs-on: ubuntu-latest
