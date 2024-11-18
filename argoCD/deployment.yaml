@@ -12,18 +12,20 @@ spec:
         app: unibot
     spec:
       containers:
-      - name: unibot
-        image: registry.uniproject-tech.net/unibot:3.2.12
-        envFrom:
-        - secretRef:
-            name: unibot-env
-        volumeMounts:
-        - name: log
-          mountPath: /app/log
-        env:
-          - name: TZ
-            value: Asia/Tokyo
+        - name: unibot
+          image: registry.uniproject-tech.net/unibot:3.2.13
+          envFrom:
+            - secretRef:
+                name: unibot-env
+          volumeMounts:
+            - name: log
+              mountPath: /app/log
+          env:
+            - name: TZ
+              value: Asia/Tokyo
       volumes:
-      - name: log
-        persistentVolumeClaim:
-          claimName: logs
+        - name: log
+          persistentVolumeClaim:
+            claimName: logs
+      imagePullSecrets:
+        - name: harbor-registry-secret
