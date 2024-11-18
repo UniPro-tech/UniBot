@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: unibot
-          image: registry.uniproject-tech.net/unibot:3.2.13
+          image: registry.uniproject-tech.net/unibot/unibot:3.2.13
           envFrom:
             - secretRef:
                 name: unibot-env
