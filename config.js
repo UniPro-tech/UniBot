@@ -1,4 +1,4 @@
-(require('dotenv')).config();
+//(require('dotenv')).config();
 module.exports = {
   adminRoleId: process.env.ROLE_ADMIN,
   color: {
