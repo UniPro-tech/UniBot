@@ -4,7 +4,6 @@ const { GetLogChannel, GetErrorChannel } = require("../../lib/channelUtils");
 
 module.exports = {
   guildOnly: true,
-  adminGuildOnly: true,
   handlingCommands: subCommandHandling("admin/feed"),
   data: addSubCommand(
     "admin/feed",
@@ -12,20 +11,7 @@ module.exports = {
       .setName("feed")
       .setDescription("RSS feed/atom feed Utilities")
   ),
-  /*data: new SlashCommandBuilder()
-    .setName("feed")
-    .setDescription("Regist RSS feed")
-    .addStringOption((option) =>
-      option.setName("url").setDescription("URL of RSS feed").setRequired(true)
-    ),*/
   async execute(interaction) {
-    if (interaction.member.permissions.has("ADMINISTRATOR") === false) {
-      interaction.reply({
-        content: "You don't have permission to use this command.",
-        ephemeral: true,
-      });
-      return "No permission";
-    }
     const command = this.handlingCommands.get(
       interaction.options.getSubcommand()
     );
