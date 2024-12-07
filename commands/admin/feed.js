@@ -1,72 +1,98 @@
-const { SlashCommandBuilder } = require("discord.js");
-const Discord = require("discord.js");
-const logUtils = require("../../lib/logUtils");
-const { rssGet } = require("../../lib/rss.cjs");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { addSubCommand, subCommandHandling } = require("../../lib/commandUtils");
+const { GetLogChannel, GetErrorChannel } = require("../../lib/channelUtils");
 
 module.exports = {
   guildOnly: true,
   adminGuildOnly: true,
-  data: new SlashCommandBuilder()
+  handlingCommands: subCommandHandling("admin/feed"),
+  data: addSubCommand(
+    "admin/feed",
+    new SlashCommandBuilder()
+      .setName("feed")
+      .setDescription("RSS feed/atom feed Utilities")
+  ),
+  /*data: new SlashCommandBuilder()
     .setName("feed")
     .setDescription("Regist RSS feed")
     .addStringOption((option) =>
       option.setName("url").setDescription("URL of RSS feed").setRequired(true)
-    ),
-  /**
-   * Executes the feed command.
-   * @param {CommandInteraction} i - The interaction object.
-   * @returns {Promise<string>} - A promise that resolves when the execution is complete.
-   * @async
-   */
-  async execute(i) {
-    if (i.member.permissions.has("ADMINISTRATOR") === false) {
-      i.reply("You don't have permission to use this command.");
+    ),*/
+  async execute(interaction) {
+    if (interaction.member.permissions.has("ADMINISTRATOR") === false) {
+      interaction.reply({
+        content: "You don't have permission to use this command.",
+        ephemeral: true,
+      });
       return "No permission";
     }
-    const feed = await rssGet(i.options.getString("url"));
-    const embed = new Discord.EmbedBuilder()
-      .setTitle("Registed RSS feed")
-      .addFields([
-        {
-          name: "URL",
-          value: ` ** ${i.options.getString("url")} ** `,
-          inline: true,
-        },
-      ])
-      .setFields({
-        name: "Title",
-        value: ` ** ${feed[0].title} ** `,
-        inline: true,
-      })
-      .setFields({
-        name: "FirstContent",
-        value: ` ** ${feed[0].content} ** `,
-        inline: true,
-      })
-      .setColor(i.client.conf.color.s)
-      .setTimestamp();
-    i.reply({ embeds: [embed] });
-    console.log("OK");
-    try {
-      let log = await logUtils.readLog("v1/feed/" + i.channel.id);
-      if (log) {
-        log.data.push({
-          url: i.options.getString("url"),
-          lastDate: feed[0].pubDate,
-        });
-        await logUtils.loging(log, `v1/feed/${i.channel.id}`);
-      } else {
-        log = {
-          data: [
-            { url: i.options.getString("url"), lastDate: feed[0].pubDate },
-          ],
-        };
-        await logUtils.loging(log, `v1/feed/${i.channel.id}`);
-      }
-    } catch (e) {
-      console.error(e);
+    const command = this.handlingCommands.get(
+      interaction.options.getSubcommand()
+    );
+    await interaction.deferReply();
+    if (!command) {
+      console.log(`[-] Not Found: ${interaction.options.getSubcommand()}`);
+      return;
     }
-    console.log("OK2");
-    return "No data";
+    try {
+      await command.execute(interaction);
+      console.log(`[Run] ${interaction.options.getSubcommand()}`);
+
+      const logEmbed = new EmbedBuilder()
+        .setTitle("サブコマンド実行ログ")
+        .setDescription(`${interaction.user} がサブコマンドを実行しました。`)
+        .setColor(interaction.client.conf.color.s)
+        .setTimestamp()
+        .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
+        .addFields([
+          {
+            name: "サブコマンド",
+            value: `\`\`\`\n/${interaction.options.getSubcommand()}\n\`\`\``,
+          },
+          {
+            name: "実行サーバー",
+            value:
+              "```\n" + interaction.inGuild()
+                ? `${interaction.guild.name} (${interaction.guild.id})`
+                : "DM" + "\n```",
+          },
+          {
+            name: "実行ユーザー",
+            value:
+              "```\n" +
+              `${interaction.user.tag}(${interaction.user.id})` +
+              "\n```",
+          },
+        ])
+        .setFooter({ text: `${interaction.id}` });
+      const channel = await GetLogChannel(interaction);
+      if (channel) {
+        channel.send({ embeds: [logEmbed] });
+      }
+    } catch (error) {
+      console.error(error);
+      const logEmbed = new EmbedBuilder()
+        .setTitle("ERROR - cmd")
+        .setDescription("```\n" + error.toString() + "\n```")
+        .setColor(config.color.e)
+        .setTimestamp();
+
+      const channel = await GetErrorChannel(interaction);
+      if (channel) {
+        channel.send({ embeds: [logEmbed] });
+      }
+      const messageEmbed = new EmbedBuilder()
+        .setTitle("すみません、エラーが発生しました...")
+        .setDescription("```\n" + error + "\n```")
+        .setColor(interaction.conf.color.e)
+        .setTimestamp();
+
+      await interaction.editReply(messageEmbed);
+      const logChannel = await GetLogChannel(interaction);
+      if (logChannel) {
+        logChannel.send({ embeds: [messageEmbed] });
+      }
+    }
+    return;
   },
 };
