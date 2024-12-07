@@ -29,7 +29,7 @@
     "child_process": "^1.0.2",
     "discord-api-types": "^0.37.100",
     "discord.js": "^14.16.2",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "install": "^0.13.0",
     "node-cron": "^3.0.3",
     "rss-parser": "^3.13.0"
