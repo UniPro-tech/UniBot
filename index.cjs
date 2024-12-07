@@ -1,3 +1,5 @@
+const cron = require("node-cron");
+
 const {
   Client,
   GatewayIntentBits,
@@ -16,8 +18,8 @@ const client = new Client({
   partials: [Partials.Channel],
   ws: {
     properties: {
-      $os: "Untitled OS",
-      $browser: "Untitled Browser",
+      $os: "Uni OS",
+      $browser: "Uni Browser",
       $device: "K8s on Proxmox VE 6.4 in Sibainu",
     },
   },
@@ -26,16 +28,18 @@ const client = new Client({
 const fs = require("fs");
 
 const config = require("./config.js");
-const functions = { timeUtils: require("./lib/timeUtils.js"),logUtils: require("./lib/logUtils.js") };
+const functions = {
+  timeUtils: require("./lib/timeUtils.js"),
+  logUtils: require("./lib/logUtils.js"),
+};
 
 client.conf = config;
 client.func = functions;
 client.fs = fs;
 
 const cmdH = require(`./lib/commandUtils.js`);
-client.commands = new Collection(); // Add this line to define the client.commands object
+client.commands = new Collection();
 cmdH.handling(client, fs, Collection, config);
-// イベントハンドリング
 const eventFiles = fs
   .readdirSync("./events")
   .filter((file) => file.endsWith(".js"));
@@ -46,7 +50,10 @@ for (const file of eventFiles) {
       client.once(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${functions.timeUtils.timeToJST(Date.now(), true)}]\u001b[0m\n`,
+        `\u001b[31m[${functions.timeUtils.timeToJST(
+          Date.now(),
+          true
+        )}]\u001b[0m\n`,
         error
       );
     }
@@ -55,18 +62,53 @@ for (const file of eventFiles) {
       client.on(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${functions.timeUtils.timeToJST(Date.now(), true)}]\u001b[0m\n`,
+        `\u001b[31m[${functions.timeUtils.timeToJST(
+          Date.now(),
+          true
+        )}]\u001b[0m\n`,
         error
       );
     }
   }
 }
 
+const { rssGet } = require("./lib/rss.cjs");
+
+cron.schedule("*/1-59 * * * *", async () => {
+  console.log("Cron job start");
+  const files = fs.readdirSync("./log/v1/feed");
+  for (const file of files) {
+    const datas = await JSON.parse(
+      fs.readFileSync(`./log/v1/feed/${file}.log`)
+    ).data;
+    datas.forEach(async (data, index) => {
+      console.log(data.url);
+      const items = await rssGet(data.url);
+      const channel = client.channels.cache.get(file.replace(".log", ""));
+      for (const item of items) {
+        if (item.pubDate <= data.lastDate) continue;
+        console.log("send");
+        const embed = new EmbedBuilder()
+          .setTitle(item.title)
+          .setURL(item.link)
+          .setDescription(item.content)
+          .setColor(config.color.s)
+          .setTimestamp();
+        channel.send({ embeds: [embed] });
+        datas[index].lastDate = items[0].pubDate;
+        functions.logUtils.loging(datas, `v1/feed/${file}`);
+      }
+    });
+  }
+});
+
 client.login(config.token);
 
 // エラー処理 (これ入れないとエラーで落ちる。本当は良くないかもしれない)
 process.on("uncaughtException", (error) => {
-  console.error(`[${functions.timeUtils.timeToJST(Date.now(), true)}] ${error.stack}`);
+  console.error(
+    `[${functions.timeUtils.timeToJST(Date.now(), true)}] ${error.stack}`
+  );
   const embed = new EmbedBuilder()
     .setTitle("ERROR - uncaughtException")
     .setDescription("```\n" + error.stack + "\n```")
@@ -79,7 +121,10 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error(
-    `\u001b[31m[${functions.timeUtils.timeToJST(Date.now(), true)}] ${reason}\u001b[0m\n`,
+    `\u001b[31m[${functions.timeUtils.timeToJST(
+      Date.now(),
+      true
+    )}] ${reason}\u001b[0m\n`,
     promise
   );
   const embed = new EmbedBuilder()
