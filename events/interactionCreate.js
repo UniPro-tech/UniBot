@@ -99,7 +99,7 @@ module.exports = {
                     .setColor(config.color.e)
                     .setTimestamp();
 
-                await interaction.reply(messageEmbed);
+                await interaction.reply({ embeds: [messageEmbed] });
                 const logChannel = await GetLogChannel(interaction);
                 if (logChannel) {
                     logChannel.send({ embeds: [messageEmbed] });
