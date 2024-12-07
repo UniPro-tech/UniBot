@@ -4,9 +4,9 @@ const { GetLogChannel, GetErrorChannel } = require("../../lib/channelUtils");
 
 module.exports = {
   guildOnly: true,
-  handlingCommands: subCommandHandling("admin/feed"),
+  handlingCommands: subCommandHandling("general/feed"),
   data: addSubCommand(
-    "admin/feed",
+    "general/feed",
     new SlashCommandBuilder()
       .setName("feed")
       .setDescription("RSS feed/atom feed Utilities")
