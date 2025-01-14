@@ -18,13 +18,13 @@ jobs:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
-          registry: registry.uniproject-tech.net
+          registry: registry.uniproject.jp
           username: robot$github-publisher
           password: ${{ secrets.HARBOR_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t registry.uniproject-tech.net/unibot/unibot:latest .
+        run: docker build -t registry.uniproject.jp/unibot/unibot:latest .
         id: build
 
       - name: Push Docker image
-        run: docker push registry.uniproject-tech.net/unibot/unibot:latest
+        run: docker push registry.uniproject.jp/unibot/unibot:latest
