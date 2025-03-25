@@ -6,4 +6,4 @@ RUN npm install
 
 COPY . .
 
-CMD [ "npm", "run", "boot" ]
+CMD [ "bun", "run", "index.cjs" ]
