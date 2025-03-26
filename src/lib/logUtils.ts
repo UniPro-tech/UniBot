@@ -1,11 +1,11 @@
-const fs = require("fs");
-const timeUtils = require("./timeUtils.js");
+import fs from "fs";
+import timeUtils from "@/lib/timeUtils";
 /**
  * Writs a log file for a specific directory.
  * @param {string} api_name - The name of the path.
  * @returns {Promise<Object>} - The parsed log data.
  */
-exports.loging = async (post_data, api_name) => {
+export const write = async (post_data: Object, api_name: string) => {
   const URI = `${process.cwd()}/log/${api_name}`;
   try {
     if (!fs.existsSync(URI)) {
@@ -15,7 +15,7 @@ exports.loging = async (post_data, api_name) => {
       await fs.promises.mkdir(URI, { recursive: true });
     }
     const data = JSON.stringify(post_data);
-    fs.writeFile(`${URI}.log`, data, (err) => {
+    fs.writeFile(`${URI}.log`, data, (err: any) => {
       if (err) {
         console.error(
           `\u001b[31m[${timeUtils.timeToJST(
@@ -43,12 +43,12 @@ exports.loging = async (post_data, api_name) => {
  * @param {string} api_name - The name of the path.
  * @returns {Promise<Object>} - The parsed log data.
  */
-exports.readLog = async (api_name) => {
+export const read = async (api_name: string) => {
   const URI = `${process.cwd()}/log/${api_name}`;
   if (!fs.existsSync(URI + ".log")) return null;
   try {
     const jsonString = fs.readFileSync(URI + ".log");
-    const data = JSON.parse(jsonString);
+    const data = JSON.parse(jsonString.toString());
     return data;
   } catch (error) {
     console.error(
