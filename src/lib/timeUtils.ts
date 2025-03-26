@@ -8,7 +8,7 @@ const timeToJSTTimestamp = (timestamp: number | string | Date): Date => {
   var tz = dt.getTimezoneOffset(); //サーバーで設定されているタイムゾーンの世界標準時からの時差（分）
   tz = (tz + 540) * 60 * 1000; //日本時間との時差(9時間=540分)を計算し、ミリ秒単位に変換
 
-  dt = new Date(timestamp + tz); //時差を調整した上でタイムスタンプ値を Date オブジェクトに変換
+  dt = new Date(timestamp.toString() + tz.toString()); //時差を調整した上でタイムスタンプ値を Date オブジェクトに変換
   return dt;
 };
 
