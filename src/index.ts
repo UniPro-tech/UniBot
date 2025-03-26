@@ -1,12 +1,13 @@
-const cron = require("node-cron");
-
-const {
+//import cron from "node-cron";
+import {
   Client,
   GatewayIntentBits,
   Collection,
   Partials,
   EmbedBuilder,
-} = require("discord.js");
+  Channel,
+  TextChannel,
+} from "discord.js";
 
 const client = new Client({
   intents: [
@@ -16,30 +17,22 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
   ],
   partials: [Partials.Channel],
-  ws: {
-    properties: {
-      $os: "Uni OS",
-      $browser: "Uni Browser",
-      $device: "K8s on Proxmox VE 6.4 in Sibainu",
-    },
-  },
 });
 
-const fs = require("fs");
-
-const config = require("./config.js");
-const functions = {
-  timeUtils: require("./lib/timeUtils.js"),
-  logUtils: require("./lib/logUtils.js"),
+import fs from "fs";
+import config from "@/config";
+import timeUtils from "@/lib/timeUtils";
+import logUtils from "@/lib/logUtils";
+client.config = config;
+client.function = {
+  timeUtils: timeUtils,
+  logUtils: logUtils,
 };
-
-client.conf = config;
-client.func = functions;
 client.fs = fs;
 
-const cmdH = require(`./lib/commandUtils.js`);
+import { handling as commandHandling } from "@/lib/commandUtils";
 client.commands = new Collection();
-cmdH.handling(client, fs, Collection, config);
+commandHandling(client);
 const eventFiles = fs
   .readdirSync("./events")
   .filter((file) => file.endsWith(".js"));
@@ -50,7 +43,7 @@ for (const file of eventFiles) {
       client.once(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${functions.timeUtils.timeToJST(
+        `\u001b[31m[${client.function.timeUtils.timeToJST(
           Date.now(),
           true
         )}]\u001b[0m\n`,
@@ -62,7 +55,7 @@ for (const file of eventFiles) {
       client.on(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${functions.timeUtils.timeToJST(
+        `\u001b[31m[${client.function.timeUtils.timeToJST(
           Date.now(),
           true
         )}]\u001b[0m\n`,
@@ -71,16 +64,16 @@ for (const file of eventFiles) {
     }
   }
 }
+// TODO:ここ下の3行のコメントアウトを外し、いい感じにする
+//const { rssGet } = require("./lib/rss.cjs");
 
-const { rssGet } = require("./lib/rss.cjs");
-
-cron.schedule("*/1-59 * * * *", async () => {
-  console.log("Cron job start");
+//cron.schedule("*/1-59 * * * *", async () => {
+/*  console.log("Cron job start");
   const files = fs.readdirSync("./log/v1/feed");
   for (const file of files) {
     const datas = await JSON.parse(
-      fs.readFileSync(`./log/v1/feed/${file}.log`)
-    ).data;
+      fs.readFileSync(`./log/v1/feed/${file}.log`).toString()
+    );
     datas.forEach(async (data, index) => {
       console.log(data.url);
       const items = await rssGet(data.url);
@@ -96,32 +89,37 @@ cron.schedule("*/1-59 * * * *", async () => {
           .setTimestamp();
         channel.send({ embeds: [embed] });
         datas[index].lastDate = items[0].pubDate;
-        functions.logUtils.loging(datas, `v1/feed/${file}`);
+        client.function.logUtils.write(datas, `v1/feed/${file}`);
       }
     });
   }
 });
+*/
 
 client.login(config.token);
 
 // エラー処理 (これ入れないとエラーで落ちる。本当は良くないかもしれない)
 process.on("uncaughtException", (error) => {
   console.error(
-    `[${functions.timeUtils.timeToJST(Date.now(), true)}] ${error.stack}`
+    `[${client.function.timeUtils.timeToJST(Date.now(), true)}] ${error.stack}`
   );
   const embed = new EmbedBuilder()
     .setTitle("ERROR - uncaughtException")
     .setDescription("```\n" + error.stack + "\n```")
     .setColor(config.color.e)
     .setTimestamp();
-  client.channels
-    .fetch(config.logch.error)
-    .then((c) => c.send({ embeds: [embed] }));
+  client.channels.fetch(config.logch.error).then((channel: Channel | null) => {
+    if (!channel || !(channel instanceof TextChannel)) {
+      console.error("Error: Log Channel is invalid.");
+      return;
+    }
+    channel.send({ embeds: [embed] });
+  });
 });
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error(
-    `\u001b[31m[${functions.timeUtils.timeToJST(
+    `\u001b[31m[${client.function.timeUtils.timeToJST(
       Date.now(),
       true
     )}] ${reason}\u001b[0m\n`,
@@ -132,7 +130,11 @@ process.on("unhandledRejection", (reason, promise) => {
     .setDescription("```\n" + reason + "\n```")
     .setColor(config.color.e)
     .setTimestamp();
-  client.channels
-    .fetch(config.logch.error)
-    .then((c) => c.send({ embeds: [embed] }));
+  client.channels.fetch(config.logch.error).then((channel: Channel | null) => {
+    if (!channel || !(channel instanceof TextChannel)) {
+      console.error("Error: Log Channel is invalid.");
+      return;
+    }
+    channel.send({ embeds: [embed] });
+  });
 });
