@@ -59,3 +59,8 @@ export const read = async (api_name: string) => {
     );
   }
 };
+
+export default {
+  write,
+  read,
+};

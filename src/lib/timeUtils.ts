@@ -45,3 +45,8 @@ export const timeToJST = (
   }
   return return_str;
 };
+
+export default {
+  timeToJSTTimestamp,
+  timeToJST,
+};
