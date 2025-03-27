@@ -1,5 +1,5 @@
 import { Collection } from "discord.js";
-import { Command } from "./commands/types/Command";
+import { Command } from "@/commands/types/Command";
 import timeUtils from "@/lib/timeUtils";
 import logUtils from "@/lib/logUtils";
 
