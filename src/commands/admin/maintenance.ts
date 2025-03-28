@@ -5,7 +5,7 @@ import {
   CommandInteractionOptionResolver,
 } from "discord.js";
 const { subCommandHandling, addSubCommand } = require(`../../lib/commandUtils`);
-const { GetLogChannel, GetErrorChannel } = require(`../../lib/channelUtils`);
+import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
 
 export const handlingCommands = subCommandHandling("admin/maintenance");
@@ -22,8 +22,8 @@ export const execute = async (interaction: CommandInteraction) => {
     (interaction.options as CommandInteractionOptionResolver).getSubcommand()
   );
   if (!command) {
-    console.log(
-      `[-] Not Found: ${(
+    console.info(
+      `[Not Found] Command: ${(
         interaction.options as CommandInteractionOptionResolver
       ).getSubcommand()}`
     );
@@ -31,7 +31,7 @@ export const execute = async (interaction: CommandInteraction) => {
   }
   try {
     await command.execute(interaction);
-    console.log(
+    console.info(
       `[Run] ${(
         interaction.options as CommandInteractionOptionResolver
       ).getSubcommand()}`
@@ -66,7 +66,7 @@ export const execute = async (interaction: CommandInteraction) => {
         },
       ])
       .setFooter({ text: `${interaction.id}` });
-    const channel = await GetLogChannel(interaction);
+    const channel = await GetLogChannel(interaction.client);
     if (channel) {
       channel.send({ embeds: [logEmbed] });
     }
@@ -78,7 +78,7 @@ export const execute = async (interaction: CommandInteraction) => {
       .setColor(config.color.e)
       .setTimestamp();
 
-    const channel = await GetErrorChannel(interaction);
+    const channel = await GetErrorChannel(interaction.client);
     if (channel) {
       channel.send({ embeds: [logEmbed] });
     }
@@ -89,7 +89,7 @@ export const execute = async (interaction: CommandInteraction) => {
       .setTimestamp();
 
     await interaction.reply({ embeds: [messageEmbed] });
-    const logChannel = await GetLogChannel(interaction);
+    const logChannel = await GetLogChannel(interaction.client);
     if (logChannel) {
       logChannel.send({ embeds: [messageEmbed] });
     }
