@@ -1,6 +1,6 @@
 import { Events, EmbedBuilder, Interaction } from "discord.js";
 import config from "@/config";
-const { GetLogChannel, GetErrorChannel } = require(`../lib/channelUtils`);
+import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 
 export const name = Events.InteractionCreate;
 export const execute = async (interaction: Interaction) => {
@@ -72,7 +72,7 @@ export const execute = async (interaction: Interaction) => {
           },
         ])
         .setFooter({ text: `${interaction.id}` });
-      const channel = await GetLogChannel(interaction);
+      const channel = await GetLogChannel(interaction.client);
       if (channel) {
         channel.send({ embeds: [logEmbed] });
       }
@@ -91,7 +91,7 @@ export const execute = async (interaction: Interaction) => {
         .setColor(config.color.e)
         .setTimestamp();
 
-      const channel = await GetErrorChannel(interaction);
+      const channel = await GetErrorChannel(interaction.client);
       if (channel) {
         channel.send({ embeds: [logEmbed] });
       }
@@ -102,7 +102,7 @@ export const execute = async (interaction: Interaction) => {
         .setTimestamp();
 
       await interaction.reply({ embeds: [messageEmbed] });
-      const logChannel = await GetLogChannel(interaction);
+      const logChannel = await GetLogChannel(interaction.client);
       if (logChannel) {
         logChannel.send({ embeds: [messageEmbed] });
       }

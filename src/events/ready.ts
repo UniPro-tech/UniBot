@@ -1,11 +1,10 @@
 import Discord, { Client } from "discord.js";
+import commandUtils from "@/lib/commandUtils";
 
 export const name = "ready";
 export const execute = async (client: Client) => {
   const logFile = await client.function.logUtils.read("v1/conf/status");
-  console.log(logFile);
-  const commandUtils = require(`../lib/commandUtils.js`);
-  commandUtils.addCmd(client);
+  commandUtils.addCommand(client);
   console.debug(
     `[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`
   );
