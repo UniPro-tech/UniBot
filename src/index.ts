@@ -35,7 +35,10 @@ client.commands = new Collection();
 commandHandling(client);
 const eventFiles = fs
   .readdirSync("./events")
-  .filter((file) => file.endsWith(".js"));
+  .filter(
+    (file) =>
+      (file.endsWith(".ts") && !file.endsWith(".d.ts")) || file.endsWith(".js")
+  );
 for (const file of eventFiles) {
   const event = require(`./events/${file}`);
   if (event.once) {
@@ -64,6 +67,7 @@ for (const file of eventFiles) {
     }
   }
 }
+
 // TODO:ここ下の3行のコメントアウトを外し、いい感じにする
 //const { rssGet } = require("./lib/rss.cjs");
 
@@ -95,8 +99,6 @@ for (const file of eventFiles) {
   }
 });
 */
-
-client.login(config.token);
 
 // エラー処理 (これ入れないとエラーで落ちる。本当は良くないかもしれない)
 process.on("uncaughtException", (error) => {
@@ -138,3 +140,5 @@ process.on("unhandledRejection", (reason, promise) => {
     channel.send({ embeds: [embed] });
   });
 });
+
+client.login(config.token);
