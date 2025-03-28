@@ -1,6 +1,10 @@
+import { Command } from "@/commands/types/Command";
 import { REST } from "@discordjs/rest";
-import { Routes } from "discord-api-types/v10";
-import { Client, Collection } from "discord.js";
+import {
+  RESTPostAPIChatInputApplicationCommandsJSONBody,
+  Routes,
+} from "discord-api-types/v10";
+import { Client, Collection, SlashCommandBuilder } from "discord.js";
 import fs from "fs";
 
 /**
@@ -15,11 +19,18 @@ export const addCommand = async (client: Client) => {
   const testGuild = config.dev.testGuild;
 
   let command_int = 0;
-  const globalCommands = [];
-  const adminGuildCommands = [];
+  const globalCommands =
+    [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
+  const adminGuildCommands =
+    [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
   const commandFolders = fs.readdirSync(`${process.cwd()}/commands`);
 
-  function cmdToArray(array, command, file, notice = "") {
+  function cmdToArray(
+    array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
+    command: Command,
+    file: string,
+    notice = ""
+  ) {
     try {
       array.push(command.data.toJSON());
       command_int++;
@@ -31,18 +42,27 @@ export const addCommand = async (client: Client) => {
     }
   }
 
-  async function putToDiscord(array, guild = false) {
+  async function putToDiscord(
+    array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
+    guild: undefined | string = undefined
+  ) {
     if (guild) {
       await rest.put(
-        Routes.applicationGuildCommands(client.application.id, guild),
+        Routes.applicationGuildCommands(
+          client.application?.id as string,
+          guild
+        ),
         {
           body: array,
         }
       );
     } else {
-      await rest.put(Routes.applicationCommands(client.application.id), {
-        body: array,
-      });
+      await rest.put(
+        Routes.applicationCommands(client.application?.id as string),
+        {
+          body: array,
+        }
+      );
     }
   }
 
@@ -50,36 +70,39 @@ export const addCommand = async (client: Client) => {
     console.log(`[Init]Adding ${folder} commands...`);
     const commandFiles = fs
       .readdirSync(`${process.cwd()}/commands/${folder}`)
-      .filter((file) => file.endsWith(".js"));
+      .filter(
+        (file) =>
+          file.endsWith(".js") ||
+          (file.endsWith(".ts") && !file.endsWith(".d.ts"))
+      );
     for (const file of commandFiles) {
-      const command = require(`${process.cwd()}/commands/${folder}/${file}`);
+      const command =
+        require(`${process.cwd()}/commands/${folder}/${file}`) as Command;
       if (command.adminGuildOnly) {
         cmdToArray(adminGuildCommands, command, file, "[Admin]");
         continue;
       }
-      if (command.onlyCommand) continue;
+      //if (command.onlyCommand) continue;
       cmdToArray(globalCommands, command, file, "[Global]");
     }
     console.log(`[Init]${folder} added.`);
   }
 
-  (async () => {
-    try {
-      console.log(`[Init]Registering ${command_int}...`);
+  try {
+    console.log(`[Init]Registering ${command_int}...`);
 
-      //Admin
-      putToDiscord(adminGuildCommands, testGuild);
-      console.log(`[Init]Registered Admin Guild Slash Commands.`);
+    //Admin
+    putToDiscord(adminGuildCommands, testGuild);
+    console.log(`[Init]Registered Admin Guild Slash Commands.`);
 
-      //Global
-      putToDiscord(globalCommands);
-      console.log(`[Init]Registered Global Slash Commands.`);
+    //Global
+    putToDiscord(globalCommands);
+    console.log(`[Init]Registered Global Slash Commands.`);
 
-      console.log(`[Init]Registered All Slash Commands.`);
-    } catch (error) {
-      console.error(error);
-    }
-  })();
+    console.log(`[Init]Registered All Slash Commands.`);
+  } catch (error) {
+    console.error("[error]", error);
+  }
 };
 
 /**
@@ -98,7 +121,7 @@ export const handling = async (client: Client) => {
     console.log(`\u001b[32m[Init]Loading ${folder} commands\u001b[0m`);
     const commandFiles = fs
       .readdirSync(`${process.cwd()}/commands/${folder}`)
-      .filter((file) => file.endsWith(".js"));
+      .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
     for (const file of commandFiles) {
       console.debug(`dir:${folder},file:${file}`);
       const command = require(`${process.cwd()}/commands/${folder}/${file}`);
@@ -122,7 +145,7 @@ export const handling = async (client: Client) => {
  * @param {object} data - The data object to add subcommands to.
  * @returns {object} - The modified data object with added subcommands.
  */
-export const addSubCommand = (name: string, data: object) => {
+export const addSubCommand = (name: string, data: SlashCommandBuilder) => {
   console.log(`\u001b[32m[Init]Adding ${name}'s SubCommands\u001b[0m`);
   const commandFiles = fs
     .readdirSync(`${process.cwd()}/commands/${name}`)

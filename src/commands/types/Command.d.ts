@@ -2,7 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export interface Command {
   handlingCommands: Function | undefined;
-  admunGuildOnly: boolean | undefined;
+  adminGuildOnly: boolean | undefined;
   guildOnly: boolean | undefined;
   data:
     | SlashCommandBuilder
