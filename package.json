@@ -4,7 +4,8 @@
   "description": "The Discord Bot made by UniProject.",
   "main": "index.js",
   "scripts": {
-    "boot": "node index.cjs"
+    "build": "tsc -p ./",
+    "start": "node dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -25,11 +26,13 @@
   "dependencies": {
     "@discordjs/rest": "^2.4.3",
     "@discordjs/voice": "^0.17.0",
+    "@types/node": "^22.13.14",
     "axios": "^1.8.4",
     "child_process": "^1.0.2",
     "discord-api-types": "^0.37.119",
     "discord.js": "^14.18.0",
     "dotenv": "^16.4.7",
+    "fs": "^0.0.1-security",
     "install": "^0.13.0",
     "node-cron": "^3.0.3",
     "rss-parser": "^3.13.0"
