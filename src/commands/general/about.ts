@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
-const packageData = require("@/package.json");
+import path from "path";
+const packageData = require(path.resolve(__dirname, "../../../package.json"));
 
 export const guildOnly = false;
 export const data = new SlashCommandBuilder()

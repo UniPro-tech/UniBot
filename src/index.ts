@@ -31,16 +31,17 @@ client.function = {
 client.fs = fs;
 
 import { handling as commandHandling } from "@/lib/commandUtils";
+import path from "path";
 client.commands = new Collection();
 commandHandling(client);
 const eventFiles = fs
-  .readdirSync("./events")
+  .readdirSync(path.resolve(__dirname, "events"))
   .filter(
     (file) =>
       (file.endsWith(".ts") && !file.endsWith(".d.ts")) || file.endsWith(".js")
   );
 for (const file of eventFiles) {
-  const event = require(`./events/${file}`);
+  const event = require(path.resolve(__dirname, `./events/${file}`));
   if (event.once) {
     try {
       client.once(event.name, (...args) => event.execute(...args, client));

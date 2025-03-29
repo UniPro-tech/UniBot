@@ -1,12 +1,13 @@
 import fs from "fs";
 import timeUtils from "@/lib/timeUtils";
+import path from "path";
 /**
  * Writs a log file for a specific directory.
  * @param {string} api_name - The name of the path.
  * @returns {Promise<Object>} - The parsed log data.
  */
 export const write = async (post_data: Object, api_name: string) => {
-  const URI = `${process.cwd()}/log/${api_name}`;
+  const URI = path.resolve(__dirname, `../log/${api_name}`);
   try {
     if (!fs.existsSync(URI)) {
       console.log(
@@ -44,7 +45,7 @@ export const write = async (post_data: Object, api_name: string) => {
  * @returns {Promise<Object>} - The parsed log data.
  */
 export const read = async (api_name: string) => {
-  const URI = `${process.cwd()}/log/${api_name}`;
+  const URI = path.resolve(__dirname, `../log/${api_name}`);
   if (!fs.existsSync(URI + ".log")) return null;
   try {
     const jsonString = fs.readFileSync(URI + ".log");

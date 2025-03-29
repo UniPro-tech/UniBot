@@ -4,7 +4,7 @@ import {
   CommandInteraction,
   CommandInteractionOptionResolver,
 } from "discord.js";
-const { subCommandHandling, addSubCommand } = require(`../../lib/commandUtils`);
+import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
 

@@ -6,6 +6,7 @@ import {
 } from "discord-api-types/v10";
 import { Client, Collection, SlashCommandBuilder } from "discord.js";
 import fs from "fs";
+import path from "path";
 
 /**
  * @param {Client} client
@@ -23,7 +24,7 @@ export const addCommand = async (client: Client) => {
     [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
   const adminGuildCommands =
     [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
-  const commandFolders = fs.readdirSync(`${process.cwd()}/commands`);
+  const commandFolders = fs.readdirSync(path.resolve(__dirname, `../commands`));
 
   function cmdToArray(
     array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
@@ -69,15 +70,17 @@ export const addCommand = async (client: Client) => {
   for (const folder of commandFolders) {
     console.log(`[Init]Adding ${folder} commands...`);
     const commandFiles = fs
-      .readdirSync(`${process.cwd()}/commands/${folder}`)
+      .readdirSync(path.resolve(__dirname, `../commands/${folder}`))
       .filter(
         (file) =>
           file.endsWith(".js") ||
           (file.endsWith(".ts") && !file.endsWith(".d.ts"))
       );
     for (const file of commandFiles) {
-      const command =
-        require(`${process.cwd()}/commands/${folder}/${file}`) as Command;
+      const command = require(path.resolve(
+        __dirname,
+        `../commands/${folder}/${file}`
+      )) as Command;
       if (command.adminGuildOnly) {
         cmdToArray(adminGuildCommands, command, file, "[Admin]");
         continue;
@@ -116,15 +119,18 @@ export const addCommand = async (client: Client) => {
 export const handling = async (client: Client) => {
   console.log(`\u001b[32m===Load Command Executing Data===\u001b[0m`);
   client.commands = new Collection();
-  const commandFolders = fs.readdirSync(`${process.cwd()}/commands`);
+  const commandFolders = fs.readdirSync(path.resolve(__dirname, `../commands`));
   for (const folder of commandFolders) {
     console.log(`\u001b[32m[Init]Loading ${folder} commands\u001b[0m`);
     const commandFiles = fs
-      .readdirSync(`${process.cwd()}/commands/${folder}`)
+      .readdirSync(path.resolve(__dirname, `../commands/${folder}`))
       .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
     for (const file of commandFiles) {
       console.debug(`dir:${folder},file:${file}`);
-      const command = require(`${process.cwd()}/commands/${folder}/${file}`);
+      const command = require(path.resolve(
+        __dirname,
+        `../commands/${folder}/${file}`
+      ));
       try {
         client.commands.set(command.data.name, command);
         console.log(`[Init]${command.data.name} has been loaded.`);
@@ -148,10 +154,13 @@ export const handling = async (client: Client) => {
 export const addSubCommand = (name: string, data: SlashCommandBuilder) => {
   console.log(`\u001b[32m[Init]Adding ${name}'s SubCommands\u001b[0m`);
   const commandFiles = fs
-    .readdirSync(`${process.cwd()}/commands/${name}`)
+    .readdirSync(path.resolve(__dirname, `../commands/${name}`))
     .filter((file) => file.endsWith(".js"));
   for (const file of commandFiles) {
-    const command = require(`${process.cwd()}/commands/${name}/${file}`);
+    const command = require(path.resolve(
+      __dirname,
+      `../commands/${name}/${file}`
+    ));
     if (command.subCommandGroup) {
       data.addSubcommandGroup(command.data);
     } else data.addSubcommand(command.data);
@@ -175,11 +184,14 @@ export const subCommandHandling = async (name: string) => {
     `\u001b[32m===Load ${name}'s SubCommand Executing Data===\u001b[0m`
   );
   const commandFiles = fs
-    .readdirSync(`${process.cwd()}/commands/${name}`)
+    .readdirSync(path.resolve(__dirname, `../commands/${name}`))
     .filter((file) => file.endsWith(".js"));
   for (const file of commandFiles) {
     console.log(`dir:${name},file:${file}`);
-    const command = require(`${process.cwd()}/commands/${name}/${file}`);
+    const command = require(path.resolve(
+      __dirname,
+      `../commands/${name}/${file}`
+    ));
     try {
       collection.set(command.data.name, command);
       console.log(`[Subcommand]${command.data.name} has been loaded.`);
