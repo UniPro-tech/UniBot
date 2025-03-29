@@ -4,11 +4,11 @@
  * @returns {Date} - The converted JST timestamp.
  */
 const timeToJSTTimestamp = (timestamp: number | string | Date): Date => {
-  var dt = new Date(); //Date オブジェクトを作成
-  var tz = dt.getTimezoneOffset(); //サーバーで設定されているタイムゾーンの世界標準時からの時差（分）
-  tz = (tz + 540) * 60 * 1000; //日本時間との時差(9時間=540分)を計算し、ミリ秒単位に変換
+  var dt = new Date();
+  var tz = dt.getTimezoneOffset();
+  tz = (tz + 540) * 60 * 1000;
 
-  dt = new Date(timestamp.toString() + tz.toString()); //時差を調整した上でタイムスタンプ値を Date オブジェクトに変換
+  dt = new Date(timestamp.toString() + tz.toString());
   return dt;
 };
 
