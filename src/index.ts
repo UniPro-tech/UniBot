@@ -47,7 +47,7 @@ for (const file of eventFiles) {
       client.once(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${client.function.timeUtils.timeToJST(
+        `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(
           Date.now(),
           true
         )}]\u001b[0m\n`,
@@ -59,7 +59,7 @@ for (const file of eventFiles) {
       client.on(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${client.function.timeUtils.timeToJST(
+        `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(
           Date.now(),
           true
         )}]\u001b[0m\n`,
@@ -104,7 +104,9 @@ for (const file of eventFiles) {
 // エラー処理 (これ入れないとエラーで落ちる。本当は良くないかもしれない)
 process.on("uncaughtException", (error) => {
   console.error(
-    `[${client.function.timeUtils.timeToJST(Date.now(), true)}] ${error.stack}`
+    `[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)}] ${
+      error.stack
+    }`
   );
   const embed = new EmbedBuilder()
     .setTitle("ERROR - uncaughtException")
@@ -122,7 +124,7 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error(
-    `\u001b[31m[${client.function.timeUtils.timeToJST(
+    `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(
       Date.now(),
       true
     )}] ${reason}\u001b[0m\n`,

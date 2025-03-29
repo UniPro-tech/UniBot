@@ -11,7 +11,10 @@ export const write = async (post_data: Object, api_name: string) => {
   try {
     if (!fs.existsSync(URI)) {
       console.log(
-        `[${timeUtils.timeToJST(Date.now(), true)} info]Create directory ${URI}`
+        `[${timeUtils.timeToJSTstamp(
+          Date.now(),
+          true
+        )} info]Create directory ${URI}`
       );
       await fs.promises.mkdir(URI, { recursive: true });
     }
@@ -19,7 +22,7 @@ export const write = async (post_data: Object, api_name: string) => {
     fs.writeFile(`${URI}.log`, data, (err: any) => {
       if (err) {
         console.error(
-          `\u001b[31m[${timeUtils.timeToJST(
+          `\u001b[31m[${timeUtils.timeToJSTstamp(
             Date.now(),
             true
           )} error]An Error Occured.\nDatails:\n${err}\u001b[0m`
@@ -27,7 +30,7 @@ export const write = async (post_data: Object, api_name: string) => {
         throw err;
       } else {
         console.log(
-          `[${timeUtils.timeToJST(
+          `[${timeUtils.timeToJSTstamp(
             Date.now(),
             true
           )} info]Write data to ${URI}.log`
@@ -53,7 +56,7 @@ export const read = async (api_name: string) => {
     return data;
   } catch (error) {
     console.error(
-      `\u001b[31m[${timeUtils.timeToJST(
+      `\u001b[31m[${timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error]An Error Occured.\nDatails:\n${error}\u001b[0m`

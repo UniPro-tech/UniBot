@@ -6,7 +6,7 @@ export const name = Events.InteractionCreate;
 export const execute = async (interaction: Interaction) => {
   if (interaction.isChatInputCommand()) {
     console.log(
-      `[${interaction.client.function.timeUtils.timeToJST(
+      `[${interaction.client.function.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} info] ->${interaction.commandName}`
@@ -14,7 +14,7 @@ export const execute = async (interaction: Interaction) => {
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) {
       console.log(
-        `[${interaction.client.function.timeUtils.timeToJST(
+        `[${interaction.client.function.timeUtils.timeToJSTstamp(
           Date.now(),
           true
         )} info] Not Found: ${interaction.commandName}`
@@ -28,7 +28,7 @@ export const execute = async (interaction: Interaction) => {
         .setColor(interaction.client.config.color.e);
       interaction.reply({ embeds: [embed] });
       console.log(
-        `[${interaction.client.function.timeUtils.timeToJST(
+        `[${interaction.client.function.timeUtils.timeToJSTstamp(
           Date.now(),
           true
         )} info] DM Only: ${interaction.commandName}`
@@ -39,7 +39,7 @@ export const execute = async (interaction: Interaction) => {
     try {
       await command.execute(interaction);
       console.log(
-        `[${interaction.client.function.timeUtils.timeToJST(
+        `[${interaction.client.function.timeUtils.timeToJSTstamp(
           Date.now(),
           true
         )} run] ${interaction.commandName}`
@@ -78,7 +78,7 @@ export const execute = async (interaction: Interaction) => {
       }
     } catch (error) {
       console.error(
-        `[${interaction.client.function.timeUtils.timeToJST(
+        `[${interaction.client.function.timeUtils.timeToJSTstamp(
           Date.now(),
           true
         )} error]An Error Occured in ${

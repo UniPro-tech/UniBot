@@ -3,26 +3,26 @@
  * @param {number} timestamp - The timestamp to convert.
  * @returns {Date} - The converted JST timestamp.
  */
-const timeToJSTTimestamp = (timestamp: number | string | Date): Date => {
-  var dt = new Date();
-  var tz = dt.getTimezoneOffset();
-  tz = (tz + 540) * 60 * 1000;
-
-  dt = new Date(timestamp.toString() + tz.toString());
-  return dt;
+const timeToJST = (timestamp: number | string | Date): Date => {
+  const dt = new Date(
+    typeof timestamp === "number" ? timestamp : new Date(timestamp).getTime()
+  );
+  const utc = new Date(dt.getTime() - dt.getTimezoneOffset() * 60 * 1000); // Convert to UTC
+  const tzOffset = 540 * 60 * 1000; // JST is UTC+9
+  return new Date(utc.getTime() + tzOffset); // Convert to JST
 };
 
 /**
  * Converts a JST (Japan Standard Time) timestamp to a formatted date string or an object with individual date components.
- * @param {number} timestamp - The JST timestamp to convert.
+ * @param {number} time - The JST timestamp to convert.
  * @param {boolean} [format=false] - Determines whether to return a formatted date string or an object with individual date components. Default is false.
  * @returns {string|Object} - The formatted date string or an object with individual date components.
  */
-export const timeToJST = (
-  timestamp: number | string | Date,
+export const timeToJSTstamp = (
+  time: number | string | Date,
   format = false
 ): Object => {
-  const dt = timeToJSTTimestamp(timestamp);
+  const dt = new Date(time);
   const year = dt.getFullYear();
   const month = dt.getMonth() + 1;
   const date = dt.getDate();
@@ -47,6 +47,6 @@ export const timeToJST = (
 };
 
 export default {
-  timeToJSTTimestamp,
   timeToJST,
+  timeToJSTstamp,
 };
