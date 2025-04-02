@@ -1,11 +1,18 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  Collection,
+  CommandInteraction,
+  SlashCommandBuilder,
+  SlashCommandSubcommandBuilder,
+  SlashCommandSubcommandGroupBuilder,
+} from "discord.js";
 
 export interface Command {
-  handlingCommands: Function | undefined;
+  handlingCommands: Collection<string, Command> | undefined;
   adminGuildOnly: boolean | undefined;
   guildOnly: boolean | undefined;
   data:
     | SlashCommandBuilder
-    | Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand">;
-  execute(interaction: ChatInputCommandInteraction): Promise<void>;
+    | SlashCommandSubcommandBuilder
+    | SlashCommandSubcommandGroupBuilder;
+  execute(interaction: CommandInteraction): Promise<void>;
 }
