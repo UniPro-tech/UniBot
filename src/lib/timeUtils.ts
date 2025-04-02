@@ -3,24 +3,26 @@
  * @param {number} timestamp - The timestamp to convert.
  * @returns {Date} - The converted JST timestamp.
  */
-function timeToJSTTimestamp(timestamp) {
-  var dt = new Date(); //Date オブジェクトを作成
-  var tz = dt.getTimezoneOffset(); //サーバーで設定されているタイムゾーンの世界標準時からの時差（分）
-  tz = (tz + 540) * 60 * 1000; //日本時間との時差(9時間=540分)を計算し、ミリ秒単位に変換
-
-  dt = new Date(timestamp + tz); //時差を調整した上でタイムスタンプ値を Date オブジェクトに変換
-  return dt;
-}
-exports.timeToJSTTimestamp = timeToJSTTimestamp;
+const timeToJST = (timestamp: number | string | Date): Date => {
+  const dt = new Date(
+    typeof timestamp === "number" ? timestamp : new Date(timestamp).getTime()
+  );
+  const utc = new Date(dt.getTime() - dt.getTimezoneOffset() * 60 * 1000); // Convert to UTC
+  const tzOffset = 540 * 60 * 1000; // JST is UTC+9
+  return new Date(utc.getTime() + tzOffset); // Convert to JST
+};
 
 /**
  * Converts a JST (Japan Standard Time) timestamp to a formatted date string or an object with individual date components.
- * @param {number} timestamp - The JST timestamp to convert.
+ * @param {number} time - The JST timestamp to convert.
  * @param {boolean} [format=false] - Determines whether to return a formatted date string or an object with individual date components. Default is false.
  * @returns {string|Object} - The formatted date string or an object with individual date components.
  */
-exports.timeToJST = function (timestamp, format = false) {
-  const dt = timeToJSTTimestamp(timestamp);
+export const timeToJSTstamp = (
+  time: number | string | Date,
+  format = false
+): Object => {
+  const dt = new Date(time);
   const year = dt.getFullYear();
   const month = dt.getMonth() + 1;
   const date = dt.getDate();
@@ -42,4 +44,9 @@ exports.timeToJST = function (timestamp, format = false) {
     };
   }
   return return_str;
+};
+
+export default {
+  timeToJST,
+  timeToJSTstamp,
 };
