@@ -1,16 +1,20 @@
-import { CommandInteraction, GuildMemberRoleManager } from "discord.js";
+import {
+  CommandInteraction,
+  GuildMemberRoleManager,
+  SlashCommandSubcommandBuilder,
+} from "discord.js";
 
-import { SlashCommandSubcommandBuilder } from "@discordjs/builders";
-import conf from "@/config";
+import config from "@/config";
 import { addCommand, handling } from "@/lib/commandUtils";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("reload")
   .setDescription("Reloads a command.");
+export const adminGuildOnly = true;
 export const execute = async (interaction: CommandInteraction) => {
   if (
     !(interaction.member?.roles as GuildMemberRoleManager).cache.has(
-      conf.adminRoleId
+      config.adminRoleId
     )
   ) {
     interaction.reply("権限がありません");
@@ -20,4 +24,10 @@ export const execute = async (interaction: CommandInteraction) => {
   await addCommand(interaction.client);
   await handling(interaction.client);
   await interaction.editReply("Reloaded!");
+};
+
+export default {
+  data,
+  adminGuildOnly,
+  execute,
 };
