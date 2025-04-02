@@ -1,8 +1,8 @@
-FROM node:slim
+FROM oven/bun:slim
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN bun install
 
 COPY . .
 
