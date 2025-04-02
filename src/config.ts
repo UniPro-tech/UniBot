@@ -1,6 +1,6 @@
 //(require('dotenv')).config();
 const config = {
-  adminRoleId: process.env.ADMIN_ROLE_ID,
+  adminRoleId: process.env.ROLE_ADMIN,
   color: {
     s: 0x000000,
     e: 0xffffff,
@@ -10,11 +10,11 @@ const config = {
     testGuild: process.env.TEST_GUILD,
   },
   logch: {
-    ready: process.env.LOGCH_READY,
-    command: process.env.LOGCH_COMMAND,
-    error: process.env.LOGCH_ERROR,
-    guildCreate: process.env.LOGCH_GUILD_CREATE,
-    guildDelete: process.env.LOGCH_GUILD_DELETE,
+    ready: process.env.LOG_SUCCESS_ID,
+    command: process.env.LOG_SUCCESS_ID,
+    error: process.env.LOG_ERROR_ID,
+    guildCreate: process.env.LOGCH_GUILD_ID,
+    guildDelete: process.env.LOGCH_GUILD_ID,
   },
 };
 
