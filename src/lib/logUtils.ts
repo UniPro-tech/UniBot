@@ -9,24 +9,26 @@ import path from "path";
 export const write = async (post_data: Object, api_name: string) => {
   const URI = path.resolve(__dirname, `../log/${api_name}`);
   try {
-    if (!fs.existsSync(URI)) {
-      console.log(`[${timeUtils.timeToJSTstamp(Date.now(), true)} info]Create directory ${URI}`);
-      await fs.promises.mkdir(URI, { recursive: true });
+    const dirPath = path.dirname(URI);
+    if (!fs.existsSync(dirPath)) {
+      console.log(
+        `[${timeUtils.timeToJSTstamp(Date.now(), true)} info]Create directory ${dirPath}`
+      );
+      await fs.promises.mkdir(dirPath, { recursive: true });
     }
     const data = JSON.stringify(post_data);
-    fs.writeFile(`${URI}.log`, data, (err: any) => {
-      if (err) {
-        console.error(
-          `\u001b[31m[${timeUtils.timeToJSTstamp(
-            Date.now(),
-            true
-          )} error]An Error Occured.\nDatails:\n${err}\u001b[0m`
-        );
-        throw err;
-      } else {
-        console.log(`[${timeUtils.timeToJSTstamp(Date.now(), true)} info]Write data to ${URI}.log`);
-      }
-    });
+    try {
+      await fs.promises.writeFile(`${URI}.log`, data);
+      console.log(`[${timeUtils.timeToJSTstamp(Date.now(), true)} info]Write data to ${URI}.log`);
+    } catch (err) {
+      console.error(
+        `\u001b[31m[${timeUtils.timeToJSTstamp(
+          Date.now(),
+          true
+        )} error]An Error Occured.\nDatails:\n${err}\u001b[0m`
+      );
+      throw err;
+    }
   } catch (e) {
     console.log(e);
   }
@@ -39,7 +41,11 @@ export const write = async (post_data: Object, api_name: string) => {
  */
 export const read = async (api_name: string) => {
   const URI = path.resolve(__dirname, `../log/${api_name}`);
-  if (!fs.existsSync(URI + ".log")) return null;
+  try {
+    await fs.promises.access(URI + ".log");
+  } catch {
+    return null;
+  }
   try {
     const jsonString = fs.readFileSync(URI + ".log");
     const data = JSON.parse(jsonString.toString());
