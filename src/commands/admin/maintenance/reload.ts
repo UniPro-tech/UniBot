@@ -12,11 +12,7 @@ export const data = new SlashCommandSubcommandBuilder()
   .setDescription("Reloads a command.");
 export const adminGuildOnly = true;
 export const execute = async (interaction: CommandInteraction) => {
-  if (
-    !(interaction.member?.roles as GuildMemberRoleManager).cache.has(
-      config.adminRoleId
-    )
-  ) {
+  if (!(interaction.member?.roles as GuildMemberRoleManager).cache.has(config.adminRoleId)) {
     interaction.reply("権限がありません");
     return;
   }

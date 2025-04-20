@@ -21,9 +21,7 @@ export const execute = async (interaction: CommandInteraction) => {
   interaction.reply({ embeds: [embed] });
   return "No data";
 };
-export const data = new SlashCommandBuilder()
-  .setName(name)
-  .setDescription("Ping値を測定");
+export const data = new SlashCommandBuilder().setName(name).setDescription("Ping値を測定");
 
 export default {
   guildOnly,

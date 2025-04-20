@@ -65,10 +65,7 @@ export const execute = async (interaction: Interaction) => {
           },
           {
             name: "実行ユーザー",
-            value:
-              "```\n" +
-              `${interaction.user.tag}(${interaction.user.id})` +
-              "\n```",
+            value: "```\n" + `${interaction.user.tag}(${interaction.user.id})` + "\n```",
           },
         ])
         .setFooter({ text: `${interaction.id}` });
@@ -81,9 +78,7 @@ export const execute = async (interaction: Interaction) => {
         `[${interaction.client.function.timeUtils.timeToJSTstamp(
           Date.now(),
           true
-        )} error]An Error Occured in ${
-          interaction.commandName
-        }\nDatails:\n${error}`
+        )} error]An Error Occured in ${interaction.commandName}\nDatails:\n${error}`
       );
       const logEmbed = new EmbedBuilder()
         .setTitle("ERROR - cmd")

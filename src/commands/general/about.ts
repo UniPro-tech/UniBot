@@ -40,9 +40,7 @@ export const execute = async (interaction: CommandInteraction) => {
   if (packageData.author) {
     embed.addFields({
       name: "Author",
-      value: `[${packageData.author + packageData.email}](${
-        packageData.author.url
-      })`,
+      value: `[${packageData.author + packageData.email}](${packageData.author.url})`,
     });
   }
   if (packageData.license) {
@@ -64,9 +62,8 @@ export const execute = async (interaction: CommandInteraction) => {
   if (packageData.contributors) {
     let temp = new Array();
     for (let i = 0; i < packageData.contributors.length; i++) {
-      temp[
-        i
-      ] = `[${packageData.contributors[i].name} <${packageData.contributors[i].email}>](${packageData.contributors[i].url})`;
+      temp[i] =
+        `[${packageData.contributors[i].name} <${packageData.contributors[i].email}>](${packageData.contributors[i].url})`;
     }
     embed.addFields({ name: "Contributors", value: temp.join("\n") });
   }

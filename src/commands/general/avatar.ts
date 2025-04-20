@@ -1,9 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
 import config from "@/config";
-import {
-  CommandInteraction,
-  CommandInteractionOptionResolver,
-} from "discord.js";
+import { CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
 export const guildOnly = false;
 
@@ -13,14 +10,10 @@ export const data = new SlashCommandBuilder()
   .addUserOption((option) =>
     option
       .setName("target")
-      .setDescription(
-        "ここにユーザーを指定してそのユーザーのアイコンのURLを取得します。"
-      )
+      .setDescription("ここにユーザーを指定してそのユーザーのアイコンのURLを取得します。")
   );
 export const execute = async (interaction: CommandInteraction) => {
-  const user = (
-    interaction.options as CommandInteractionOptionResolver
-  ).getUser("target");
+  const user = (interaction.options as CommandInteractionOptionResolver).getUser("target");
   if (user) {
     const embed = new EmbedBuilder()
       .setTitle(`${user.username}'s Avatar`)

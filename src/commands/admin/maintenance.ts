@@ -11,9 +11,7 @@ import config from "@/config";
 export const handlingCommands = subCommandHandling("admin/maintenance");
 export const data = addSubCommand(
   "admin/maintenance",
-  new SlashCommandBuilder()
-    .setName("maintenance")
-    .setDescription("メンテナンスモード")
+  new SlashCommandBuilder().setName("maintenance").setDescription("メンテナンスモード")
 );
 export const guildOnly = true;
 
@@ -32,9 +30,7 @@ export const execute = async (interaction: CommandInteraction) => {
   try {
     await command.execute(interaction);
     console.info(
-      `[Run] ${(
-        interaction.options as CommandInteractionOptionResolver
-      ).getSubcommand()}`
+      `[Run] ${(interaction.options as CommandInteractionOptionResolver).getSubcommand()}`
     );
 
     const logEmbed = new EmbedBuilder()
@@ -59,10 +55,7 @@ export const execute = async (interaction: CommandInteraction) => {
         },
         {
           name: "実行ユーザー",
-          value:
-            "```\n" +
-            `${interaction.user.tag}(${interaction.user.id})` +
-            "\n```",
+          value: "```\n" + `${interaction.user.tag}(${interaction.user.id})` + "\n```",
         },
       ])
       .setFooter({ text: `${interaction.id}` });

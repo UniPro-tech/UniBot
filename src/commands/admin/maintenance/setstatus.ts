@@ -14,9 +14,7 @@ export const data = new SlashCommandSubcommandBuilder()
   .setName("setstatus")
   .setDescription("メンテモード")
   .addStringOption((option) =>
-    option
-      .setName("statusdiscription")
-      .setDescription("プレイ中に表示するやつ(StreamはURLでもok)")
+    option.setName("statusdiscription").setDescription("プレイ中に表示するやつ(StreamはURLでもok)")
   )
   .addStringOption((option) =>
     option.setName("status").setDescription("すてーたす").setChoices(
@@ -48,29 +46,21 @@ export const data = new SlashCommandSubcommandBuilder()
   );
 
 export const execute = async (interaction: CommandInteraction) => {
-  if (
-    !(interaction.member?.roles as GuildMemberRoleManager).cache.has(
-      config.adminRoleId
-    )
-  ) {
+  if (!(interaction.member?.roles as GuildMemberRoleManager).cache.has(config.adminRoleId)) {
     interaction.reply("権限がありません");
     return;
   }
   const client = interaction.client;
   try {
-    const onoff = (
-      interaction.options as CommandInteractionOptionResolver
-    ).getString("enable");
+    const onoff = (interaction.options as CommandInteractionOptionResolver).getString("enable");
     if (onoff == "on") {
-      const status = (
-        interaction.options as CommandInteractionOptionResolver
-      ).getString("status");
-      const statusDescription = (
-        interaction.options as CommandInteractionOptionResolver
-      ).getString("statusdiscription");
-      const activityType = (
-        interaction.options as CommandInteractionOptionResolver
-      ).getString("activitytype");
+      const status = (interaction.options as CommandInteractionOptionResolver).getString("status");
+      const statusDescription = (interaction.options as CommandInteractionOptionResolver).getString(
+        "statusdiscription"
+      );
+      const activityType = (interaction.options as CommandInteractionOptionResolver).getString(
+        "activitytype"
+      );
       const activityOpt: ActivityOptions = {
         name: statusDescription as string,
         type: ActivityType.Playing,

@@ -36,10 +36,7 @@ client.commands = new Collection();
 commandHandling(client);
 const eventFiles = fs
   .readdirSync(path.resolve(__dirname, "events"))
-  .filter(
-    (file) =>
-      (file.endsWith(".ts") && !file.endsWith(".d.ts")) || file.endsWith(".js")
-  );
+  .filter((file) => (file.endsWith(".ts") && !file.endsWith(".d.ts")) || file.endsWith(".js"));
 for (const file of eventFiles) {
   const event = require(path.resolve(__dirname, `./events/${file}`));
   if (event.once) {
@@ -47,10 +44,7 @@ for (const file of eventFiles) {
       client.once(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(
-          Date.now(),
-          true
-        )}]\u001b[0m\n`,
+        `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
         error
       );
     }
@@ -59,10 +53,7 @@ for (const file of eventFiles) {
       client.on(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(
-          Date.now(),
-          true
-        )}]\u001b[0m\n`,
+        `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
         error
       );
     }
@@ -103,11 +94,7 @@ for (const file of eventFiles) {
 
 // エラー処理 (これ入れないとエラーで落ちる。本当は良くないかもしれない)
 process.on("uncaughtException", (error) => {
-  console.error(
-    `[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)}] ${
-      error.stack
-    }`
-  );
+  console.error(`[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)}] ${error.stack}`);
   const embed = new EmbedBuilder()
     .setTitle("ERROR - uncaughtException")
     .setDescription("```\n" + error.stack + "\n```")

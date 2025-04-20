@@ -5,9 +5,7 @@ export const name = "ready";
 export const execute = async (client: Client) => {
   const logFile = await client.function.logUtils.read("v1/conf/status");
   commandUtils.addCommand(client);
-  console.debug(
-    `[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`
-  );
+  console.debug(`[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
   if (!client.user) {
     console.error(
       `[error] [${client.function.timeUtils.timeToJSTstamp(

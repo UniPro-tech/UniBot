@@ -1,15 +1,7 @@
 import { Command } from "@/commands/types/Command";
 import { REST } from "@discordjs/rest";
-import {
-  RESTPostAPIChatInputApplicationCommandsJSONBody,
-  Routes,
-} from "discord-api-types/v10";
-import {
-  Client,
-  Collection,
-  SlashCommandBuilder,
-  SlashCommandSubcommandBuilder,
-} from "discord.js";
+import { RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
+import { Client, Collection, SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 import fs from "fs";
 import path from "path";
 
@@ -25,10 +17,8 @@ export const addCommand = async (client: Client) => {
   const testGuild = config.dev.testGuild;
 
   let command_int = 0;
-  const globalCommands =
-    [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
-  const adminGuildCommands =
-    [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
+  const globalCommands = [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
+  const adminGuildCommands = [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
   const commandFolders = fs.readdirSync(path.resolve(__dirname, `../commands`));
 
   function cmdToArray(
@@ -42,9 +32,7 @@ export const addCommand = async (client: Client) => {
       command_int++;
       console.log(`${notice} ${file} has been added.`);
     } catch (error) {
-      console.error(
-        `${notice} An Error Occured in ${file} \nエラー内容\n ${error}`
-      );
+      console.error(`${notice} An Error Occured in ${file} \nエラー内容\n ${error}`);
     }
   }
 
@@ -53,22 +41,13 @@ export const addCommand = async (client: Client) => {
     guild: undefined | string = undefined
   ) {
     if (guild) {
-      await rest.put(
-        Routes.applicationGuildCommands(
-          client.application?.id as string,
-          guild
-        ),
-        {
-          body: array,
-        }
-      );
+      await rest.put(Routes.applicationGuildCommands(client.application?.id as string, guild), {
+        body: array,
+      });
     } else {
-      await rest.put(
-        Routes.applicationCommands(client.application?.id as string),
-        {
-          body: array,
-        }
-      );
+      await rest.put(Routes.applicationCommands(client.application?.id as string), {
+        body: array,
+      });
     }
   }
 
@@ -76,16 +55,9 @@ export const addCommand = async (client: Client) => {
     console.log(`[Init]Adding ${folder} commands...`);
     const commandFiles = fs
       .readdirSync(path.resolve(__dirname, `../commands/${folder}`))
-      .filter(
-        (file) =>
-          file.endsWith(".js") ||
-          (file.endsWith(".ts") && !file.endsWith(".d.ts"))
-      );
+      .filter((file) => file.endsWith(".js") || (file.endsWith(".ts") && !file.endsWith(".d.ts")));
     for (const file of commandFiles) {
-      const command = require(path.resolve(
-        __dirname,
-        `../commands/${folder}/${file}`
-      )) as Command;
+      const command = require(path.resolve(__dirname, `../commands/${folder}/${file}`)) as Command;
       if (command.adminGuildOnly) {
         cmdToArray(adminGuildCommands, command, file, "[Admin]");
         continue;
@@ -132,17 +104,12 @@ export const handling = async (client: Client) => {
       .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
     for (const file of commandFiles) {
       console.debug(`dir:${folder},file:${file}`);
-      const command = require(path.resolve(
-        __dirname,
-        `../commands/${folder}/${file}`
-      ));
+      const command = require(path.resolve(__dirname, `../commands/${folder}/${file}`));
       try {
         client.commands.set(command.data.name, command);
         console.log(`[Init]${command.data.name} has been loaded.`);
       } catch (error) {
-        console.error(
-          `[error]An Error Occured in ${command.data.name}\nDatails:\n ${error}`
-        );
+        console.error(`[error]An Error Occured in ${command.data.name}\nDatails:\n ${error}`);
       }
     }
     console.log(`\u001b[32m${folder} has been loaded\u001b[0m`);
@@ -162,10 +129,7 @@ export const addSubCommand = (name: string, data: SlashCommandBuilder) => {
     .readdirSync(path.resolve(__dirname, `../commands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
   for (const file of commandFiles) {
-    const command = require(path.resolve(
-      __dirname,
-      `../commands/${name}/${file}`
-    )) as Command;
+    const command = require(path.resolve(__dirname, `../commands/${name}/${file}`)) as Command;
     /*if (command.subCommandGroup) {
       data.addSubcommandGroup(command.data);
     } else */
@@ -187,18 +151,13 @@ export const addSubCommand = (name: string, data: SlashCommandBuilder) => {
  */
 export const subCommandHandling = (name: string) => {
   const collection = new Collection<string, Command>();
-  console.log(
-    `\u001b[32m===Load ${name}'s SubCommand Executing Data===\u001b[0m`
-  );
+  console.log(`\u001b[32m===Load ${name}'s SubCommand Executing Data===\u001b[0m`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../commands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
   for (const file of commandFiles) {
     console.log(`dir:${name},file:${file}`);
-    const command = require(path.resolve(
-      __dirname,
-      `../commands/${name}/${file}`
-    )) as Command;
+    const command = require(path.resolve(__dirname, `../commands/${name}/${file}`)) as Command;
     try {
       collection.set(command.data.name, command);
       console.log(`[Subcommand]${command.data.name} has been loaded.`);

@@ -10,12 +10,7 @@ export const write = async (post_data: Object, api_name: string) => {
   const URI = path.resolve(__dirname, `../log/${api_name}`);
   try {
     if (!fs.existsSync(URI)) {
-      console.log(
-        `[${timeUtils.timeToJSTstamp(
-          Date.now(),
-          true
-        )} info]Create directory ${URI}`
-      );
+      console.log(`[${timeUtils.timeToJSTstamp(Date.now(), true)} info]Create directory ${URI}`);
       await fs.promises.mkdir(URI, { recursive: true });
     }
     const data = JSON.stringify(post_data);
@@ -29,12 +24,7 @@ export const write = async (post_data: Object, api_name: string) => {
         );
         throw err;
       } else {
-        console.log(
-          `[${timeUtils.timeToJSTstamp(
-            Date.now(),
-            true
-          )} info]Write data to ${URI}.log`
-        );
+        console.log(`[${timeUtils.timeToJSTstamp(Date.now(), true)} info]Write data to ${URI}.log`);
       }
     });
   } catch (e) {
