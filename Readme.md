@@ -1,18 +1,44 @@
 # UniBot
 
-Discord の JavaScript で書かれた有益な Bot
+UniPro内を統治したりしているDiscord Botです。
 
-## Getting Started
+## ローカルで動かす
 
-You can run this script on Node.js.
+### 前提条件
 
-## npm install
+- Bun >=1.2
 
-Install npm package.
+### 設定
 
-### Config
+_envを.envとしてコピーし、各種値を変更してください。
 
-Overwrite config.js.
+### 実行
+
+#### 依存関係のインストール
+
+npm packageのインストールを行います。
+
+```shell
+bun install
+```
+
+#### 実行
+
+Bunのランタイムで実行します。
+
+```shell
+bun src/index.ts
+```
+
+## Dockerで動かす
+
+[docker-composeファイル](docker-compose.prod.yaml)を実行します。
+
+## 開発する
+
+ローカルで開発する場合は、以上の手順に従ってください。
+
+コンテナ内で開発したい場合は、[開発用のdocker-composeファイル](docker-compose.dev.yaml)を用いてください。
 
 ## Built With
 
@@ -20,7 +46,7 @@ Overwrite config.js.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 ## Versioning
 
@@ -28,7 +54,7 @@ For the versions available, see the [tags on this repository](https://github.com
 
 ## Authors
 
-- **Yuito** - [yuito-it](https://github.com/yuito-it)
+- @yuito-it
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
