@@ -3,6 +3,7 @@ import {
   SlashCommandSubcommandBuilder,
   EmbedBuilder,
   GuildMember,
+  MessageFlags,
 } from "discord.js";
 import config from "@/config";
 
@@ -145,7 +146,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
   await interaction.reply({
     embeds: [reply],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 
   for (let i = 0; i < roleID_list.length; i++) {
