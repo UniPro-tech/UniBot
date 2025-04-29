@@ -11,7 +11,7 @@ import config from "@/config";
 export const handlingCommands = subCommandHandling("admin/rp");
 export const data = addSubCommand(
   "admin/rp",
-  new SlashCommandBuilder().setName("rp").setDescription("メンテナンスモード")
+  new SlashCommandBuilder().setName("rp").setDescription("ロールパネルを管理します。")
 );
 export const guildOnly = true;
 
@@ -40,6 +40,10 @@ export const execute = async (interaction: CommandInteraction) => {
       .setTimestamp()
       .setThumbnail(interaction.user.displayAvatarURL())
       .addFields([
+        {
+          name: "実行コマンド",
+          value: `\`\`\`\n/${interaction.commandName}\n\`\`\``,
+        },
         {
           name: "サブコマンド",
           value: `\`\`\`\n/${(
