@@ -68,11 +68,11 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     ":regional_indicator_w:",
     ":regional_indicator_x:",
     ":regional_indicator_y:",
-    ":regional_indicator_z:"
+    ":regional_indicator_z:",
   ];
 
   const memberRoles = member.roles.cache.map((role) => role.position);
-  const highestMemberRole = Math.max(...memberRoles); // create by Claude
+  const highestMemberRole = Math.max(...memberRoles);
 
   const botMember = interaction.guild?.members.me;
   if (!botMember) {
@@ -80,7 +80,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     return;
   }
   const botRoles = botMember.roles.cache.map((role) => role.position);
-  const highestBotRole = Math.max(...botRoles); // create by Claude
+  const highestBotRole = Math.max(...botRoles);
 
   const panelTitle = interaction.options.getString("title") || "役職パネル";
 
