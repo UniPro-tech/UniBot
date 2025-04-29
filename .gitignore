@@ -24,3 +24,5 @@ yarn-error.log
 *.swp
 
 log/
+
+docker-compose.dev.yaml
