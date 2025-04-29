@@ -2,7 +2,6 @@ import {
   CommandInteraction,
   GuildMemberRoleManager,
   SlashCommandSubcommandBuilder,
-  EmbedBuilder,
 } from "discord.js";
 
 import config from "@/config";
