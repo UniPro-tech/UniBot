@@ -17,4 +17,4 @@ RUN bun install
 
 COPY . .
 
-CMD [ "bun", "--watch", "src/index.ts" ]
+CMD [ "bun", "src/index.ts" ]
