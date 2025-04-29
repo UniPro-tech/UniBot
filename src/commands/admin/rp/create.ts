@@ -150,11 +150,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   });
 
   for (let i = 0; i < roleID_list.length; i++) {
-    try {
-      await message.react(alphabet[i]);
-    } catch (error) {
-      console.error(`リアクションの追加中にエラーが発生しました: ${error}`);
-    }
+    await message.react(alphabet[i]);
   }
 };
 
