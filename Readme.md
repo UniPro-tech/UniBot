@@ -38,7 +38,19 @@ bun src/index.ts
 
 ローカルで開発する場合は、以上の手順に従ってください。
 
-コンテナ内で開発したい場合は、[開発用のdocker-composeファイル](docker-compose.dev.yaml)を用いてください。
+コンテナ内で開発したい場合は、[開発用のdocker-composeファイル](_docker-compose.dev.yaml)を用いてください。
+なお、SSH以外でやる場合は、SSHの部分をコメントアウトし、HTTPの部分のコメントアウトを解除してください。 
+`/app`がワーキングディレクトリです。
+
+### トラブルシューティング
+
+#### コンテナ内でSSHのエラーが出る場合
+
+このコマンドを実行してください。
+
+```shell
+ssh-add /root/.ssh/privatekey
+```
 
 ## Built With
 
