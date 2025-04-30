@@ -2,6 +2,7 @@ services:
   bot:
     container_name: unibot
     build: .
+    image: <your-name>/unibot:latest
     restart: always
     volumes:
       #change this to your local path
@@ -13,20 +14,27 @@ services:
         set -e
         git config --global user.name \"$GIT_USER_NAME\" &&
         git config --global user.email \"$GIT_USER_EMAIL\" &&
-        # Ensure SSH agent is running
+
+        # SSH Settings (SSH)
+        chmod 600 /root/.ssh/privatekey &&
         eval \$(ssh-agent -s) &&
         ssh-add /root/.ssh/privatekey &&
-        # Set Git Signing
+        mkdir -p /root/.ssh &&
+        chmod 600 /root/.ssh/privatekey &&
+        mkdir -p /root/.config/git &&
+        echo -e \"$GIT_USER_EMAIL $(cat /root/.ssh/pubkey)\" > /root/.config/git/allowed_signers &&
+        git remote rm origin &&
+        git remote add origin \"git@github.com:UniPro-tech/UniBot.git\" &&
+
+        # Set Git Signing (SSH)
         git config --global gpg.format ssh &&
         git config --global user.signingkey ~/.ssh/privatekey &&
         git config --global commit.gpgsign true &&
         git config --global tag.gpgsign true &&
+
         # Authenticate with GitHub (HTTPS)
         # gh auth login --with-token <<< \"$GIT_TOKEN\" &&
-        mkdir -p /root/.ssh &&
-        chmod 600 /root/.ssh/privatekey &&
-        mkdir -p /root/.config/git &&
-        echo -e \"$GIT_USER_EMAIL $(cat /root/.ssh/path/to/pubkey)" > /root/.config/git/allowed_signers &&
+
         cd /app &&
         bun run --watch src/index.ts
       "
