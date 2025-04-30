@@ -1,8 +1,13 @@
+## 別の人が同じディレクトリ名を使用している場合は変更してください。
+name: unibot
+
 services:
   bot:
     container_name: unibot
     build: .
-    image: <your-name>/unibot:latest
+    # 別の人が同じように使用している場合はイメージの競合を防ぐため、変更してください。
+    # 例: yuito-it/unibot:latest
+    image: unibot:latest
     restart: always
     volumes:
       #change this to your local path
