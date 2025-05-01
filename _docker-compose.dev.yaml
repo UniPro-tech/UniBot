@@ -43,3 +43,16 @@ services:
         cd /app &&
         bun run --watch src/index.ts
       "
+  postgres:
+    image: postgres:17.4
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=unibot
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+volumes:
+  postgres:

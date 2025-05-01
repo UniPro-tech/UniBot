@@ -4,6 +4,10 @@ import {
   EmbedBuilder,
   GuildMember,
   MessageFlags,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  ComponentType
 } from "discord.js";
 import config from "@/config";
 
@@ -41,37 +45,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     return; // アドミンロールが付与されていなかったら終了
   }
 
-  let result = "";
-  let roleID_list: string[] = [];
-  const alphabet = [
-    "🇦",
-    "🇧",
-    "🇨",
-    "🇩",
-    "🇪",
-    "🇫",
-    "🇬",
-    "🇭",
-    "🇮",
-    "🇯",
-    "🇰",
-    "🇱",
-    "🇲",
-    "🇳",
-    "🇴",
-    "🇵",
-    "🇶",
-    "🇷",
-    "🇸",
-    "🇹",
-    "🇺",
-    "🇻",
-    "🇼",
-    "🇽",
-    "🇾",
-    "🇿",
-  ];
-
+  const roles = [];
   const memberRoles = member.roles.cache.map((role) => role.position);
   const highestMemberRole = Math.max(...memberRoles);
 
@@ -115,8 +89,10 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
         return;
       }
 
-      roleID_list.push(role.id);
-      result += `${alphabet[i]}:<@&${role.id}>\n`;
+      roles.push({
+        id: role.id,
+        name: role.name
+      });
     }
   }
 
@@ -127,15 +103,47 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     });
     return;
   }
+  // 役職がなければ終了
+  if (roles.length === 0) {
+    await interaction.reply({
+      content: "有効な役職が選択されていません",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // セレクトメニューの作成
+  const selectMenu = new StringSelectMenuBuilder()
+    .setCustomId('role-selector')
+    .setPlaceholder('ロールを選択してください')
+    .setMinValues(0)
+    .setMaxValues(roles.length);
+
+  // 選択肢を追加
+  roles.forEach(role => {
+    selectMenu.addOptions(
+      new StringSelectMenuOptionBuilder()
+        .setLabel(role.name)
+        .setValue(role.id)
+        .setDescription(`${role.name}ロールを取得/解除します`)
+    );
+  });
+  const row = new ActionRowBuilder<StringSelectMenuBuilder>()
+  .addComponents(selectMenu);
+
+  // パネルの説明を作成
+  let description = "下のメニューから希望するロールを選択してください。\n";
+  description += "すでに持っているロールを選択すると解除されます。\n\n";
 
   const send = new EmbedBuilder()
     .setColor("#4CAF50")
     .setTitle(panelTitle)
-    .setDescription(result)
+    .setDescription(description)
     .setTimestamp();
 
-  const message = await interaction.channel.send({
+  await interaction.channel.send({
     embeds: [send],
+    components: [row]
   });
 
   const reply = new EmbedBuilder()
@@ -148,10 +156,6 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     embeds: [reply],
     flags: MessageFlags.Ephemeral,
   });
-
-  for (let i = 0; i < roleID_list.length; i++) {
-    await message.react(alphabet[i]);
-  }
 };
 
 export default {
