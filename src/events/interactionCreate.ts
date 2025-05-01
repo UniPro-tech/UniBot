@@ -1,4 +1,4 @@
-import { Events, EmbedBuilder, Interaction } from "discord.js";
+import { Events, EmbedBuilder, Interaction,GuildMember,TextChannel } from "discord.js";
 import config from "@/config";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 
@@ -101,6 +101,39 @@ export const execute = async (interaction: Interaction) => {
       if (logChannel) {
         logChannel.send({ embeds: [messageEmbed] });
       }
+    }
+  } else if (interaction.isStringSelectMenu()) {
+    if (interaction.customId === 'role-selector') {
+      const selected = interaction.values[0];
+      console.log(`選択された項目: <@&${selected}>`);
+      await interaction.deferReply({ ephemeral: true });
+      const member = interaction.guild?.members.cache.get(interaction.user.id);
+      if (!member) {
+        await interaction.reply({ content: 'メンバー情報を取得できませんでした。', ephemeral: true });
+        return;
+      }
+      const hasRole = member.roles.cache.has(selected);
+
+      if (hasRole) {
+        await member.roles.remove(selected);
+        await interaction.editReply(`${member.displayName} から役職 <@&${selected}> を削除しました。`);
+      } else {
+        await member.roles.add(selected);
+        await interaction.editReply(`${member.displayName} に役職 <@&${selected}> を付与しました。`);
+      }
+      console.log(
+        `[${interaction.client.function.timeUtils.timeToJSTstamp(
+          Date.now(),
+          true
+        )} info] Selected: ${selected}`
+      );
+    } else {
+      console.log(
+        `[${interaction.client.function.timeUtils.timeToJSTstamp(
+          Date.now(),
+          true
+        )} info] Not Found: ${interaction.customId}`
+      );
     }
   }
 };

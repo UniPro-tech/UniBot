@@ -125,7 +125,6 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       new StringSelectMenuOptionBuilder()
         .setLabel(role.name)
         .setValue(role.id)
-        .setDescription(`${role.name}ロールを取得/解除します`)
     );
   });
   const row = new ActionRowBuilder<StringSelectMenuBuilder>()
