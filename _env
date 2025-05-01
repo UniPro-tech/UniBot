@@ -6,6 +6,9 @@ LOGCH_GUILD_ID="YOUR_GUILD_ID"
 ROLE_ADMIN="YOUR_ADMIN_ROLE_ID"
 TEST_GUILD="YOUR_TEST_GUILD_ID"
 
+# Prisma Database URL
+DATABASE_URL="postgresql://root:secret@localhost:5432/unibot?schema=public"
+
 # For Development
 GPG_KEY_ID="YOUR_GPG_KEY_ID(OPTION)"
 GIT_USER_NAME="YOUR_GIT_USER_NAME"
