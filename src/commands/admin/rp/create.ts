@@ -45,7 +45,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
   const panelTitle = interaction.options.getString('title') || '役職パネル';
 
-  for (let i = 0; i <= 10; i++) {
+  for (let i = 0; i <= 2; i++) {
      const role = interaction.options.getRole(`role${i}`);
      if (role) {
         // @everyone ロールのIDを取得
