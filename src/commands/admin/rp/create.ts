@@ -32,6 +32,13 @@ export const adminGuildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const member = interaction.member as GuildMember;
+  if (!member.roles.cache.has(interaction.client.config.adminRoleId)) {
+    await interaction.reply({
+      content: "権限がありません",
+      flags: MessageFlags.Ephemeral,
+    });
+    return; // アドミンロールが付与されていなかったら終了
+  }
 
   if (!interaction.channel || !interaction.channel.isSendable()) {
     await interaction.reply({

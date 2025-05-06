@@ -7,6 +7,7 @@ import {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
+  PermissionsBitField,
 } from "discord.js";
 import { randomUUID } from "crypto";
 
@@ -32,6 +33,13 @@ export const adminGuildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const member = interaction.member as GuildMember;
+  if (!member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+    await interaction.reply({
+      content: "権限がありません",
+      flags: MessageFlags.Ephemeral,
+    });
+    return; // 権限管理権限が付与されていなかったら終了
+  }
 
   if (!interaction.channel || !interaction.channel.isSendable()) {
     await interaction.reply({
