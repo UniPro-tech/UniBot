@@ -22,7 +22,7 @@ const client = new Client({
 import fs from "fs";
 import config from "@/config";
 import timeUtils from "@/lib/timeUtils";
-import logUtils from "@/lib/logUtils";
+import logUtils from "@/lib/dataUtils";
 client.config = config;
 client.function = {
   timeUtils: timeUtils,
