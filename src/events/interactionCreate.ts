@@ -103,7 +103,12 @@ export const execute = async (interaction: Interaction) => {
   } else if (interaction.isStringSelectMenu()) {
     if (interaction.customId.startsWith("rp_")) {
       const selected = interaction.values[0];
-      console.log(`選択された項目: <@&${selected}>`);
+      console.log(
+        `[${interaction.client.function.timeUtils.timeToJSTstamp(
+          Date.now(),
+          true
+        )} info] -> Menu Selected: ${selected}`
+      );
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const member = interaction.guild?.members.cache.get(interaction.user.id);
       if (!member) {
