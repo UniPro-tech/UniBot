@@ -36,6 +36,13 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     await interaction.reply({ content: "権限がありません", flags: MessageFlags.Ephemeral });
     return;
   }
+  if (!interaction.channel || !interaction.channel.isSendable()) {
+    await interaction.reply({
+      content: "メッセージを送信できるチャンネルではありません",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
   const roles = [];
   const memberRoles = member.roles.cache.map((role) => role.position);
@@ -100,13 +107,6 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     }
   }
 
-  if (!interaction.channel || !interaction.channel.isSendable()) {
-    await interaction.reply({
-      content: "メッセージを送信できるチャンネルではありません",
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
   // 役職がなければ終了
   if (roles.length === 0) {
     await interaction.reply({
