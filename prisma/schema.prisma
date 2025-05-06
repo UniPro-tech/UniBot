@@ -14,8 +14,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Rp {
-  id    Int     @id @default(autoincrement())
+model RolePanel {
+  id String @id @default(uuid())
   title String  @unique
   roles String[]
 }
