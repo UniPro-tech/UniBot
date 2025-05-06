@@ -9,6 +9,7 @@ import {
   StringSelectMenuOptionBuilder,
 } from "discord.js";
 import config from "@/config";
+import { randomUUID } from "crypto";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("create")
@@ -116,9 +117,20 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     return;
   }
 
-  // セレクトメニューの作成
+  // 役職の重複をチェック
+  const roleIds = roles.map((role) => role.id);
+  const uniqueRoleIds = new Set(roleIds);
+  if (uniqueRoleIds.size !== roleIds.length) {
+    await interaction.reply({
+      content: "同じ役職が複数選択されています",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const panelId = randomUUID();
   const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId("role-selector")
+    .setCustomId(`rp_${panelId}`)
     .setPlaceholder("ロールを選択してください")
     .setMinValues(0)
     .setMaxValues(roles.length);
