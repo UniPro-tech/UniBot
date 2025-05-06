@@ -103,7 +103,7 @@ export const execute = async (interaction: Interaction) => {
       }
     }
   } else if (interaction.isStringSelectMenu()) {
-    if (interaction.customId === 'role-selector') {
+    if (interaction.customId.startsWith('rp_')) {
       const selected = interaction.values[0];
       console.log(`選択された項目: <@&${selected}>`);
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
