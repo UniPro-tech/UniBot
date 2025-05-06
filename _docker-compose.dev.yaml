@@ -42,7 +42,7 @@ services:
 
         cd /app &&
         bunx prisma generate &&
-        bunx prisma migrate dev &&
+        bunx prisma migrate dev --name init &&
         bun run --watch src/index.ts
       "
     depends_on:
