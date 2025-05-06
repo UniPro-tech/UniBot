@@ -26,3 +26,5 @@ yarn-error.log
 log/
 
 docker-compose.dev.yaml
+dev/*
+src/generated
