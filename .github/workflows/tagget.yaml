@@ -1,0 +1,58 @@
+name: npm versioner
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to bump to"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - "major"
+          - "minor"
+          - "patch"
+          - "prerelease"
+      prefix:
+        description: "Prefix for the pre-version"
+        required: false
+        type: choice
+        default: "none"
+        options:
+          - "alpha"
+          - "rc"
+          - "none"
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate a token
+        id: generate-token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.NPM_VERSIONER_APP_ID }}
+          private_key: ${{ secrets.NPM_VERSIONER_PRIVATE_KEY }}
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: Set up Git
+        run: |
+          git config user.name  "NPM Versioner"
+          git config user.email "188119480+npm-versioner[bot]@users.noreply.github.com"
+      - name: Bump version(Normal)
+        if: ${{ github.event.inputs.prefix == 'none' }}
+        run: npm version ${{ github.event.inputs.version }}
+      - name: Bump version(Pre-release)
+        if: ${{ github.event.inputs.prefix != 'none' }}
+        run: npm version pre${{ github.event.inputs.version }} --preid=${{ github.event.inputs.prefix }}
+      - name: Push changes
+        run: |
+          git push --follow-tags --force
+          git push --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
