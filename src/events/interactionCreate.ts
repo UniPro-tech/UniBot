@@ -1,4 +1,4 @@
-import { Events, EmbedBuilder, Interaction,GuildMember,TextChannel } from "discord.js";
+import { Events, EmbedBuilder, Interaction, MessageFlags } from "discord.js";
 import config from "@/config";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 
@@ -106,10 +106,10 @@ export const execute = async (interaction: Interaction) => {
     if (interaction.customId === 'role-selector') {
       const selected = interaction.values[0];
       console.log(`選択された項目: <@&${selected}>`);
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const member = interaction.guild?.members.cache.get(interaction.user.id);
       if (!member) {
-        await interaction.reply({ content: 'メンバー情報を取得できませんでした。', ephemeral: true });
+        await interaction.reply({ content: 'メンバー情報を取得できませんでした。', flags: MessageFlags.Ephemeral });
         return;
       }
       const hasRole = member.roles.cache.has(selected);
