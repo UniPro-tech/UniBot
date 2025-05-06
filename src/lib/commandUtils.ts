@@ -138,7 +138,6 @@ export const addSubCommand = (name: string, data: SlashCommandBuilder) => {
     console.log(`[Subcommand]${file} has been added.`);
   }
   console.log(`\u001b[32m[Init]Added ${name}'s SubCommands\u001b[0m`);
-  console.log(data.toJSON());
   return data;
 };
 
@@ -156,7 +155,6 @@ export const subCommandHandling = (name: string) => {
     .readdirSync(path.resolve(__dirname, `../commands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
   for (const file of commandFiles) {
-    console.log(`dir:${name},file:${file}`);
     const command = require(path.resolve(__dirname, `../commands/${name}/${file}`)) as Command;
     try {
       collection.set(command.data.name, command);

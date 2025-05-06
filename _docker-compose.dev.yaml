@@ -41,5 +41,20 @@ services:
         # gh auth login --with-token <<< \"$GIT_TOKEN\" &&
 
         cd /app &&
+        bunx prisma generate &&
+        bunx prisma migrate dev --name init &&
         bun run --watch src/index.ts
       "
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:17.4
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=unibot
+    volumes:
+      - ./dev/db:/var/lib/postgresql/data
+    ports:
+      - 5432
