@@ -8,7 +8,6 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
 } from "discord.js";
-import config from "@/config";
 import { randomUUID } from "crypto";
 
 export const data = new SlashCommandSubcommandBuilder()
