@@ -102,50 +102,54 @@ export const execute = async (interaction: Interaction) => {
     }
   } else if (interaction.isStringSelectMenu()) {
     if (interaction.customId.startsWith("rp_")) {
-      const selected = interaction.values[0];
+      const selected = interaction.values;
       console.log(
         `[${interaction.client.function.timeUtils.timeToJSTstamp(
           Date.now(),
           true
         )} info] -> Menu Selected: ${selected}`
       );
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferUpdate();
       const member = interaction.guild?.members.cache.get(interaction.user.id);
       if (!member) {
-        await interaction.reply({
+        await interaction.followUp({
           content: "メンバー情報を取得できませんでした。",
           flags: MessageFlags.Ephemeral,
         });
         return;
       }
-      interaction.update({
+      interaction.editReply({
         components: interaction.message.components,
       });
-      const hasRole = member.roles.cache.has(selected);
+      selected.forEach(async (value) => {
+        const hasRole = member.roles.cache.has(value);
 
-      if (hasRole) {
-        await member.roles.remove(selected);
-        await interaction.editReply(
-          `${member.displayName} から役職 <@&${selected}> を削除しました。`
-        );
-        console.log(
-          `[${interaction.client.function.timeUtils.timeToJSTstamp(
-            Date.now(),
-            true
-          )} info] -> Role Removed: for ${member.displayName}`
-        );
-      } else {
-        await member.roles.add(selected);
-        await interaction.editReply(
-          `${member.displayName} に役職 <@&${selected}> を付与しました。`
-        );
-        console.log(
-          `[${interaction.client.function.timeUtils.timeToJSTstamp(
-            Date.now(),
-            true
-          )} info] -> Role Added: for ${member.displayName}`
-        );
-      }
+        if (hasRole) {
+          await member.roles.remove(value);
+          await interaction.followUp({
+            content: `${member.displayName} から役職 <@&${value}> を削除しました。`,
+            flags: MessageFlags.Ephemeral,
+          });
+          console.log(
+            `[${interaction.client.function.timeUtils.timeToJSTstamp(
+              Date.now(),
+              true
+            )} info] -> Role Removed: for ${member.displayName}`
+          );
+        } else {
+          await member.roles.add(value);
+          await interaction.followUp({
+            content: `${member.displayName} に役職 <@&${value}> を付与しました。`,
+            flags: MessageFlags.Ephemeral,
+          });
+          console.log(
+            `[${interaction.client.function.timeUtils.timeToJSTstamp(
+              Date.now(),
+              true
+            )} info] -> Role Added: for ${member.displayName}`
+          );
+        }
+      });
     } else {
       console.log(
         `[${interaction.client.function.timeUtils.timeToJSTstamp(
