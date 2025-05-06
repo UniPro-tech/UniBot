@@ -118,6 +118,9 @@ export const execute = async (interaction: Interaction) => {
         });
         return;
       }
+      interaction.update({
+        components: interaction.message.components,
+      });
       const hasRole = member.roles.cache.has(selected);
 
       if (hasRole) {
@@ -125,18 +128,24 @@ export const execute = async (interaction: Interaction) => {
         await interaction.editReply(
           `${member.displayName} から役職 <@&${selected}> を削除しました。`
         );
+        console.log(
+          `[${interaction.client.function.timeUtils.timeToJSTstamp(
+            Date.now(),
+            true
+          )} info] -> Role Removed: for ${member.displayName}`
+        );
       } else {
         await member.roles.add(selected);
         await interaction.editReply(
           `${member.displayName} に役職 <@&${selected}> を付与しました。`
         );
+        console.log(
+          `[${interaction.client.function.timeUtils.timeToJSTstamp(
+            Date.now(),
+            true
+          )} info] -> Role Added: for ${member.displayName}`
+        );
       }
-      console.log(
-        `[${interaction.client.function.timeUtils.timeToJSTstamp(
-          Date.now(),
-          true
-        )} info] Selected: ${selected}`
-      );
     } else {
       console.log(
         `[${interaction.client.function.timeUtils.timeToJSTstamp(
