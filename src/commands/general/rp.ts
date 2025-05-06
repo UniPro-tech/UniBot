@@ -8,10 +8,10 @@ import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
 
-export const handlingCommands = subCommandHandling("admin/rp");
+export const handlingCommands = subCommandHandling("general/rp");
 export const data = addSubCommand(
-  "admin/rp",
-  new SlashCommandBuilder().setName("rp_dev").setDescription("ロールパネルを管理します。")
+  "general/rp",
+  new SlashCommandBuilder().setName("rp").setDescription("ロールパネルを管理します。")
 );
 export const guildOnly = true;
 
