@@ -6,10 +6,9 @@ export const name = Events.InteractionCreate;
 export const execute = async (interaction: Interaction) => {
   if (interaction.isChatInputCommand()) {
     console.log(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} info] ->${interaction.commandName}`
+      `[${interaction.client.function.timeUtils.timeToJSTstamp(Date.now(), true)} info] ->${
+        interaction.commandName
+      }`
     );
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) {
@@ -39,10 +38,9 @@ export const execute = async (interaction: Interaction) => {
     try {
       await command.execute(interaction);
       console.log(
-        `[${interaction.client.function.timeUtils.timeToJSTstamp(
-          Date.now(),
-          true
-        )} run] ${interaction.commandName}`
+        `[${interaction.client.function.timeUtils.timeToJSTstamp(Date.now(), true)} run] ${
+          interaction.commandName
+        }`
       );
 
       const logEmbed = new EmbedBuilder()
@@ -103,23 +101,30 @@ export const execute = async (interaction: Interaction) => {
       }
     }
   } else if (interaction.isStringSelectMenu()) {
-    if (interaction.customId.startsWith('rp_')) {
+    if (interaction.customId.startsWith("rp_")) {
       const selected = interaction.values[0];
       console.log(`選択された項目: <@&${selected}>`);
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const member = interaction.guild?.members.cache.get(interaction.user.id);
       if (!member) {
-        await interaction.reply({ content: 'メンバー情報を取得できませんでした。', flags: MessageFlags.Ephemeral });
+        await interaction.reply({
+          content: "メンバー情報を取得できませんでした。",
+          flags: MessageFlags.Ephemeral,
+        });
         return;
       }
       const hasRole = member.roles.cache.has(selected);
 
       if (hasRole) {
         await member.roles.remove(selected);
-        await interaction.editReply(`${member.displayName} から役職 <@&${selected}> を削除しました。`);
+        await interaction.editReply(
+          `${member.displayName} から役職 <@&${selected}> を削除しました。`
+        );
       } else {
         await member.roles.add(selected);
-        await interaction.editReply(`${member.displayName} に役職 <@&${selected}> を付与しました。`);
+        await interaction.editReply(
+          `${member.displayName} に役職 <@&${selected}> を付与しました。`
+        );
       }
       console.log(
         `[${interaction.client.function.timeUtils.timeToJSTstamp(
