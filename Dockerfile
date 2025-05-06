@@ -17,4 +17,4 @@ RUN bun install
 
 COPY . .
 
-CMD [ "bunx prisma migrate deploy", "&&", "bunx prisma generate", "&&", "bun run src/index.ts" ]
+CMD [ "bun run src/index.ts" ]
