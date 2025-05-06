@@ -140,7 +140,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     selectMenu.addOptions(
       new StringSelectMenuOptionBuilder()
         .setLabel(role.name)
-        .setValue(role.id)
+        .setValue(role.id.toString())
         .setDescription(`${role.name} ロールを取得/解除します`)
     );
   });
