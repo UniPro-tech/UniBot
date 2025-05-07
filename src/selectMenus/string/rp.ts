@@ -25,34 +25,33 @@ export const execute = async (interaction: StringSelectMenuInteraction, id: stri
   });
 
   let completedRoles = Array<{ roleId: string; action: string }>();
-  let completed = false;
+  // Removed `completed` flag as it is no longer needed.
   try {
-    selected.forEach(async (value, index) => {
-      const hasRole = member.roles.cache.has(value);
+    await Promise.all(
+      selected.map(async (value) => {
+        const hasRole = member.roles.cache.has(value);
 
-      if (hasRole) {
-        await member.roles.remove(value);
-        completedRoles.push({ roleId: value, action: "removed" });
-        console.log(
-          `[${interaction.client.function.timeUtils.timeToJSTstamp(
-            Date.now(),
-            true
-          )} info] -> Role Removed: for ${member.displayName}`
-        );
-      } else {
-        await member.roles.add(value);
-        completedRoles.push({ roleId: value, action: "added" });
-        console.log(
-          `[${interaction.client.function.timeUtils.timeToJSTstamp(
-            Date.now(),
-            true
-          )} info] -> Role Added: for ${member.displayName}`
-        );
-      }
-      if (index === selected.length - 1) {
-        completed = true;
-      }
-    });
+        if (hasRole) {
+          await member.roles.remove(value);
+          completedRoles.push({ roleId: value, action: "removed" });
+          console.log(
+            `[${interaction.client.function.timeUtils.timeToJSTstamp(
+              Date.now(),
+              true
+            )} info] -> Role Removed: for ${member.displayName}`
+          );
+        } else {
+          await member.roles.add(value);
+          completedRoles.push({ roleId: value, action: "added" });
+          console.log(
+            `[${interaction.client.function.timeUtils.timeToJSTstamp(
+              Date.now(),
+              true
+            )} info] -> Role Added: for ${member.displayName}`
+          );
+        }
+      })
+    );
   } catch (error) {
     console.error(
       `[${interaction.client.function.timeUtils.timeToJSTstamp(
