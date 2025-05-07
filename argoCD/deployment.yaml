@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unibot
+spec:
+  selector:
+    matchLabels:
+      app: unibot
+  template:
+    metadata:
+      labels:
+        app: unibot
+    spec:
+      containers:
+        - name: unibot
+          image: registry.uniproject-tech.net/unibot/unibot:3.3.2
+          envFrom:
+            - secretRef:
+                name: unibot-env
+          volumeMounts:
+            - name: log
+              mountPath: /app/log
+          env:
+            - name: TZ
+              value: Asia/Tokyo
+      volumes:
+        - name: log
+          persistentVolumeClaim:
+            claimName: logs
+      imagePullSecrets:
+        - name: harbor-registry-secret

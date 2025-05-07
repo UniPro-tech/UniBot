@@ -1,28 +1,71 @@
-const { SlashCommandBuilder } = require("discord.js");
-const Discord = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const package_data = require("../../package.json");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("about")
     .setDescription("このBotについての情報を表示します。"),
-  async execute(i, client) {
-    let size;
-    client.shard.fetchClientValues("guilds.cache.size").then((result) => {
-      size = result;
-    });
-    const embed = new Discord.EmbedBuilder()
+  async execute(interaction) {
+    //const size = await interaction.client.shard.fetchClientValues("guilds.cache.size");
+    const embed = new EmbedBuilder()
       .setColor(0x0099ff)
-      .setTitle(`About ${client.conf.productname}`)
-      .setURL("https://uniproject-tech.net/UniBot/")
-      .setAuthor(client.conf.author)
-      .setDescription(client.conf.description)
-      .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
-      .addFields(
-        { name: "Version", value: client.conf.version },
-        { name: "Author", value: client.conf.author.name },
-        { name: "Guild Count", value: `${size}` }
-      )
+      .setTitle(`About ${package_data.name}`)
       .setTimestamp();
-    i.reply({ embeds: [embed] });
+    if (interaction.client.shard) {
+      embed.addFields({
+        name: "Shard ID",
+        value: interaction.client.shard.ids,
+        inline: true,
+      });
+      embed.addFields({
+        name: "Shard Count",
+        value: interaction.client.shard.count,
+        inline: true,
+      });
+    }
+    if (package_data.description) {
+      embed.setDescription(package_data.description);
+    }
+    if (package_data.version) {
+      embed.addFields({
+        name: "Version",
+        value: package_data.version,
+        inline: true,
+      });
+    }
+    if (package_data.author) {
+      embed.addFields({
+        name: "Author",
+        value: `[${package_data.author + package_data.email}](${
+          package_data.author.url
+        })`,
+      });
+    }
+    if (package_data.license) {
+      embed.addFields({
+        name: "License",
+        value: package_data.license,
+        inline: true,
+      });
+    }
+    if (package_data.repository) {
+      embed.addFields({
+        name: "Repository",
+        value: package_data.repository.url,
+      });
+    }
+    if (package_data.homepage) {
+      embed.setURL(package_data.homepage);
+    }
+    if (package_data.contributors) {
+      let temp = new Array();
+      for (let i = 0; i < package_data.contributors.length; i++) {
+        temp[
+          i
+        ] = `[${package_data.contributors[i].name} <${package_data.contributors[i].email}>](${package_data.contributors[i].url})`;
+      }
+      embed.addFields({ name: "Contributors", value: temp.join("\n") });
+    }
+    interaction.reply({ embeds: [embed] });
   },
 };

@@ -1,16 +1,21 @@
 const Discord = require("discord.js");
 module.exports = {
   name: "ready", // イベント名
+  /**
+   * Event handler for the "ready" event.
+   *
+   * @param {Discord.Client} client - The Discord client object.
+   * @returns {Promise<void>} - A promise that resolves when the execution is complete.
+   */
   async execute(client) {
-    const logFile = await client.func.readLog("v1/conf/status");
+    const logFile = await client.func.logUtils.readLog("v1/conf/status");
     console.log(logFile);
-    const add = require(`../system/add.js`);
-
-    add.addCmd(client.conf);
-    console.log(
-      `on:${logFile.onoff},play:${logFile.playing},status:${logFile.status}`
+    const commandUtils = require(`../lib/commandUtils.js`);
+    commandUtils.addCmd(client);
+    console.debug(
+      `[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`
     );
-    if (logFile.onoff == "on") {
+    if (logFile?.onoff == "on") {
       let activityOpt = {};
       switch (logFile.type) {
         case "WATCHING":
@@ -27,6 +32,12 @@ module.exports = {
 
         case "STREAMING":
           activityOpt.type = Discord.ActivityType.Streaming;
+          activityOpt.url = statusDescription;
+          activityOpt.name = "Youtube";
+          break;
+
+        case "CUSTOM":
+          activityOpt.type = Discord.ActivityType.Custom;
           break;
 
         default:
@@ -47,9 +58,11 @@ module.exports = {
       client.user.setStatus("online");
     }
     const channel = client.channels.cache.get(client.conf.logch.ready);
-    channel.send("Discordログインしました!");
+    if (channel) {
+      channel.send("Discordログインしました!");
+    }
     console.log(
-      `[${client.func.timeToJST(Date.now(), true)}] Logged in as ${
+      `[${client.func.timeUtils.timeToJST(Date.now(), true)} info] Logged in as ${
         client.user.tag
       }!`
     );

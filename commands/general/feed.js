@@ -1,27 +1,21 @@
-const { SlashCommandBuilder, EmbedBuilder, CommandInteraction } = require("discord.js");
-const { subCommandHandling, addSubCommand } = require(`../../lib/commandUtils`);
-const { GetLogChannel, GetErrorChannel } = require(`../../lib/channelUtils`);
-const config = require("../../config");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { addSubCommand, subCommandHandling } = require("../../lib/commandUtils");
+const { GetLogChannel, GetErrorChannel } = require("../../lib/channelUtils");
 
 module.exports = {
-  handlingCommands: subCommandHandling("admin/maintenance"),
+  guildOnly: true,
+  handlingCommands: subCommandHandling("general/feed"),
   data: addSubCommand(
-    "admin/maintenance",
+    "general/feed",
     new SlashCommandBuilder()
-      .setName("maintenance")
-      .setDescription("メンテナンスモード")
+      .setName("feed")
+      .setDescription("RSS feed/atom feed Utilities")
   ),
-  adminGuildOnly: true,
-  /**
-   * Executes the maintenance command.
-   *
-   * @param {CommandInteraction} interaction - The interaction object.
-   * @returns {Promise<void>} - A promise that resolves when the execution is complete.
-   */
   async execute(interaction) {
     const command = this.handlingCommands.get(
       interaction.options.getSubcommand()
     );
+    await interaction.deferReply();
     if (!command) {
       console.log(`[-] Not Found: ${interaction.options.getSubcommand()}`);
       return;
@@ -79,7 +73,7 @@ module.exports = {
         .setColor(interaction.conf.color.e)
         .setTimestamp();
 
-      await interaction.reply(messageEmbed);
+      await interaction.editReply(messageEmbed);
       const logChannel = await GetLogChannel(interaction);
       if (logChannel) {
         logChannel.send({ embeds: [messageEmbed] });
