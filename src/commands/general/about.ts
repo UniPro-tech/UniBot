@@ -37,12 +37,6 @@ export const execute = async (interaction: CommandInteraction) => {
       inline: true,
     });
   }
-  if (packageData.author) {
-    embed.addFields({
-      name: "Author",
-      value: `[${packageData.author + packageData.email}](${packageData.author.url})`,
-    });
-  }
   if (packageData.license) {
     embed.addFields({
       name: "License",
@@ -50,10 +44,18 @@ export const execute = async (interaction: CommandInteraction) => {
       inline: true,
     });
   }
+  if (packageData.author) {
+    embed.addFields({
+      name: "Authors",
+      value: packageData.author.name,
+      inline: false,
+    });
+  }
   if (packageData.repository) {
     embed.addFields({
       name: "Repository",
       value: packageData.repository.url,
+      inline: false,
     });
   }
   if (packageData.homepage) {
@@ -62,10 +64,21 @@ export const execute = async (interaction: CommandInteraction) => {
   if (packageData.contributors) {
     let temp = new Array();
     for (let i = 0; i < packageData.contributors.length; i++) {
-      temp[i] =
-        `[${packageData.contributors[i].name} <${packageData.contributors[i].email}>](${packageData.contributors[i].url})`;
+      temp[
+        i
+      ] = `- [${packageData.contributors[i].name}](${packageData.contributors[i].url}) <[${packageData.contributors[i].email}](mailto:${packageData.contributors[i].email})>`;
     }
     embed.addFields({ name: "Contributors", value: temp.join("\n") });
   }
+  embed.setTimestamp();
+  embed.setThumbnail(
+    interaction.client.user?.displayAvatarURL({
+      size: 1024,
+    })
+  );
+  embed.setFooter({
+    text: `Requested by ${interaction.user.tag}`,
+    iconURL: interaction.user.displayAvatarURL(),
+  });
   interaction.reply({ embeds: [embed] });
 };
