@@ -35,9 +35,9 @@ export const StringSelectMenuCollector = async (client: Client) => {
     const menuDefine = require(path.resolve(__dirname, `../selectMenus/string/${file}`));
     try {
       client.stringSelectMenus.set(menuDefine.name, menuDefine);
-      console.log(`[Init]${menuDefine.data.name} has been loaded.`);
+      console.log(`[Init]${menuDefine.name} has been loaded.`);
     } catch (error) {
-      console.error(`[error]An Error Occured in ${menuDefine.data.name}\nDatails:\n ${error}`);
+      console.error(`[error]An Error Occured in ${menuDefine.name}\nDatails:\n ${error}`);
     }
   }
 };
