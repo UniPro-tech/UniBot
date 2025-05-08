@@ -2,7 +2,8 @@
   "name": "unibot",
   "version": "4.1.0-rc.0",
   "description": "The Discord Bot made by UniProject.",
-  "main": "index.js",
+  "main": "index.ts",
+  "private": true,
   "scripts": {
     "build": "tsc -p ./",
     "start": "node dist/index.js"
@@ -19,7 +20,17 @@
     {
       "name": "YuitoAkatsuki",
       "email": "yuito@uniproject.jp",
-      "url": "https://github.com/yuito-it"
+      "url": "https://yuito-it.jp"
+    },
+    {
+      "name": "彩音",
+      "email": "01c.ayane@uniproject.jp",
+      "url": "https://ayane0857.net/"
+    },
+    {
+      "name": "Root Cat",
+      "email": "renoisme@uniproject.jp",
+      "url": "https://github.com/renoisme"
     }
   ],
   "license": "MIT",

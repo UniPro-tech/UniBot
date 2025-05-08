@@ -37,7 +37,7 @@ export const StringSelectMenuCollector = async (client: Client) => {
       client.stringSelectMenus.set(menuDefine.name, menuDefine);
       console.log(`[Init]${menuDefine.name} has been loaded.`);
     } catch (error) {
-      console.error(`[error]An Error Occured in ${menuDefine.name}\nDatails:\n ${error}`);
+      console.error(`[error]An Error Occured in ${menuDefine.name}\nDetails:\n ${error}`);
     }
   }
 };

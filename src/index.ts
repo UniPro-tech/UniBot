@@ -30,7 +30,7 @@ client.function = {
 };
 client.fs = fs;
 
-import { CommandCollector, StringSelectMenuCollector } from "@/lib/collect";
+import { CommandCollector, StringSelectMenuCollector } from "@/lib/collecter";
 import path from "path";
 CommandCollector(client);
 StringSelectMenuCollector(client);
