@@ -62,7 +62,7 @@ export const execute = async (interaction: CommandInteraction) => {
     embed.setURL(packageData.homepage);
   }
   if (packageData.contributors) {
-    let temp = new Array();
+    let temp = [];
     for (let i = 0; i < packageData.contributors.length; i++) {
       temp[
         i
