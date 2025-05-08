@@ -86,37 +86,6 @@ export const addCommand = async (client: Client) => {
 };
 
 /**
- * Handles the command handling process.
- *
- * @param {Object} client - The client object.
- * @param {Object} fs - The fs object.
- * @param {Object} Collection - The Collection object.
- * @returns {Promise<void>} - A promise that resolves when the command handling is complete.
- */
-export const handling = async (client: Client) => {
-  console.log(`\u001b[32m===Load Command Executing Data===\u001b[0m`);
-  client.commands = new Collection();
-  const commandFolders = fs.readdirSync(path.resolve(__dirname, `../commands`));
-  for (const folder of commandFolders) {
-    console.log(`\u001b[32m[Init]Loading ${folder} commands\u001b[0m`);
-    const commandFiles = fs
-      .readdirSync(path.resolve(__dirname, `../commands/${folder}`))
-      .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
-    for (const file of commandFiles) {
-      console.debug(`dir:${folder},file:${file}`);
-      const command = require(path.resolve(__dirname, `../commands/${folder}/${file}`));
-      try {
-        client.commands.set(command.data.name, command);
-        console.log(`[Init]${command.data.name} has been loaded.`);
-      } catch (error) {
-        console.error(`[error]An Error Occured in ${command.data.name}\nDatails:\n ${error}`);
-      }
-    }
-    console.log(`\u001b[32m${folder} has been loaded\u001b[0m`);
-  }
-};
-
-/**
  * Adds subcommands to the provided data object.
  *
  * @param {string} name - The name of the command.
@@ -171,7 +140,6 @@ export const subCommandHandling = (name: string) => {
 
 export default {
   addCommand,
-  handling,
   addSubCommand,
   subCommandHandling,
 };
