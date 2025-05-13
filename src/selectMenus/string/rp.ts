@@ -25,7 +25,7 @@ export const execute = async (interaction: StringSelectMenuInteraction, id: stri
   });
 
   let completedRoles = Array<{ roleId: string; action: string }>();
-  // Removed `completed` flag as it is no longer needed.
+  let completed = false;
   try {
     await Promise.all(
       selected.map(async (value) => {
@@ -52,6 +52,7 @@ export const execute = async (interaction: StringSelectMenuInteraction, id: stri
         }
       })
     );
+    completed = true;
   } catch (error) {
     console.error(
       `[${interaction.client.function.timeUtils.timeToJSTstamp(
