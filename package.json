@@ -46,7 +46,7 @@
     "dotenv": "^16.4.7",
     "fs": "^0.0.1-security",
     "install": "^0.13.0",
-    "node-cron": "^3.0.3",
+    "node-cron": "^4.0.6",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
