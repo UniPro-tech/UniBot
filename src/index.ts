@@ -36,6 +36,14 @@ import {
   StringSelectMenuCollector,
 } from "@/lib/collecter";
 import path from "path";
+import { ChatInputCommand } from "./executors/types/Command";
+import { StringSelectMenu } from "./executors/types/StringSelectMenu";
+client.interactionExecutorsCollections = {
+  chatInputCommands: new Collection<string, ChatInputCommand>(),
+  stringSelectMenus: new Collection<string, StringSelectMenu>(),
+  // TODO: ここはMessageContextMenuCommandにする
+  messageContextMenuCommands: new Collection<string, ChatInputCommand>(),
+};
 ChatInputCommandCollector(client);
 StringSelectMenuCollector(client);
 MessageContextMenuCommandCollector(client);
