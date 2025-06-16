@@ -30,10 +30,15 @@ client.function = {
 };
 client.fs = fs;
 
-import { CommandCollector, StringSelectMenuCollector } from "@/lib/collecter";
+import {
+  ChatInputCommandCollector,
+  MessageContextMenuCommandCollector,
+  StringSelectMenuCollector,
+} from "@/lib/collecter";
 import path from "path";
-CommandCollector(client);
+ChatInputCommandCollector(client);
 StringSelectMenuCollector(client);
+MessageContextMenuCommandCollector(client);
 const eventFiles = fs
   .readdirSync(path.resolve(__dirname, "events"))
   .filter((file) => (file.endsWith(".ts") && !file.endsWith(".d.ts")) || file.endsWith(".js"));

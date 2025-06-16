@@ -2,8 +2,8 @@ import { Client, Collection } from "discord.js";
 import path from "path";
 import fs from "fs";
 
-export const CommandCollector = async (client: Client) => {
-  console.log(`\u001b[32m===Load Command Executing Data===\u001b[0m`);
+export const ChatInputCommandCollector = async (client: Client) => {
+  console.log(`\u001b[32m===Load ChatInputCommand Executing Data===\u001b[0m`);
   client.interactionExecutorsCollections.chatInputCommands = new Collection();
   const commandFolders = fs.readdirSync(path.resolve(__dirname, `../executors/chatInputCommands`));
   for (const folder of commandFolders) {
@@ -26,13 +26,14 @@ export const CommandCollector = async (client: Client) => {
     }
     console.log(`\u001b[32m${folder} has been loaded\u001b[0m`);
   }
+  console.log(`\u001b[32m===ChatInputCommand Executing Data Loaded===\u001b[0m`);
 };
 
 export const StringSelectMenuCollector = async (client: Client) => {
-  console.log(`\u001b[32m===Load Command Executing Data===\u001b[0m`);
+  console.log(`\u001b[32m===Load StringSelectMenu Executing Data===\u001b[0m`);
   client.interactionExecutorsCollections.stringSelectMenus = new Collection();
   const commandFiles = fs
-    .readdirSync(path.resolve(__dirname, `../selectMenus/string`))
+    .readdirSync(path.resolve(__dirname, `../executors/selectMenus/string`))
     .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
   for (const file of commandFiles) {
     const menuDefine = require(path.resolve(__dirname, `../executors/selectMenus/string/${file}`));
@@ -43,4 +44,29 @@ export const StringSelectMenuCollector = async (client: Client) => {
       console.error(`[error]An Error Occured in ${menuDefine.name}\nDetails:\n ${error}`);
     }
   }
+  console.log(`\u001b[32m===StringSelectMenu Executing Data Loaded===\u001b[0m`);
+};
+
+export const MessageContextMenuCommandCollector = async (client: Client) => {
+  console.log(`\u001b[32m===Load MessageContextMenuCommand Executing Data===\u001b[0m`);
+  client.interactionExecutorsCollections.messageContextMenuCommands = new Collection();
+  const commandFiles = fs
+    .readdirSync(path.resolve(__dirname, `../executors/messageContextMenuCommands`))
+    .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
+  for (const file of commandFiles) {
+    const menuDefine = require(path.resolve(
+      __dirname,
+      `../executors/messageContextMenuCommands/${file}`
+    ));
+    try {
+      client.interactionExecutorsCollections.messageContextMenuCommands.set(
+        menuDefine.name,
+        menuDefine
+      );
+      console.log(`[Init]${menuDefine.name} has been loaded.`);
+    } catch (error) {
+      console.error(`[error]An Error Occured in ${menuDefine.name}\nDetails:\n ${error}`);
+    }
+  }
+  console.log(`\u001b[32m===MessageContextMenuCommand Executing Data Loaded===\u001b[0m`);
 };
