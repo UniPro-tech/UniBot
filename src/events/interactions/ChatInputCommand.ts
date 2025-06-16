@@ -54,9 +54,11 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
         {
           name: "実行サーバー",
           value:
-            "```\n" + (interaction.inGuild()
+            "```\n" +
+            (interaction.inGuild()
               ? `${interaction.guild?.name} (${interaction.guild?.id})`
-              : "DM") + "\n```",
+              : "DM") +
+            "\n```",
         },
         {
           name: "実行ユーザー",
