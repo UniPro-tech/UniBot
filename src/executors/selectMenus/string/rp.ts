@@ -6,7 +6,7 @@ export const name = "rp";
 export const execute = async (interaction: StringSelectMenuInteraction, id: string) => {
   const selected = interaction.values;
   console.log(
-    `[${interaction.client.function.timeUtils.timeToJSTstamp(
+    `[${interaction.client.functions.timeUtils.timeToJSTstamp(
       Date.now(),
       true
     )} info] -> Menu Selected: ${selected}`
@@ -35,7 +35,7 @@ export const execute = async (interaction: StringSelectMenuInteraction, id: stri
           await member.roles.remove(value);
           completedRoles.push({ roleId: value, action: "removed" });
           console.log(
-            `[${interaction.client.function.timeUtils.timeToJSTstamp(
+            `[${interaction.client.functions.timeUtils.timeToJSTstamp(
               Date.now(),
               true
             )} info] -> Role Removed: for ${member.displayName}`
@@ -44,7 +44,7 @@ export const execute = async (interaction: StringSelectMenuInteraction, id: stri
           await member.roles.add(value);
           completedRoles.push({ roleId: value, action: "added" });
           console.log(
-            `[${interaction.client.function.timeUtils.timeToJSTstamp(
+            `[${interaction.client.functions.timeUtils.timeToJSTstamp(
               Date.now(),
               true
             )} info] -> Role Added: for ${member.displayName}`
@@ -55,7 +55,7 @@ export const execute = async (interaction: StringSelectMenuInteraction, id: stri
     completed = true;
   } catch (error) {
     console.error(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error]An Error Occured in ${interaction.customId}\nDetails:\n${error}`

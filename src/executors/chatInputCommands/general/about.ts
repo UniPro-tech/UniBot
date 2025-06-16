@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 import path from "path";
-const packageData = require(path.resolve(__dirname, "../../../package.json"));
+const packageData = require(path.resolve(__dirname, "../../../../package.json"));
 
 export const guildOnly = false;
 export const data = new SlashCommandBuilder()
@@ -64,8 +64,9 @@ export const execute = async (interaction: CommandInteraction) => {
   if (packageData.contributors) {
     let temp = [];
     for (let i = 0; i < packageData.contributors.length; i++) {
-      temp[i] =
-        `- [${packageData.contributors[i].name}](${packageData.contributors[i].url}) <[${packageData.contributors[i].email}](mailto:${packageData.contributors[i].email})>`;
+      temp[
+        i
+      ] = `- [${packageData.contributors[i].name}](${packageData.contributors[i].url}) <[${packageData.contributors[i].email}](mailto:${packageData.contributors[i].email})>`;
     }
     embed.addFields({ name: "Contributors", value: temp.join("\n") });
   }
