@@ -1,4 +1,4 @@
-import { Command } from "@/commands/types/Command";
+import { ChatInputCommand } from "@/executors/types/Command";
 import { REST } from "@discordjs/rest";
 import { RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { Client, Collection, SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
@@ -23,7 +23,7 @@ export const addCommand = async (client: Client) => {
 
   function cmdToArray(
     array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
-    command: Command,
+    command: ChatInputCommand,
     file: string,
     notice = ""
   ) {
@@ -57,7 +57,10 @@ export const addCommand = async (client: Client) => {
       .readdirSync(path.resolve(__dirname, `../commands/${folder}`))
       .filter((file) => file.endsWith(".js") || (file.endsWith(".ts") && !file.endsWith(".d.ts")));
     for (const file of commandFiles) {
-      const command = require(path.resolve(__dirname, `../commands/${folder}/${file}`)) as Command;
+      const command = require(path.resolve(
+        __dirname,
+        `../commands/${folder}/${file}`
+      )) as ChatInputCommand;
       if (command.adminGuildOnly) {
         cmdToArray(adminGuildCommands, command, file, "[Admin]");
         continue;
@@ -98,7 +101,10 @@ export const addSubCommand = (name: string, data: SlashCommandBuilder) => {
     .readdirSync(path.resolve(__dirname, `../commands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
   for (const file of commandFiles) {
-    const command = require(path.resolve(__dirname, `../commands/${name}/${file}`)) as Command;
+    const command = require(path.resolve(
+      __dirname,
+      `../commands/${name}/${file}`
+    )) as ChatInputCommand;
     /*if (command.subCommandGroup) {
       data.addSubcommandGroup(command.data);
     } else */
@@ -118,13 +124,16 @@ export const addSubCommand = (name: string, data: SlashCommandBuilder) => {
  * @returns {Promise<void>} - A promise that resolves when the sub-commands are handled.
  */
 export const subCommandHandling = (name: string) => {
-  const collection = new Collection<string, Command>();
+  const collection = new Collection<string, ChatInputCommand>();
   console.log(`\u001b[32m===Load ${name}'s SubCommand Executing Data===\u001b[0m`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../commands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
   for (const file of commandFiles) {
-    const command = require(path.resolve(__dirname, `../commands/${name}/${file}`)) as Command;
+    const command = require(path.resolve(
+      __dirname,
+      `../commands/${name}/${file}`
+    )) as ChatInputCommand;
     try {
       collection.set(command.data.name, command);
       console.log(`[Subcommand]${command.data.name} has been loaded.`);

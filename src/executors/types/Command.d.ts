@@ -6,8 +6,8 @@ import {
   SlashCommandSubcommandGroupBuilder,
 } from "discord.js";
 
-export interface Command {
-  handlingCommands: Collection<string, Command> | undefined;
+export interface ChatInputCommand {
+  handlingCommands: Collection<string, ChatInputCommand> | undefined;
   adminGuildOnly: boolean | undefined;
   guildOnly: boolean | undefined;
   data: SlashCommandBuilder | SlashCommandSubcommandBuilder | SlashCommandSubcommandGroupBuilder;

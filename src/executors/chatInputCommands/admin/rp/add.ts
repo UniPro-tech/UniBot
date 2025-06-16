@@ -12,7 +12,7 @@ import config from "@/config";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("add")
-  .setDescription("リアクションパネルを作成します")
+  .setDescription("リアクションパネルにロールを追加します")
   .addRoleOption((option) =>
     option.setName("role0").setDescription("追加するロールを選択してください").setRequired(true)
   )

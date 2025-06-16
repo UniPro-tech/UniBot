@@ -1,8 +1,8 @@
 import { Collection } from "discord.js";
-import { Command } from "@/commands/types/Command";
+import { ChatInputCommand } from "@/executors/types/Command";
 import timeUtils from "@/lib/timeUtils";
 import logUtils from "@/lib/dataUtils";
-import { StringSelectMenuDefineType } from "@/selectMenus/types/SelectMenuDefineType";
+import { StringSelectMenu } from "@/executors/types/StringSelectMenu";
 
 declare module "discord.js" {
   interface Client {
@@ -13,8 +13,9 @@ declare module "discord.js" {
       logUtils: typeof logUtils;
     };
     interactionExecutorsCollections: {
-      chatInputCommands: Collection<string, Command>;
-      stringSelectMenus: Collection<string, StringSelectMenuDefineType>;
+      chatInputCommands: Collection<string, ChatInputCommand>;
+      stringSelectMenus: Collection<string, StringSelectMenu>;
+      messageContextMenuCommands: Collection<string, ChatInputCommand>;
     };
   }
 }
