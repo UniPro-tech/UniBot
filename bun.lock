@@ -17,7 +17,7 @@
         "install": "^0.13.0",
         "node-cron": "^3.0.3",
         "rss-parser": "^3.13.0",
-        "voicevoxjs": "^0.6.0",
+        "voicevox.js": "^0.6.0",
       },
       "devDependencies": {
         "@types/node-cron": "^3.0.11",
@@ -142,7 +142,7 @@
 
     "uuid": ["uuid@8.3.2", "", { "bin": "dist/bin/uuid" }, "sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg=="],
 
-    "voicevoxjs": ["voicevoxjs@0.6.0", "", { "dependencies": { "axios": "^1.10.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-mMpvmck1mx0QjaaN2JiCq0lfJD7Vkq/CDcTDOt1h1slYvrl3z6dxSVYscdFjjpspGVz/4Tqb6fTEQ9ECXi9AQQ=="],
+    "voicevox.js": ["voicevox.js@0.6.0", "", { "dependencies": { "axios": "^1.10.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-woqDfV1pxrZcwqpfJwdrtO81e2Y297nvvQJzou8I7G+p2bLlQ0ThibSo7KV8s5Ka/T7fZfI0zYcuP0oz5pnU8g=="],
 
     "ws": ["ws@8.18.0", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw=="],
 
