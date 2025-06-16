@@ -47,7 +47,8 @@
     "fs": "^0.0.1-security",
     "install": "^0.13.0",
     "node-cron": "^3.0.3",
-    "rss-parser": "^3.13.0"
+    "rss-parser": "^3.13.0",
+    "voicevoxjs": "^0.6.0"
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",

@@ -4,25 +4,26 @@
     "": {
       "name": "unibot",
       "dependencies": {
-        "@discordjs/rest": "^2.4.3",
+        "@discordjs/rest": "^2.5.1",
         "@discordjs/voice": "^0.17.0",
-        "@prisma/client": "^6.7.0",
-        "@types/node": "^22.13.14",
-        "axios": "^1.9.0",
+        "@prisma/client": "^6.9.0",
+        "@types/node": "^22.15.32",
+        "axios": "^1.10.0",
         "child_process": "^1.0.2",
-        "discord-api-types": "^0.37.119",
-        "discord.js": "^14.18.0",
-        "dotenv": "^16.4.7",
+        "discord-api-types": "^0.37.120",
+        "discord.js": "^14.19.3",
+        "dotenv": "^16.5.0",
         "fs": "^0.0.1-security",
         "install": "^0.13.0",
         "node-cron": "^3.0.3",
         "rss-parser": "^3.13.0",
+        "voicevoxjs": "^0.6.0",
       },
       "devDependencies": {
         "@types/node-cron": "^3.0.11",
-        "prisma": "^6.7.0",
+        "prisma": "^6.9.0",
         "tsconfig-paths": "^4.2.0",
-        "typescript": "^5.8.2",
+        "typescript": "^5.8.3",
       },
     },
   },
@@ -140,6 +141,8 @@
     "undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
 
     "uuid": ["uuid@8.3.2", "", { "bin": "dist/bin/uuid" }, "sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg=="],
+
+    "voicevoxjs": ["voicevoxjs@0.6.0", "", { "dependencies": { "axios": "^1.10.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-mMpvmck1mx0QjaaN2JiCq0lfJD7Vkq/CDcTDOt1h1slYvrl3z6dxSVYscdFjjpspGVz/4Tqb6fTEQ9ECXi9AQQ=="],
 
     "ws": ["ws@8.18.0", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw=="],
 
