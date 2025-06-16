@@ -1,10 +1,14 @@
 import Discord, { Client } from "discord.js";
-import commandUtils from "@/lib/commandUtils";
+import {
+  chatInputCommandsRegister,
+  messageContextMenuCommandsRegister,
+} from "@/lib/executorsRegister";
 
 export const name = "ready";
 export const execute = async (client: Client) => {
-  const logFile = await client.function.logUtils.readConfig("status");
-  commandUtils.addCommand(client);
+  const logFile = await client.functions.logUtils.readConfig("status");
+  chatInputCommandsRegister(client);
+  messageContextMenuCommandsRegister(client);
   console.debug(`[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
   if (!client.user) {
     console.error(
@@ -74,7 +78,7 @@ export const execute = async (client: Client) => {
     channel.send("Discordログインしました!");
   }
   console.log(
-    `[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${
+    `[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${
       client.user.tag
     }!`
   );
