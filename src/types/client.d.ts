@@ -6,13 +6,15 @@ import { StringSelectMenuDefineType } from "@/selectMenus/types/SelectMenuDefine
 
 declare module "discord.js" {
   interface Client {
-    commands: Collection<string, Command>;
     fs: typeof import("fs");
     config: typeof import("@/config");
     function: {
       timeUtils: typeof timeUtils;
       logUtils: typeof logUtils;
     };
-    stringSelectMenus: Collection<string, StringSelectMenuDefineType>;
+    interactionExecutorsCollections: {
+      chatInputCommands: Collection<string, Command>;
+      stringSelectMenus: Collection<string, StringSelectMenuDefineType>;
+    };
   }
 }

@@ -4,11 +4,14 @@ import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 
 const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction) => {
   console.log(
-    `[${interaction.client.function.timeUtils.timeToJSTstamp(Date.now(), true)} info] ->${
-      interaction.commandName
-    }`
+    `[${interaction.client.function.timeUtils.timeToJSTstamp(
+      Date.now(),
+      true
+    )} info] ChatInputCommand->${interaction.commandName}`
   );
-  const command = interaction.client.commands.get(interaction.commandName);
+  const command = interaction.client.interactionExecutorsCollections.chatInputCommands.get(
+    interaction.commandName
+  );
   if (!command) {
     console.log(
       `[${interaction.client.function.timeUtils.timeToJSTstamp(

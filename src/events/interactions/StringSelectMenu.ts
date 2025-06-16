@@ -5,7 +5,8 @@ import config from "@/config";
 const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
   try {
     const [prefix, id] = interaction.customId.split("_");
-    const executionDefine = interaction.client.stringSelectMenus.get(prefix);
+    const executionDefine =
+      interaction.client.interactionExecutorsCollections.stringSelectMenus.get(prefix);
     if (!executionDefine) {
       console.log(
         `[${interaction.client.function.timeUtils.timeToJSTstamp(
@@ -15,6 +16,12 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
       );
       return;
     }
+    console.log(
+      `[${interaction.client.function.timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} info] StringSelectMenu -> ${interaction.customId}`
+    );
     await executionDefine.execute(interaction, id);
   } catch (error) {
     console.error(
