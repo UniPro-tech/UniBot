@@ -2,6 +2,8 @@ import { Client, Collection } from "discord.js";
 import path from "path";
 import fs from "fs";
 
+// TODO: Collectionの型を指定する
+
 export const ChatInputCommandCollector = async (client: Client) => {
   console.log(`\u001b[32m===Load ChatInputCommand Executing Data===\u001b[0m`);
   client.interactionExecutorsCollections.chatInputCommands = new Collection();
