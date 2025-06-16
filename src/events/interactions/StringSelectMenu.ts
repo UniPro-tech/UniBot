@@ -9,7 +9,7 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
       interaction.client.interactionExecutorsCollections.stringSelectMenus.get(prefix);
     if (!executionDefine) {
       console.log(
-        `[${interaction.client.function.timeUtils.timeToJSTstamp(
+        `[${interaction.client.functions.timeUtils.timeToJSTstamp(
           Date.now(),
           true
         )} info] Not Found: ${interaction.customId}`
@@ -17,7 +17,7 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
       return;
     }
     console.log(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} info] StringSelectMenu -> ${interaction.customId}`
@@ -25,7 +25,7 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
     await executionDefine.execute(interaction, id);
   } catch (error) {
     console.error(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error]An Error Occured in ${interaction.customId}\nDetails:\n${error}`

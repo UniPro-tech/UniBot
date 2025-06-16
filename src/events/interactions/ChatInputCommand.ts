@@ -4,7 +4,7 @@ import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 
 const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction) => {
   console.log(
-    `[${interaction.client.function.timeUtils.timeToJSTstamp(
+    `[${interaction.client.functions.timeUtils.timeToJSTstamp(
       Date.now(),
       true
     )} info] ChatInputCommand->${interaction.commandName}`
@@ -14,7 +14,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
   );
   if (!command) {
     console.log(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} info] Not Found: ${interaction.commandName}`
@@ -28,7 +28,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
       .setColor(interaction.client.config.color.error);
     interaction.reply({ embeds: [embed] });
     console.log(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(Date.now(), true)} info] DM Only: ${
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] DM Only: ${
         interaction.commandName
       }`
     );
@@ -38,7 +38,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
   try {
     await command.execute(interaction);
     console.log(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(Date.now(), true)} run] ${
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} run] ${
         interaction.commandName
       }`
     );
@@ -75,7 +75,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
     }
   } catch (error) {
     console.error(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error]An Error Occured in ${interaction.commandName}\nDatails:\n${error}`

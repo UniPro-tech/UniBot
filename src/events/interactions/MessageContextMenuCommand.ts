@@ -4,7 +4,7 @@ import config from "@/config";
 
 const MessageContextMenuCommand = async (interaction: MessageContextMenuCommandInteraction) => {
   console.log(
-    `[${interaction.client.function.timeUtils.timeToJSTstamp(
+    `[${interaction.client.functions.timeUtils.timeToJSTstamp(
       Date.now(),
       true
     )} info] MessageContextMenu ->${interaction.commandName}`
@@ -14,7 +14,7 @@ const MessageContextMenuCommand = async (interaction: MessageContextMenuCommandI
   );
   if (!command) {
     console.log(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} info] Not Found: ${interaction.commandName}`
@@ -28,7 +28,7 @@ const MessageContextMenuCommand = async (interaction: MessageContextMenuCommandI
       .setColor(interaction.client.config.color.e);
     interaction.reply({ embeds: [embed] });
     console.log(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(Date.now(), true)} info] DM Only: ${
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] DM Only: ${
         interaction.commandName
       }`
     );
@@ -38,7 +38,7 @@ const MessageContextMenuCommand = async (interaction: MessageContextMenuCommandI
   try {
     await command.execute(interaction);
     console.log(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(Date.now(), true)} run] ${
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} run] ${
         interaction.commandName
       }`
     );
@@ -75,7 +75,7 @@ const MessageContextMenuCommand = async (interaction: MessageContextMenuCommandI
     }
   } catch (error) {
     console.error(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error]An Error Occured in ${interaction.commandName}\nDatails:\n${error}`

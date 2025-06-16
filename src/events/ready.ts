@@ -8,7 +8,7 @@ export const execute = async (client: Client) => {
   console.debug(`[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
   if (!client.user) {
     console.error(
-      `[error] [${client.function.timeUtils.timeToJSTstamp(
+      `[error] [${client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error] Client.user is undefined`
@@ -64,7 +64,7 @@ export const execute = async (client: Client) => {
   const channel = client.channels.cache.get(client.config.logch.ready);
   if (!channel || !(channel instanceof Discord.TextChannel)) {
     console.error(
-      `[error] [${client.function.timeUtils.timeToJSTstamp(
+      `[error] [${client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error] Log Channel is invalid`

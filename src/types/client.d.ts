@@ -8,7 +8,7 @@ declare module "discord.js" {
   interface Client {
     fs: typeof import("fs");
     config: typeof import("@/config");
-    function: {
+    functions: {
       timeUtils: typeof timeUtils;
       logUtils: typeof logUtils;
     };
