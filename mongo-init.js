@@ -6,7 +6,8 @@ try {
     print("Error: primary not ready, initialize ...");
     rs.initiate({
       _id: "my-replica-set",
-      members: [{ _id: 0, host: "localhost:27017" }],
+      // ここを適切なホスト名に変更
+      members: [{ _id: 0, host: "mongo:27017" }],
     });
     quit(1);
   } else {
