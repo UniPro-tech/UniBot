@@ -13,9 +13,3 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-model RolePanel {
-  id String @id @default(uuid())
-  title String  @unique
-  roles String[]
-}
