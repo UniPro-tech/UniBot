@@ -3,7 +3,7 @@ import commandUtils from "@/lib/commandUtils";
 
 export const name = "ready";
 export const execute = async (client: Client) => {
-  const logFile = await client.function.logUtils.read("v1/conf/status");
+  const logFile = await client.function.logUtils.readConfig("status");
   commandUtils.addCommand(client);
   console.debug(`[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
   if (!client.user) {
@@ -74,10 +74,9 @@ export const execute = async (client: Client) => {
     channel.send("Discordログインしました!");
   }
   console.log(
-    `[${client.function.timeUtils.timeToJSTstamp(
-      Date.now(),
-      true
-    )} info] Logged in as ${client.user.tag}!`
+    `[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${
+      client.user.tag
+    }!`
   );
 };
 
