@@ -17,9 +17,7 @@ services:
     command: >
       bash -c "
         set -e
-        git config --global user.name \"$GIT_USER_NAME\" &&
-        git config --global user.email \"$GIT_USER_EMAIL\" &&
-
+        git config --global user.name \"$GIT_USER_NAME\" &&      git config --global user.email \"$GIT_USER_EMAIL\" &&
         # SSH Settings (SSH)
         chmod 600 /root/.ssh/privatekey &&
         eval \$(ssh-agent -s) &&
@@ -28,33 +26,49 @@ services:
         chmod 600 /root/.ssh/privatekey &&
         mkdir -p /root/.config/git &&
         echo -e \"$GIT_USER_EMAIL $(cat /root/.ssh/pubkey)\" > /root/.config/git/allowed_signers &&
-        git remote rm origin &&
-        git remote add origin \"git@github.com:UniPro-tech/UniBot.git\" &&
-
+        git remote rm origin &&      git remote add origin \"git@github.com:UniPro-tech/UniBot.git\" &&
         # Set Git Signing (SSH)
         git config --global gpg.format ssh &&
         git config --global user.signingkey ~/.ssh/privatekey &&
-        git config --global commit.gpgsign true &&
-        git config --global tag.gpgsign true &&
-
-        # Authenticate with GitHub (HTTPS)
-        # gh auth login --with-token <<< \"$GIT_TOKEN\" &&
-
+        git config --global commit.gpgsign true &&      git config --global tag.gpgsign true &&
+        # Authenticate with GitHub (HTTPS)      # gh auth login --with-token <<< \"$GIT_TOKEN\" &&
         cd /app &&
         bunx prisma generate &&
         bunx prisma migrate dev --name init &&
         bun run --watch src/index.ts
       "
     depends_on:
-      - postgres
-  postgres:
-    image: postgres:17.4
-    container_name: postgres
+      - mongo
+
+  mongo:
+    image: mongo:6.0.6
     environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=unibot
-    volumes:
-      - ./dev/db:/var/lib/postgresql/data
+      - AUTH=no
+    command: [--replSet, my-replica-set, --noauth, --bind_ip_all]
     ports:
-      - 5432
+      - 27017:27017
+    healthcheck:
+      test: mongosh mongo-init.js
+      interval: 10s
+      start_period: 30s
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/mongo-init.js
+    restart: always
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo_express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      #ME_CONFIG_MONGODB_URL: mongodb://@mongo:27017/
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
+    depends_on:
+      - mongo
+volumes:
+  mongodb_data:

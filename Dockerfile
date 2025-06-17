@@ -17,4 +17,4 @@ RUN bun install
 
 COPY . .
 
-CMD [ "bun", "run", "src/index.ts" ]
+CMD ["sh", "-c", "bunx prisma db push && bun run src/index.ts"]
