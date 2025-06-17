@@ -1,5 +1,6 @@
 import {
   ActivityOptions,
+  ChatInputCommandInteraction,
   CommandInteraction,
   CommandInteractionOptionResolver,
   GuildMemberRoleManager,
@@ -45,7 +46,7 @@ export const data = new SlashCommandSubcommandBuilder()
       .setChoices({ name: "オン", value: "on" }, { name: "オフ", value: "off" })
   );
 
-export const execute = async (interaction: CommandInteraction) => {
+export const execute = async (interaction: ChatInputCommandInteraction) => {
   if (!(interaction.member?.roles as GuildMemberRoleManager).cache.has(config.adminRoleId)) {
     interaction.reply("権限がありません");
     return;
@@ -111,14 +112,14 @@ export const execute = async (interaction: CommandInteraction) => {
         .setTimestamp();
 
       interaction.reply({ embeds: [embed] });
-      client.function.logUtils.write(
+      client.function.logUtils.writeConfig(
         {
           onoff: "on",
           status: status,
           playing: statusDescription,
           type: activityType,
         },
-        "v1/conf/status"
+        "status"
       );
       return `{ onoff:"on",status: "${status}", statusDesc: "${statusDescription}", type: "${activityType}" }`;
     } else {
@@ -131,7 +132,7 @@ export const execute = async (interaction: CommandInteraction) => {
         .setTimestamp();
 
       interaction.reply({ embeds: [embed] });
-      client.function.logUtils.write({ onoff: "off" }, "v1/conf/status");
+      client.function.logUtils.writeConfig({ onoff: "off" }, "status");
       return `{ onoff:"off"}`;
     }
   } catch (e) {

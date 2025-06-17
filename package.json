@@ -35,15 +35,15 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@discordjs/rest": "^2.4.3",
+    "@discordjs/rest": "^2.5.1",
     "@discordjs/voice": "^0.17.0",
-    "@prisma/client": "^6.7.0",
-    "@types/node": "^22.13.14",
-    "axios": "^1.8.4",
+    "@prisma/client": "^6.9.0",
+    "@types/node": "^22.15.32",
+    "axios": "^1.10.0",
     "child_process": "^1.0.2",
-    "discord-api-types": "^0.37.119",
-    "discord.js": "^14.18.0",
-    "dotenv": "^16.4.7",
+    "discord-api-types": "^0.37.120",
+    "discord.js": "^14.20.0",
+    "dotenv": "^16.5.0",
     "fs": "^0.0.1-security",
     "install": "^0.13.0",
     "node-cron": "^3.0.3",
@@ -51,8 +51,8 @@
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",
-    "prisma": "^6.7.0",
+    "prisma": "^6.9.0",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }
