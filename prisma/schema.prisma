@@ -7,14 +7,25 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
 model Config {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  key   String @map("_key") @unique
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  key        String   @unique @map("_key")
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  value String
+  value      String
+}
+
+model selectedData {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  user       String   @map("_user") 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  type       String   @map("_type")
+  data       String   @map("_data")
 }
