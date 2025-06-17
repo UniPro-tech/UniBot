@@ -11,7 +11,7 @@ export const prismaClient = new PrismaClient();
  * @param {string} api_name - The name of the path.
  * @returns {Promise<Object>} - The parsed log data.
  */
-export const writeConfig = async (post_data: Object, key: string) => {
+export const writeConfig = async (postData: Object, key: string) => {
   try {
     await prismaClient.config.upsert({
       where: { key },
