@@ -1,6 +1,4 @@
-import fs from "fs";
 import timeUtils from "@/lib/timeUtils";
-import path from "path";
 
 import { PrismaClient } from "@prisma/client";
 
@@ -15,8 +13,8 @@ export const writeConfig = async (postData: Object, key: string) => {
   try {
     await prismaClient.config.upsert({
       where: { key },
-      update: { value: JSON.stringify(post_data) },
-      create: { key, value: JSON.stringify(post_data) },
+      update: { value: JSON.stringify(postData) },
+      create: { key, value: JSON.stringify(postData) },
     });
   } catch (e) {
     console.log(e);
