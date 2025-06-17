@@ -2,7 +2,9 @@ import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 import { EmbedBuilder, MessageContextMenuCommandInteraction } from "discord.js";
 import config from "@/config";
 
-const MessageContextMenuCommand = async (interaction: MessageContextMenuCommandInteraction) => {
+const MessageContextMenuCommandExecute = async (
+  interaction: MessageContextMenuCommandInteraction
+) => {
   console.log(
     `[${interaction.client.functions.timeUtils.timeToJSTstamp(
       Date.now(),
@@ -104,4 +106,4 @@ const MessageContextMenuCommand = async (interaction: MessageContextMenuCommandI
   }
 };
 
-export default MessageContextMenuCommand;
+export default MessageContextMenuCommandExecute;

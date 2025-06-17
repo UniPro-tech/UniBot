@@ -1,12 +1,17 @@
-import { CommandInteraction, ContextMenuCommandBuilder, ApplicationCommandType } from "discord.js";
+import {
+  ContextMenuCommandBuilder,
+  ApplicationCommandType,
+  MessageContextMenuCommandInteraction,
+} from "discord.js";
+
+export const name = "RPを選択";
 
 export const data = new ContextMenuCommandBuilder()
   .setName("RPを選択")
   .setType(3)
   .setType(ApplicationCommandType.Message);
 
-export const adminGuildOnly = true;
-
-export const execute = async (interaction: CommandInteraction) => {
+export const execute = async (interaction: MessageContextMenuCommandInteraction) => {
+  interaction.reply("OK");
   return;
 };
