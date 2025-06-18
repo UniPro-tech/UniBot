@@ -1,15 +1,17 @@
-import config from "@/config";
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
-import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { EmbedBuilder, MessageContextMenuCommandInteraction } from "discord.js";
+import config from "@/config";
 
-const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction) => {
+const MessageContextMenuCommandExecute = async (
+  interaction: MessageContextMenuCommandInteraction
+) => {
   console.log(
     `[${interaction.client.functions.timeUtils.timeToJSTstamp(
       Date.now(),
       true
-    )} info] ChatInputCommand->${interaction.commandName}`
+    )} info] MessageContextMenu ->${interaction.commandName}`
   );
-  const command = interaction.client.interactionExecutorsCollections.chatInputCommands.get(
+  const command = interaction.client.interactionExecutorsCollections.messageContextMenuCommands.get(
     interaction.commandName
   );
   if (!command) {
@@ -37,7 +39,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
 
   try {
     await command.execute(interaction);
-    console.log(
+    console.info(
       `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} run] ${
         interaction.commandName
       }`
@@ -78,7 +80,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
       `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
-      )} error]An Error Occured in ${interaction.commandName}\nDatails:\n${error}`
+      )} error]An Error Occurred in ${interaction.commandName}\nDetails:\n${error}`
     );
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")
@@ -104,4 +106,4 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
   }
 };
 
-export default ChatInputCommandExecute;
+export default MessageContextMenuCommandExecute;

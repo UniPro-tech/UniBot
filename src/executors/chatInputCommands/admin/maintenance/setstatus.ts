@@ -112,7 +112,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
         .setTimestamp();
 
       interaction.reply({ embeds: [embed] });
-      client.function.logUtils.writeConfig(
+      client.functions.logUtils.writeConfig(
         {
           onoff: "on",
           status: status,
@@ -132,7 +132,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
         .setTimestamp();
 
       interaction.reply({ embeds: [embed] });
-      client.function.logUtils.writeConfig({ onoff: "off" }, "status");
+      client.functions.logUtils.writeConfig({ onoff: "off" }, "status");
       return `{ onoff:"off"}`;
     }
   } catch (e) {

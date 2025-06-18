@@ -1,18 +1,21 @@
 import { Collection } from "discord.js";
-import { Command } from "@/commands/types/Command";
+import { ChatInputCommand } from "@/executors/types/ChatInputCommand";
 import timeUtils from "@/lib/timeUtils";
 import logUtils from "@/lib/dataUtils";
-import { StringSelectMenuDefineType } from "@/selectMenus/types/SelectMenuDefineType";
+import { StringSelectMenu } from "@/executors/types/StringSelectMenu";
 
 declare module "discord.js" {
   interface Client {
-    commands: Collection<string, Command>;
     fs: typeof import("fs");
     config: typeof import("@/config");
-    function: {
+    functions: {
       timeUtils: typeof timeUtils;
       logUtils: typeof logUtils;
     };
-    stringSelectMenus: Collection<string, StringSelectMenuDefineType>;
+    interactionExecutorsCollections: {
+      chatInputCommands: Collection<string, ChatInputCommand>;
+      stringSelectMenus: Collection<string, StringSelectMenu>;
+      messageContextMenuCommands: Collection<string, ChatInputCommand>;
+    };
   }
 }

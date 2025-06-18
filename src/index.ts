@@ -24,16 +24,29 @@ import config from "@/config";
 import timeUtils from "@/lib/timeUtils";
 import logUtils from "@/lib/dataUtils";
 client.config = config;
-client.function = {
+client.functions = {
   timeUtils: timeUtils,
   logUtils: logUtils,
 };
 client.fs = fs;
 
-import { CommandCollector, StringSelectMenuCollector } from "@/lib/collecter";
+import {
+  ChatInputCommandCollector,
+  MessageContextMenuCommandCollector,
+  StringSelectMenuCollector,
+} from "@/lib/collecter";
 import path from "path";
-CommandCollector(client);
+import { ChatInputCommand } from "./executors/types/ChatInputCommand";
+import { StringSelectMenu } from "./executors/types/StringSelectMenu";
+client.interactionExecutorsCollections = {
+  chatInputCommands: new Collection<string, ChatInputCommand>(),
+  stringSelectMenus: new Collection<string, StringSelectMenu>(),
+  // TODO: ここはMessageContextMenuCommandにする
+  messageContextMenuCommands: new Collection<string, ChatInputCommand>(),
+};
+ChatInputCommandCollector(client);
 StringSelectMenuCollector(client);
+MessageContextMenuCommandCollector(client);
 const eventFiles = fs
   .readdirSync(path.resolve(__dirname, "events"))
   .filter((file) => (file.endsWith(".ts") && !file.endsWith(".d.ts")) || file.endsWith(".js"));
@@ -44,7 +57,7 @@ for (const file of eventFiles) {
       client.once(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
+        `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
         error
       );
     }
@@ -53,7 +66,7 @@ for (const file of eventFiles) {
       client.on(event.name, (...args) => event.execute(...args, client));
     } catch (error) {
       console.error(
-        `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
+        `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
         error
       );
     }
@@ -94,7 +107,7 @@ for (const file of eventFiles) {
 
 // エラー処理 (これ入れないとエラーで落ちる。本当は良くないかもしれない)
 process.on("uncaughtException", (error) => {
-  console.error(`[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)}] ${error.stack}`);
+  console.error(`[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}] ${error.stack}`);
   const embed = new EmbedBuilder()
     .setTitle("ERROR - uncaughtException")
     .setDescription("```\n" + error.stack + "\n```")
@@ -111,7 +124,7 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error(
-    `\u001b[31m[${client.function.timeUtils.timeToJSTstamp(
+    `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(
       Date.now(),
       true
     )}] ${reason}\u001b[0m\n`,

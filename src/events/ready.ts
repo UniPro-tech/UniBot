@@ -1,14 +1,14 @@
 import Discord, { Client } from "discord.js";
-import commandUtils from "@/lib/commandUtils";
+import { registerAllCommands } from "@/lib/executorsRegister";
 
 export const name = "ready";
 export const execute = async (client: Client) => {
-  const logFile = await client.function.logUtils.readConfig("status");
-  commandUtils.addCommand(client);
+  const logFile = await client.functions.logUtils.readConfig("status");
+  await registerAllCommands(client);
   console.debug(`[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
   if (!client.user) {
     console.error(
-      `[error] [${client.function.timeUtils.timeToJSTstamp(
+      `[error] [${client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error] Client.user is undefined`
@@ -64,7 +64,7 @@ export const execute = async (client: Client) => {
   const channel = client.channels.cache.get(client.config.logch.ready);
   if (!channel || !(channel instanceof Discord.TextChannel)) {
     console.error(
-      `[error] [${client.function.timeUtils.timeToJSTstamp(
+      `[error] [${client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error] Log Channel is invalid`
@@ -74,7 +74,7 @@ export const execute = async (client: Client) => {
     channel.send("Discordログインしました!");
   }
   console.log(
-    `[${client.function.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${
+    `[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${
       client.user.tag
     }!`
   );

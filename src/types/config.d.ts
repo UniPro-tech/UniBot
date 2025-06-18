@@ -1,8 +1,8 @@
 declare module "@/config" {
   export const adminRoleId: string;
   export const color: {
-    s: number;
-    e: number;
+    success: number;
+    error: number;
   };
   export const token: string;
   export const dev: {

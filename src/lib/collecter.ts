@@ -2,42 +2,75 @@ import { Client, Collection } from "discord.js";
 import path from "path";
 import fs from "fs";
 
-export const CommandCollector = async (client: Client) => {
-  console.log(`\u001b[32m===Load Command Executing Data===\u001b[0m`);
-  client.commands = new Collection();
-  const commandFolders = fs.readdirSync(path.resolve(__dirname, `../commands`));
+// TODO: Collectionの型を指定する
+
+export const ChatInputCommandCollector = async (client: Client) => {
+  console.info(`\u001b[32m===Load ChatInputCommand Executing Data===\u001b[0m`);
+  client.interactionExecutorsCollections.chatInputCommands = new Collection();
+  const commandFolders = fs.readdirSync(path.resolve(__dirname, `../executors/chatInputCommands`));
   for (const folder of commandFolders) {
-    console.log(`\u001b[32m[Init]Loading ${folder} commands\u001b[0m`);
+    console.info(`\u001b[32m[Init]Loading ${folder} commands\u001b[0m`);
     const commandFiles = fs
-      .readdirSync(path.resolve(__dirname, `../commands/${folder}`))
+      .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${folder}`))
       .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
     for (const file of commandFiles) {
       console.debug(`dir:${folder},file:${file}`);
-      const command = require(path.resolve(__dirname, `../commands/${folder}/${file}`));
+      const command = require(path.resolve(
+        __dirname,
+        `../executors/chatInputCommands/${folder}/${file}`
+      ));
       try {
-        client.commands.set(command.data.name, command);
-        console.log(`[Init]${command.data.name} has been loaded.`);
+        client.interactionExecutorsCollections.chatInputCommands.set(command.data.name, command);
+        console.info(`[Init]${command.data.name} has been loaded.`);
       } catch (error) {
-        console.error(`[error]An Error Occured in ${command.data.name}\nDatails:\n ${error}`);
+        console.error(`[error]An Error Occurred in ${command.data.name}\nDetails:\n ${error}`);
       }
     }
-    console.log(`\u001b[32m${folder} has been loaded\u001b[0m`);
+    console.info(`\u001b[32m${folder} has been loaded\u001b[0m`);
   }
+  console.info(`\u001b[32m===ChatInputCommand Executing Data Loaded===\u001b[0m`);
 };
 
 export const StringSelectMenuCollector = async (client: Client) => {
-  console.log(`\u001b[32m===Load Command Executing Data===\u001b[0m`);
-  client.stringSelectMenus = new Collection();
+  console.info(`\u001b[32m===Load StringSelectMenu Executing Data===\u001b[0m`);
+  client.interactionExecutorsCollections.stringSelectMenus = new Collection();
   const commandFiles = fs
-    .readdirSync(path.resolve(__dirname, `../selectMenus/string`))
+    .readdirSync(path.resolve(__dirname, `../executors/selectMenus/string`))
     .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
   for (const file of commandFiles) {
-    const menuDefine = require(path.resolve(__dirname, `../selectMenus/string/${file}`));
+    const menuDefine = await import(
+      path.resolve(__dirname, `../executors/selectMenus/string/${file}`)
+    );
     try {
-      client.stringSelectMenus.set(menuDefine.name, menuDefine);
-      console.log(`[Init]${menuDefine.name} has been loaded.`);
+      client.interactionExecutorsCollections.stringSelectMenus.set(menuDefine.name, menuDefine);
+      console.info(`[Init]${menuDefine.name} has been loaded.`);
     } catch (error) {
-      console.error(`[error]An Error Occured in ${menuDefine.name}\nDetails:\n ${error}`);
+      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
     }
   }
+  console.info(`\u001b[32m===StringSelectMenu Executing Data Loaded===\u001b[0m`);
+};
+
+export const MessageContextMenuCommandCollector = async (client: Client) => {
+  console.info(`\u001b[32m===Load MessageContextMenuCommand Executing Data===\u001b[0m`);
+  client.interactionExecutorsCollections.messageContextMenuCommands = new Collection();
+  const commandFiles = fs
+    .readdirSync(path.resolve(__dirname, `../executors/messageContextMenuCommands`))
+    .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
+  for (const file of commandFiles) {
+    const menuDefine = await import(path.resolve(
+      __dirname,
+      `../executors/messageContextMenuCommands/${file}`
+    ));
+    try {
+      client.interactionExecutorsCollections.messageContextMenuCommands.set(
+        menuDefine.name,
+        menuDefine
+      );
+      console.info(`[Init]${menuDefine.name} has been loaded.`);
+    } catch (error) {
+      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
+    }
+  }
+  console.info(`\u001b[32m===MessageContextMenuCommand Executing Data Loaded===\u001b[0m`);
 };

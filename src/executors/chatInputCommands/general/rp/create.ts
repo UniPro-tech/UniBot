@@ -7,6 +7,7 @@ import {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
+  PermissionsBitField,
 } from "discord.js";
 import { randomUUID } from "crypto";
 
@@ -28,16 +29,14 @@ export const data = new SlashCommandSubcommandBuilder()
     option.setName("role2").setDescription("付与するロールを選択してください(任意)")
   );
 
-export const adminGuildOnly = true;
-
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const member = interaction.member as GuildMember;
-  if (!member.roles.cache.has(interaction.client.config.adminRoleId)) {
+  if (!member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
     await interaction.reply({
       content: "権限がありません",
       flags: MessageFlags.Ephemeral,
     });
-    return; // アドミンロールが付与されていなかったら終了
+    return; // 権限管理権限が付与されていなかったら終了
   }
 
   if (!interaction.channel || !interaction.channel.isSendable()) {
@@ -178,5 +177,4 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
 export default {
   data,
-  adminGuildOnly,
 };

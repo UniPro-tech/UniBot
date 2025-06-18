@@ -5,20 +5,27 @@ import config from "@/config";
 const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
   try {
     const [prefix, id] = interaction.customId.split("_");
-    const executionDefine = interaction.client.stringSelectMenus.get(prefix);
+    const executionDefine =
+      interaction.client.interactionExecutorsCollections.stringSelectMenus.get(prefix);
     if (!executionDefine) {
       console.log(
-        `[${interaction.client.function.timeUtils.timeToJSTstamp(
+        `[${interaction.client.functions.timeUtils.timeToJSTstamp(
           Date.now(),
           true
         )} info] Not Found: ${interaction.customId}`
       );
       return;
     }
+    console.log(
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} info] StringSelectMenu -> ${interaction.customId}`
+    );
     await executionDefine.execute(interaction, id);
   } catch (error) {
     console.error(
-      `[${interaction.client.function.timeUtils.timeToJSTstamp(
+      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
       )} error]An Error Occured in ${interaction.customId}\nDetails:\n${error}`
