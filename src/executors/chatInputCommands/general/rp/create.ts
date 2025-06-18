@@ -29,8 +29,6 @@ export const data = new SlashCommandSubcommandBuilder()
     option.setName("role2").setDescription("付与するロールを選択してください(任意)")
   );
 
-export const adminGuildOnly = true;
-
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const member = interaction.member as GuildMember;
   if (!member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
@@ -179,5 +177,4 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
 export default {
   data,
-  adminGuildOnly,
 };

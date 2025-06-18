@@ -8,8 +8,8 @@ import {
   StringSelectMenuOptionBuilder,
   ActionRow,
   StringSelectMenuComponent,
+  PermissionsBitField,
 } from "discord.js";
-import config from "@/config";
 import { readSelected, SelectedDataType } from "@/lib/dataUtils";
 
 export const data = new SlashCommandSubcommandBuilder()
@@ -37,13 +37,14 @@ export const data = new SlashCommandSubcommandBuilder()
     option.setName("role6").setDescription("追加するロールを選択してください(任意)")
   );
 
-export const adminGuildOnly = true;
-
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const member = interaction.member as GuildMember;
-  if (!member.roles.cache.has(config.adminRoleId)) {
-    await interaction.reply({ content: "権限がありません", flags: MessageFlags.Ephemeral });
-    return; // アドミンロールが付与されていなかったら終了
+  if (!member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+    await interaction.reply({
+      content: "権限がありません",
+      flags: MessageFlags.Ephemeral,
+    });
+    return; // 権限管理権限が付与されていなかったら終了
   }
 
   const selectedMenuMessageId = (
@@ -212,5 +213,4 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
 export default {
   data,
-  adminGuildOnly,
 };

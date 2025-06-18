@@ -1,8 +1,8 @@
 import {
   SlashCommandBuilder,
   EmbedBuilder,
-  CommandInteraction,
   CommandInteractionOptionResolver,
+  ChatInputCommandInteraction,
 } from "discord.js";
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
@@ -15,7 +15,7 @@ export const data = addSubCommand(
 );
 export const guildOnly = true;
 
-export const execute = async (interaction: CommandInteraction) => {
+export const execute = async (interaction: ChatInputCommandInteraction) => {
   const command = handlingCommands.get(
     (interaction.options as CommandInteractionOptionResolver).getSubcommand()
   );
