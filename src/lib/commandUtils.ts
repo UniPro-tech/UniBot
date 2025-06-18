@@ -1,7 +1,5 @@
-import { ChatInputCommand } from "@/executors/types/Command";
-import { REST } from "@discordjs/rest";
-import { RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
-import { Client, Collection, SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
+import { ChatInputCommand } from "@/executors/types/ChatInputCommand";
+import { Collection, SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 import fs from "fs";
 import path from "path";
 

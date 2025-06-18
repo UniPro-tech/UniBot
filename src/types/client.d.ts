@@ -1,5 +1,5 @@
 import { Collection } from "discord.js";
-import { ChatInputCommand } from "@/executors/types/Command";
+import { ChatInputCommand } from "@/executors/types/ChatInputCommand";
 import timeUtils from "@/lib/timeUtils";
 import logUtils from "@/lib/dataUtils";
 import { StringSelectMenu } from "@/executors/types/StringSelectMenu";

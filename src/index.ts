@@ -36,7 +36,7 @@ import {
   StringSelectMenuCollector,
 } from "@/lib/collecter";
 import path from "path";
-import { ChatInputCommand } from "./executors/types/Command";
+import { ChatInputCommand } from "./executors/types/ChatInputCommand";
 import { StringSelectMenu } from "./executors/types/StringSelectMenu";
 client.interactionExecutorsCollections = {
   chatInputCommands: new Collection<string, ChatInputCommand>(),

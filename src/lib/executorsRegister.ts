@@ -3,11 +3,13 @@ import { RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from "discord
 import { REST } from "@discordjs/rest";
 import fs from "fs";
 import path from "path";
+import { ChatInputCommand } from "@/executors/types/ChatInputCommand";
+import { ContextMenuCommand } from "@/executors/types/ContextMenuCommand";
 
 /**
  * 差分比較用にフィールドを絞って整形
  */
-function cleanCommandData(cmd: any) {
+function cleanCommandData(cmd: RESTPostAPIChatInputApplicationCommandsJSONBody) {
   const { name, description, options, type, default_member_permissions, dm_permission } = cmd;
   return {
     name,
@@ -19,7 +21,10 @@ function cleanCommandData(cmd: any) {
   };
 }
 
-function areCommandsEqual(a: any, b: any): boolean {
+function areCommandsEqual(
+  a: RESTPostAPIChatInputApplicationCommandsJSONBody,
+  b: RESTPostAPIChatInputApplicationCommandsJSONBody
+): boolean {
   return JSON.stringify(cleanCommandData(a)) === JSON.stringify(cleanCommandData(b));
 }
 
@@ -36,11 +41,7 @@ async function putToDiscordWithDiffCheck(
     ? Routes.applicationGuildCommands(client.application?.id as string, guild)
     : Routes.applicationCommands(client.application?.id as string);
 
-  const existing = (await rest.get(route)) as any[];
-
-  console.log(
-    `array: ${array.length}, existingCommands: ${existing.length}, guild: ${guild ?? "global"}`
-  );
+  const existing = (await rest.get(route)) as RESTPostAPIChatInputApplicationCommandsJSONBody[];
 
   const shouldUpdate =
     array.length !== existing.length ||
@@ -77,7 +78,7 @@ export const registerAllCommands = async (client: Client) => {
 
   const pushCommand = (
     arr: RESTPostAPIChatInputApplicationCommandsJSONBody[],
-    command: any,
+    command: ChatInputCommand | ContextMenuCommand,
     file: string,
     typeLabel: string
   ) => {
