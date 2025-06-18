@@ -22,7 +22,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
     const embed = new EmbedBuilder()
       .setTitle("エラー")
       .setDescription("このコマンドはDMでは実行できません。")
-      .setColor(interaction.client.config.color.e);
+      .setColor(interaction.client.config.color.error);
     interaction.reply({ embeds: [embed] });
     console.log(
       `[${interaction.client.function.timeUtils.timeToJSTstamp(Date.now(), true)} info] DM Only: ${
@@ -43,7 +43,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
     const logEmbed = new EmbedBuilder()
       .setTitle("コマンド実行ログ")
       .setDescription(`${interaction.user} がコマンドを実行しました。`)
-      .setColor(config.color.s)
+      .setColor(config.color.success)
       .setTimestamp()
       .setThumbnail(interaction.user.displayAvatarURL())
       .addFields([
@@ -78,7 +78,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")
       .setDescription("```\n" + (error as any).toString() + "\n```")
-      .setColor(config.color.e)
+      .setColor(config.color.error)
       .setTimestamp();
 
     const channel = await GetErrorChannel(interaction.client);
@@ -88,7 +88,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
     const messageEmbed = new EmbedBuilder()
       .setTitle("すみません。エラーが発生しました。")
       .setDescription("```\n" + error + "\n```")
-      .setColor(config.color.e)
+      .setColor(config.color.error)
       .setTimestamp();
 
     await interaction.reply({ embeds: [messageEmbed] });

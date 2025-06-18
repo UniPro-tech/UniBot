@@ -36,7 +36,7 @@ export const execute = async (interaction: CommandInteraction) => {
     const logEmbed = new EmbedBuilder()
       .setTitle("サブコマンド実行ログ")
       .setDescription(`${interaction.user} がサブコマンドを実行しました。`)
-      .setColor(interaction.client.config.color.s)
+      .setColor(interaction.client.config.color.success)
       .setTimestamp()
       .setThumbnail(interaction.user.displayAvatarURL())
       .addFields([
@@ -72,7 +72,7 @@ export const execute = async (interaction: CommandInteraction) => {
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")
       .setDescription("```\n" + (error as any).toString() + "\n```")
-      .setColor(config.color.e)
+      .setColor(config.color.error)
       .setTimestamp();
 
     const channel = await GetErrorChannel(interaction.client);
@@ -82,7 +82,7 @@ export const execute = async (interaction: CommandInteraction) => {
     const messageEmbed = new EmbedBuilder()
       .setTitle("すみません、エラーが発生しました...")
       .setDescription("```\n" + error + "\n```")
-      .setColor(interaction.client.config.color.e)
+      .setColor(interaction.client.config.color.error)
       .setTimestamp();
 
     await interaction.reply({ embeds: [messageEmbed] });

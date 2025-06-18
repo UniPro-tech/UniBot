@@ -19,7 +19,7 @@ export const execute = async (interaction: CommandInteraction) => {
       .setTitle(`${user.username}'s Avatar`)
       .setDescription(`URL:${user.displayAvatarURL()}`)
       .setImage(user.displayAvatarURL())
-      .setColor(config.color.s)
+      .setColor(config.color.success)
       .setTimestamp();
     interaction.reply({ embeds: [embed] });
   } else {
@@ -27,7 +27,7 @@ export const execute = async (interaction: CommandInteraction) => {
       .setTitle(`Your Avatar`)
       .setDescription(`URL:${interaction.user.displayAvatarURL()}`)
       .setImage(`${interaction.user.displayAvatarURL()}`)
-      .setColor(config.color.s)
+      .setColor(config.color.success)
       .setTimestamp();
     interaction.reply({ embeds: [embed] });
   }

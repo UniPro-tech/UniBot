@@ -6,7 +6,7 @@ export const execute = async (guild: Guild, client: Client) => {
   const log = new EmbedBuilder()
     .setTitle("GuildDeleteLog")
     .setDescription(`Botが${guild.name}にから退出しました。`)
-    .setColor(client.config.color.s)
+    .setColor(client.config.color.success)
     .setTimestamp()
     .setThumbnail(guild.iconURL())
     .setFooter({ text: String(guild.id) });

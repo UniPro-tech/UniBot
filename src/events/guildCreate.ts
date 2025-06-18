@@ -5,7 +5,7 @@ export const execute = async (guild: Guild, client: Client) => {
   const log = new EmbedBuilder()
     .setTitle("GuildCreateLog")
     .setDescription(`Botが${guild.name}に参加しました。`)
-    .setColor(client.config.color.s)
+    .setColor(client.config.color.success)
     .setTimestamp()
     .setThumbnail(guild.iconURL())
     .setFooter({ text: String(guild.id) });

@@ -16,7 +16,7 @@ export const execute = async (interaction: CommandInteraction) => {
       },
       { name: "コマンド受信", value: `** ${cmdPing} ms ** `, inline: true },
     ])
-    .setColor(interaction.client.config.color.s)
+    .setColor(interaction.client.config.color.success)
     .setTimestamp();
   interaction.reply({ embeds: [embed] });
   return "No data";

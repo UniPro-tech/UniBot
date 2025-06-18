@@ -26,7 +26,7 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")
       .setDescription("```\n" + (error as any).toString() + "\n```")
-      .setColor(config.color.e)
+      .setColor(config.color.error)
       .setTimestamp();
 
     const channel = await GetErrorChannel(interaction.client);
@@ -36,7 +36,7 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
     const messageEmbed = new EmbedBuilder()
       .setTitle("すみません。エラーが発生しました。")
       .setDescription("```\n" + error + "\n```")
-      .setColor(config.color.e)
+      .setColor(config.color.error)
       .setTimestamp();
     if (interaction.channel && interaction.channel.isSendable()) {
       await interaction.channel.send({ embeds: [messageEmbed] });

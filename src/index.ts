@@ -81,7 +81,7 @@ for (const file of eventFiles) {
           .setTitle(item.title)
           .setURL(item.link)
           .setDescription(item.content)
-          .setColor(config.color.s)
+          .setColor(config.color.success)
           .setTimestamp();
         channel.send({ embeds: [embed] });
         datas[index].lastDate = items[0].pubDate;
@@ -98,7 +98,7 @@ process.on("uncaughtException", (error) => {
   const embed = new EmbedBuilder()
     .setTitle("ERROR - uncaughtException")
     .setDescription("```\n" + error.stack + "\n```")
-    .setColor(config.color.e)
+    .setColor(config.color.error)
     .setTimestamp();
   client.channels.fetch(config.logch.error).then((channel: Channel | null) => {
     if (!channel || !(channel instanceof TextChannel)) {
@@ -120,7 +120,7 @@ process.on("unhandledRejection", (reason, promise) => {
   const embed = new EmbedBuilder()
     .setTitle("ERROR - unhandledRejection")
     .setDescription("```\n" + reason + "\n```")
-    .setColor(config.color.e)
+    .setColor(config.color.error)
     .setTimestamp();
   client.channels.fetch(config.logch.error).then((channel: Channel | null) => {
     if (!channel || !(channel instanceof TextChannel)) {

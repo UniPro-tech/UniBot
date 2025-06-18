@@ -108,7 +108,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
       const embed = new Discord.EmbedBuilder()
         .setTitle("ok")
-        .setColor(client.config.color.s)
+        .setColor(client.config.color.success)
         .setTimestamp();
 
       interaction.reply({ embeds: [embed] });
@@ -128,7 +128,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       client.user.setStatus("online");
       const embed = new Discord.EmbedBuilder()
         .setTitle("ok")
-        .setColor(client.config.color.s)
+        .setColor(client.config.color.success)
         .setTimestamp();
 
       interaction.reply({ embeds: [embed] });

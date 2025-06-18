@@ -63,7 +63,7 @@ export const execute = async (interaction: StringSelectMenuInteraction, id: stri
     const messageEmbed = new EmbedBuilder()
       .setTitle("すみません。エラーが発生しました。")
       .setDescription("```\n" + error + "\n```")
-      .setColor(config.color.e)
+      .setColor(config.color.error)
       .setTimestamp();
     await interaction.followUp({
       embeds: [messageEmbed],
