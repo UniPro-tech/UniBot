@@ -1,170 +1,142 @@
-import { ChatInputCommand } from "@/executors/types/Command";
-import { REST } from "@discordjs/rest";
-import { RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { Client, SlashCommandBuilder } from "discord.js";
+import { RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
+import { REST } from "@discordjs/rest";
 import fs from "fs";
 import path from "path";
 
 /**
- * @param {Client} client
+ * 差分比較用にフィールドを絞って整形
  */
-export const chatInputCommandsRegister = async (client: Client) => {
-  console.log(`\u001b[32m===Pushing ChatInputCommand Data===\u001b[0m`);
+function cleanCommandData(cmd: any) {
+  const { name, description, options, type, default_member_permissions, dm_permission } = cmd;
+  return {
+    name,
+    description,
+    options: options ?? [],
+    type: type ?? 1,
+    default_member_permissions: default_member_permissions ?? null,
+    dm_permission: dm_permission ?? true,
+  };
+}
+
+function areCommandsEqual(a: any, b: any): boolean {
+  return JSON.stringify(cleanCommandData(a)) === JSON.stringify(cleanCommandData(b));
+}
+
+/**
+ * Discord に登録（差分がある場合のみ更新）
+ */
+async function putToDiscordWithDiffCheck(
+  client: Client,
+  rest: REST,
+  array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
+  guild?: string
+) {
+  const route = guild
+    ? Routes.applicationGuildCommands(client.application?.id as string, guild)
+    : Routes.applicationCommands(client.application?.id as string);
+
+  const existing = (await rest.get(route)) as any[];
+
+  console.log(
+    `array: ${array.length}, existingCommands: ${existing.length}, guild: ${guild ?? "global"}`
+  );
+
+  const shouldUpdate =
+    array.length !== existing.length ||
+    array.some((cmd, i) => {
+      const existingCmd = existing[i];
+      return !areCommandsEqual(cmd, existingCmd);
+    });
+
+  if (!shouldUpdate) {
+    console.log(
+      `[Skip] No changes detected. Skipping registration for ${guild ?? "global"} commands.`
+    );
+    return;
+  }
+
+  await rest.put(route, { body: array });
+  console.log(`[Update] Commands updated for ${guild ?? "global"} scope.`);
+}
+
+/**
+ * コマンド登録関数（チャット入力＋右クリック含む）
+ */
+export const registerAllCommands = async (client: Client) => {
+  console.log(`\u001b[32m===Pushing All ApplicationCommand Data===\u001b[0m`);
   const config = client.config;
   const token = config.token;
+  const testGuild = config.dev.testGuild;
   const rest = new REST({ version: "10" }).setToken(token);
 
-  const testGuild = config.dev.testGuild;
+  const globalCommands: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
+  const adminGuildCommands: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
-  let command_int = 0;
-  const globalCommands = [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
-  const adminGuildCommands = [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
-  const commandFolders = fs.readdirSync(path.resolve(__dirname, `../executors/chatInputCommands`));
+  let commandCount = 0;
 
-  function cmdToArray(
-    array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
-    command: ChatInputCommand,
+  const pushCommand = (
+    arr: RESTPostAPIChatInputApplicationCommandsJSONBody[],
+    command: any,
     file: string,
-    notice = ""
-  ) {
+    typeLabel: string
+  ) => {
     try {
-      array.push((command.data as SlashCommandBuilder).toJSON());
-      command_int++;
-      console.log(`${notice} ${file} has been added.`);
-    } catch (error) {
-      console.error(`${notice} An Error Occured in ${file} \nエラー内容\n ${error}`);
+      const data = (command.data as SlashCommandBuilder).toJSON();
+      arr.push(data);
+      commandCount++;
+      console.log(`[${typeLabel}] ${file} has been added.`);
+    } catch (err) {
+      console.error(`[${typeLabel}] Error in ${file}:\n`, err);
     }
-  }
+  };
 
-  async function putToDiscord(
-    array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
-    guild: undefined | string = undefined
-  ) {
-    if (guild) {
-      await rest.put(Routes.applicationGuildCommands(client.application?.id as string, guild), {
-        body: array,
-      });
-    } else {
-      await rest.put(Routes.applicationCommands(client.application?.id as string), {
-        body: array,
-      });
-    }
-  }
-
-  for (const folder of commandFolders) {
-    console.log(`[Init]Adding ${folder} commands...`);
+  // --- Slash Commands 読み込み
+  const slashCommandFolders = fs.readdirSync(
+    path.resolve(__dirname, "../executors/chatInputCommands")
+  );
+  for (const folder of slashCommandFolders) {
     const commandFiles = fs
       .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${folder}`))
-      .filter((file) => file.endsWith(".js") || (file.endsWith(".ts") && !file.endsWith(".d.ts")));
+      .filter((f) => f.endsWith(".js") || (f.endsWith(".ts") && !f.endsWith(".d.ts")));
+
     for (const file of commandFiles) {
       const command = require(path.resolve(
         __dirname,
         `../executors/chatInputCommands/${folder}/${file}`
-      )) as ChatInputCommand;
+      ));
       if (command.adminGuildOnly) {
-        cmdToArray(adminGuildCommands, command, file, "[Admin Slash Command]");
-        continue;
+        pushCommand(adminGuildCommands, command, file, "Admin Slash");
+      } else {
+        pushCommand(globalCommands, command, file, "Global Slash");
       }
-      //if (command.onlyCommand) continue;
-      cmdToArray(globalCommands, command, file, "[Global Slash Command]");
-    }
-    console.log(`[Init]${folder} added.`);
-  }
-
-  try {
-    console.log(`[Init]Registering ${command_int}...`);
-
-    //Admin
-    putToDiscord(adminGuildCommands, testGuild);
-    console.log(`[Init]Registered Admin Guild Slash Commands.`);
-
-    //Global
-    putToDiscord(globalCommands);
-    console.log(`[Init]Registered Global Slash Commands.`);
-
-    console.log(`[Init]Registered All Slash Commands.`);
-  } catch (error) {
-    console.error("[error]", error);
-  }
-};
-
-/**
- * @param {Client} client
- */
-export const messageContextMenuCommandsRegister = async (client: Client) => {
-  console.log(`\u001b[32m===Pushing MessageContextMenuCommand Data===\u001b[0m`);
-  const config = client.config;
-  const token = config.token;
-  const rest = new REST({ version: "10" }).setToken(token);
-
-  const testGuild = config.dev.testGuild;
-
-  let command_int = 0;
-  const globalCommands = [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
-  const adminGuildCommands = [] as RESTPostAPIChatInputApplicationCommandsJSONBody[];
-
-  function cmdToArray(
-    array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
-    command: ChatInputCommand,
-    file: string,
-    notice = ""
-  ) {
-    try {
-      array.push((command.data as SlashCommandBuilder).toJSON());
-      command_int++;
-      console.log(`${notice} ${file} has been added.`);
-    } catch (error) {
-      console.error(`${notice} An Error Occured in ${file} \nエラー内容\n ${error}`);
     }
   }
 
-  async function putToDiscord(
-    array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
-    guild: undefined | string = undefined
-  ) {
-    if (guild) {
-      await rest.put(Routes.applicationGuildCommands(client.application?.id as string, guild), {
-        body: array,
-      });
-    } else {
-      await rest.put(Routes.applicationCommands(client.application?.id as string), {
-        body: array,
-      });
-    }
-  }
+  // --- Context Menu Commands 読み込み
+  const contextMenuFiles = fs
+    .readdirSync(path.resolve(__dirname, "../executors/messageContextMenuCommands"))
+    .filter((f) => f.endsWith(".js") || (f.endsWith(".ts") && !f.endsWith(".d.ts")));
 
-  console.log(
-    `[Init]Adding ${path.resolve(__dirname, `../executors/messageContextMenuCommands`)} commands...`
-  );
-  const commandFiles = fs
-    .readdirSync(path.resolve(__dirname, `../executors/messageContextMenuCommands`))
-    .filter((file) => file.endsWith(".js") || (file.endsWith(".ts") && !file.endsWith(".d.ts")));
-  for (const file of commandFiles) {
+  for (const file of contextMenuFiles) {
     const command = require(path.resolve(
       __dirname,
       `../executors/messageContextMenuCommands/${file}`
-    )) as ChatInputCommand;
+    ));
     if (command.adminGuildOnly) {
-      cmdToArray(adminGuildCommands, command, file, "[Admin]");
-      continue;
+      pushCommand(adminGuildCommands, command, file, "Admin Context");
+    } else {
+      pushCommand(globalCommands, command, file, "Global Context");
     }
-    //if (command.onlyCommand) continue;
-    cmdToArray(globalCommands, command, file, "[Global]");
   }
 
+  // --- 実行
   try {
-    console.log(`[Init]Registering ${command_int}...`);
-
-    //Admin
-    putToDiscord(adminGuildCommands, testGuild);
-    console.log(`[Init]Registered Admin Guild Slash Commands.`);
-
-    //Global
-    putToDiscord(globalCommands);
-    console.log(`[Init]Registered Global Slash Commands.`);
-
-    console.log(`[Init]Registered All Slash Commands.`);
-  } catch (error) {
-    console.error("[error]", error);
+    console.log(`[Init] Registering ${commandCount} total commands...`);
+    await putToDiscordWithDiffCheck(client, rest, adminGuildCommands, testGuild);
+    await putToDiscordWithDiffCheck(client, rest, globalCommands);
+    console.log(`[Done] All commands registered successfully.`);
+  } catch (err) {
+    console.error("[Register Error]", err);
   }
 };

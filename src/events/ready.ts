@@ -1,14 +1,10 @@
 import Discord, { Client } from "discord.js";
-import {
-  chatInputCommandsRegister,
-  messageContextMenuCommandsRegister,
-} from "@/lib/executorsRegister";
+import { registerAllCommands } from "@/lib/executorsRegister";
 
 export const name = "ready";
 export const execute = async (client: Client) => {
   const logFile = await client.functions.logUtils.readConfig("status");
-  chatInputCommandsRegister(client);
-  messageContextMenuCommandsRegister(client);
+  await registerAllCommands(client);
   console.debug(`[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
   if (!client.user) {
     console.error(
