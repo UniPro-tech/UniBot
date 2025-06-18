@@ -26,7 +26,7 @@ export const execute = async (interaction: MessageContextMenuCommandInteraction)
   ) {
     const messageEmbed = new EmbedBuilder()
       .setTitle("ロールパネルではありません")
-      .setColor(config.color.e)
+      .setColor(config.color.error)
       .setTimestamp();
     await interaction.reply({
       embeds: [messageEmbed],
@@ -41,9 +41,9 @@ export const execute = async (interaction: MessageContextMenuCommandInteraction)
     data: interaction.targetMessage.id,
   } as SelectedData);
   const messageEmbed = new EmbedBuilder()
-      .setTitle("ロールパネルを選択しました")
-      .setColor(config.color.s)
-      .setTimestamp();
+    .setTitle("ロールパネルを選択しました")
+    .setColor(config.color.success)
+    .setTimestamp();
   await interaction.reply({
     embeds: [messageEmbed],
     flags: [MessageFlags.Ephemeral],

@@ -146,7 +146,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   description += "すでに持っているロールを選択すると解除されます。\n\n";
 
   const send = new EmbedBuilder()
-    .setColor("#4CAF50")
+    .setColor(config.color.success)
     .setTitle(panelTitle)
     .setDescription(description)
     .setTimestamp();
@@ -157,7 +157,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   });
 
   const replyEmbed = new EmbedBuilder()
-    .setColor("#4CAF50")
+    .setColor(config.color.success)
     .setTitle("役職パネル作成完了")
     .setDescription("役職パネルが作成されました。")
     .setTimestamp();
