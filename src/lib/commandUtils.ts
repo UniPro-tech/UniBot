@@ -38,15 +38,16 @@ export const addSubCommand = (name: string, data: SlashCommandBuilder) => {
  * @param {string} name - The name of the sub-commands.
  * @returns {Promise<void>} - A promise that resolves when the sub-commands are handled.
  */
-export const subCommandHandling = async (name: string) => {
+export const subCommandHandling = (name: string) => {
   const collection = new Collection<string, ChatInputCommand>();
   console.info(`\u001b[32m===Load ${name}'s SubCommand Executing Data===\u001b[0m`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
   for (const file of commandFiles) {
-    const command = (await import(
-      path.resolve(__dirname, `../executors/chatInputCommands/${name}/${file}`)
+    const command = require(path.resolve(
+      __dirname,
+      `../executors/chatInputCommands/${name}/${file}`
     )) as ChatInputCommand;
     try {
       collection.set(command.data.name, command);
