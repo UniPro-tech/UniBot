@@ -78,10 +78,14 @@ export const writeSelected = async (data: SelectedData): Promise<void> => {
  * @param {string} api_name - The name of the path.
  * @returns {Promise<Object>} - The parsed log data.
  */
-export const readSelected = async (id: string): Promise<SelectedData | null> => {
+export const readSelected = async (
+  user?: string,
+  type?: SelectedDataType,
+  data?: string
+): Promise<SelectedData | null> => {
   try {
-    const selectedData = await prismaClient.selectedData.findUnique({
-      where: { id },
+    const selectedData = await prismaClient.selectedData.findFirst({
+      where: { user, type, data },
     });
     return selectedData ? JSON.parse(selectedData.data) : null;
   } catch (error) {
