@@ -5,11 +5,11 @@ import fs from "fs";
 // TODO: Collectionの型を指定する
 
 export const ChatInputCommandCollector = async (client: Client) => {
-  console.log(`\u001b[32m===Load ChatInputCommand Executing Data===\u001b[0m`);
+  console.info(`\u001b[32m===Load ChatInputCommand Executing Data===\u001b[0m`);
   client.interactionExecutorsCollections.chatInputCommands = new Collection();
   const commandFolders = fs.readdirSync(path.resolve(__dirname, `../executors/chatInputCommands`));
   for (const folder of commandFolders) {
-    console.log(`\u001b[32m[Init]Loading ${folder} commands\u001b[0m`);
+    console.info(`\u001b[32m[Init]Loading ${folder} commands\u001b[0m`);
     const commandFiles = fs
       .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${folder}`))
       .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
@@ -21,42 +21,44 @@ export const ChatInputCommandCollector = async (client: Client) => {
       ));
       try {
         client.interactionExecutorsCollections.chatInputCommands.set(command.data.name, command);
-        console.log(`[Init]${command.data.name} has been loaded.`);
+        console.info(`[Init]${command.data.name} has been loaded.`);
       } catch (error) {
-        console.error(`[error]An Error Occured in ${command.data.name}\nDatails:\n ${error}`);
+        console.error(`[error]An Error Occurred in ${command.data.name}\nDetails:\n ${error}`);
       }
     }
-    console.log(`\u001b[32m${folder} has been loaded\u001b[0m`);
+    console.info(`\u001b[32m${folder} has been loaded\u001b[0m`);
   }
-  console.log(`\u001b[32m===ChatInputCommand Executing Data Loaded===\u001b[0m`);
+  console.info(`\u001b[32m===ChatInputCommand Executing Data Loaded===\u001b[0m`);
 };
 
 export const StringSelectMenuCollector = async (client: Client) => {
-  console.log(`\u001b[32m===Load StringSelectMenu Executing Data===\u001b[0m`);
+  console.info(`\u001b[32m===Load StringSelectMenu Executing Data===\u001b[0m`);
   client.interactionExecutorsCollections.stringSelectMenus = new Collection();
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/selectMenus/string`))
     .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
   for (const file of commandFiles) {
-    const menuDefine = require(path.resolve(__dirname, `../executors/selectMenus/string/${file}`));
+    const menuDefine = await import(
+      path.resolve(__dirname, `../executors/selectMenus/string/${file}`)
+    );
     try {
       client.interactionExecutorsCollections.stringSelectMenus.set(menuDefine.name, menuDefine);
-      console.log(`[Init]${menuDefine.name} has been loaded.`);
+      console.info(`[Init]${menuDefine.name} has been loaded.`);
     } catch (error) {
-      console.error(`[error]An Error Occured in ${menuDefine.name}\nDetails:\n ${error}`);
+      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
     }
   }
-  console.log(`\u001b[32m===StringSelectMenu Executing Data Loaded===\u001b[0m`);
+  console.info(`\u001b[32m===StringSelectMenu Executing Data Loaded===\u001b[0m`);
 };
 
 export const MessageContextMenuCommandCollector = async (client: Client) => {
-  console.log(`\u001b[32m===Load MessageContextMenuCommand Executing Data===\u001b[0m`);
+  console.info(`\u001b[32m===Load MessageContextMenuCommand Executing Data===\u001b[0m`);
   client.interactionExecutorsCollections.messageContextMenuCommands = new Collection();
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/messageContextMenuCommands`))
     .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
   for (const file of commandFiles) {
-    const menuDefine = require(path.resolve(
+    const menuDefine = await import(path.resolve(
       __dirname,
       `../executors/messageContextMenuCommands/${file}`
     ));
@@ -65,10 +67,10 @@ export const MessageContextMenuCommandCollector = async (client: Client) => {
         menuDefine.name,
         menuDefine
       );
-      console.log(`[Init]${menuDefine.name} has been loaded.`);
+      console.info(`[Init]${menuDefine.name} has been loaded.`);
     } catch (error) {
-      console.error(`[error]An Error Occured in ${menuDefine.name}\nDetails:\n ${error}`);
+      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
     }
   }
-  console.log(`\u001b[32m===MessageContextMenuCommand Executing Data Loaded===\u001b[0m`);
+  console.info(`\u001b[32m===MessageContextMenuCommand Executing Data Loaded===\u001b[0m`);
 };

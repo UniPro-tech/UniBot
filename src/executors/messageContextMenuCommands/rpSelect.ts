@@ -12,15 +12,15 @@ export const name = "RPを選択";
 
 export const data = new ContextMenuCommandBuilder()
   .setName("RPを選択")
-  .setType(3)
+  .setType(ApplicationCommandType.Message)
   .setType(ApplicationCommandType.Message);
 
 export const execute = async (interaction: MessageContextMenuCommandInteraction) => {
   if (
-    interaction.targetMessage.author.id != interaction.client.user.id ||
+    interaction.targetMessage.author.id !== interaction.client.user.id ||
     !(
       interaction.targetMessage.components[0] &&
-      interaction.targetMessage.components[0].type == 1 &&
+      interaction.targetMessage.components[0].type === 1 &&
       interaction.targetMessage.components[0].components[0].customId?.startsWith("rp_")
     )
   ) {
@@ -34,8 +34,7 @@ export const execute = async (interaction: MessageContextMenuCommandInteraction)
     });
     return;
   }
-  const messageId = interaction.targetMessage.id;
-  writeSelected({
+  await writeSelected({
     user: interaction.user.id,
     type: "Message",
     data: interaction.targetMessage.id,

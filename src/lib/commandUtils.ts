@@ -38,27 +38,26 @@ export const addSubCommand = (name: string, data: SlashCommandBuilder) => {
  * @param {string} name - The name of the sub-commands.
  * @returns {Promise<void>} - A promise that resolves when the sub-commands are handled.
  */
-export const subCommandHandling = (name: string) => {
+export const subCommandHandling = async (name: string) => {
   const collection = new Collection<string, ChatInputCommand>();
-  console.log(`\u001b[32m===Load ${name}'s SubCommand Executing Data===\u001b[0m`);
+  console.info(`\u001b[32m===Load ${name}'s SubCommand Executing Data===\u001b[0m`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
   for (const file of commandFiles) {
-    const command = require(path.resolve(
-      __dirname,
-      `../executors/chatInputCommands/${name}/${file}`
+    const command = (await import(
+      path.resolve(__dirname, `../executors/chatInputCommands/${name}/${file}`)
     )) as ChatInputCommand;
     try {
       collection.set(command.data.name, command);
-      console.log(`[Subcommand]${command.data.name} has been loaded.`);
+      console.info(`[Subcommand]${command.data.name} has been loaded.`);
     } catch (error) {
-      console.log(
-        `\u001b[31m[error]An Error Occured in ${command.data.name}\nDatails:\n ${error}\u001b[0m`
+      console.error(
+        `\u001b[31m[error]An Error Occurred in ${command.data.name}\nDetails:\n ${error}\u001b[0m`
       );
     }
   }
-  console.log(`\u001b[32m===${name} loaded===\u001b[0m`);
+  console.info(`\u001b[32m===${name} loaded===\u001b[0m`);
   return collection;
 };
 

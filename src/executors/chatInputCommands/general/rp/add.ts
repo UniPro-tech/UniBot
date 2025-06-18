@@ -100,7 +100,8 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   const botRoles = botMember.roles.cache.map((role) => role.position);
   const highestBotRole = Math.max(...botRoles);
 
-  for (let i = 0; i <= 2; i++) {
+  const maxRoles = 6;
+  for (let i = 0; i <= maxRoles; i++) {
     const role = interaction.options.getRole(`role${i}`);
     if (role) {
       // @everyone ロールのIDを取得

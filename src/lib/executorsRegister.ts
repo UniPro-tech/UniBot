@@ -51,21 +51,21 @@ async function putToDiscordWithDiffCheck(
     });
 
   if (!shouldUpdate) {
-    console.log(
+    console.info(
       `[Skip] No changes detected. Skipping registration for ${guild ?? "global"} commands.`
     );
     return;
   }
 
   await rest.put(route, { body: array });
-  console.log(`[Update] Commands updated for ${guild ?? "global"} scope.`);
+  console.info(`[Update] Commands updated for ${guild ?? "global"} scope.`);
 }
 
 /**
  * コマンド登録関数（チャット入力＋右クリック含む）
  */
 export const registerAllCommands = async (client: Client) => {
-  console.log(`\u001b[32m===Pushing All ApplicationCommand Data===\u001b[0m`);
+  console.info(`\u001b[32m===Pushing All ApplicationCommand Data===\u001b[0m`);
   const config = client.config;
   const token = config.token;
   const testGuild = config.dev.testGuild;
@@ -86,7 +86,7 @@ export const registerAllCommands = async (client: Client) => {
       const data = (command.data as SlashCommandBuilder).toJSON();
       arr.push(data);
       commandCount++;
-      console.log(`[${typeLabel}] ${file} has been added.`);
+      console.info(`[${typeLabel}] ${file} has been added.`);
     } catch (err) {
       console.error(`[${typeLabel}] Error in ${file}:\n`, err);
     }
@@ -120,10 +120,9 @@ export const registerAllCommands = async (client: Client) => {
     .filter((f) => f.endsWith(".js") || (f.endsWith(".ts") && !f.endsWith(".d.ts")));
 
   for (const file of contextMenuFiles) {
-    const command = require(path.resolve(
-      __dirname,
-      `../executors/messageContextMenuCommands/${file}`
-    ));
+    const command = await import(
+      path.resolve(__dirname, `../executors/messageContextMenuCommands/${file}`)
+    );
     if (command.adminGuildOnly) {
       pushCommand(adminGuildCommands, command, file, "Admin Context");
     } else {
@@ -133,10 +132,10 @@ export const registerAllCommands = async (client: Client) => {
 
   // --- 実行
   try {
-    console.log(`[Init] Registering ${commandCount} total commands...`);
+    console.info(`[Init] Registering ${commandCount} total commands...`);
     await putToDiscordWithDiffCheck(client, rest, adminGuildCommands, testGuild);
     await putToDiscordWithDiffCheck(client, rest, globalCommands);
-    console.log(`[Done] All commands registered successfully.`);
+    console.info(`[Done] All commands registered successfully.`);
   } catch (err) {
     console.error("[Register Error]", err);
   }

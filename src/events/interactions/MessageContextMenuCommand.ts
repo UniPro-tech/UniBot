@@ -39,7 +39,7 @@ const MessageContextMenuCommandExecute = async (
 
   try {
     await command.execute(interaction);
-    console.log(
+    console.info(
       `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} run] ${
         interaction.commandName
       }`
@@ -80,7 +80,7 @@ const MessageContextMenuCommandExecute = async (
       `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
-      )} error]An Error Occured in ${interaction.commandName}\nDatails:\n${error}`
+      )} error]An Error Occurred in ${interaction.commandName}\nDetails:\n${error}`
     );
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")

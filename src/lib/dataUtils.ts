@@ -69,7 +69,7 @@ export const writeSelected = async (data: SelectedData): Promise<void> => {
       },
     });
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 

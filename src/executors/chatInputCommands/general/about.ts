@@ -1,14 +1,13 @@
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 import path from "path";
-const packageData = require(path.resolve(__dirname, "../../../../package.json"));
 
 export const guildOnly = false;
 export const data = new SlashCommandBuilder()
   .setName("about")
   .setDescription("このBotについての情報を表示します。");
 export const execute = async (interaction: CommandInteraction) => {
-  //const size = await interaction.client.shard.fetchClientValues("guilds.cache.size");
+  const packageData = await import(path.resolve(__dirname, "../../../../package.json"));
   const embed = new EmbedBuilder()
     .setColor(0x0099ff)
     .setTitle(`About ${packageData.name}`)
