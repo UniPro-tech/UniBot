@@ -87,7 +87,7 @@ export const readSelected = async (
     const selectedData = await prismaClient.selectedData.findFirst({
       where: { user, type, data },
     });
-    return selectedData ? JSON.parse(selectedData.data) : null;
+    return (selectedData as SelectedData) || null;
   } catch (error) {
     // TODO: ここでThrow Errorを投げて、呼び出し元でcatchするようにする
     console.error(
