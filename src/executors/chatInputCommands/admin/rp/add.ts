@@ -1,14 +1,16 @@
 import {
   ChatInputCommandInteraction,
   SlashCommandSubcommandBuilder,
-  EmbedBuilder,
   GuildMember,
   MessageFlags,
   ActionRowBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
+  ActionRow,
+  StringSelectMenuComponent,
 } from "discord.js";
 import config from "@/config";
+import { readSelected, SelectedDataType } from "@/lib/dataUtils";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("add")
@@ -44,6 +46,44 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     return; // アドミンロールが付与されていなかったら終了
   }
 
+  const selectedMenuMessageId = (
+    await readSelected(interaction.user.id, SelectedDataType.Message)
+  )?.data.replace(/"/g, "");
+  if (!selectedMenuMessageId) {
+    await interaction.reply({
+      content: "DB not found",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  const selectedMenuMessage = await interaction.channel?.messages.fetch(
+    selectedMenuMessageId as string
+  );
+  if (!selectedMenuMessage) {
+    await interaction.reply({
+      content: "It is not a valid messageId",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  if (!selectedMenuMessage.components || selectedMenuMessage.components.length === 0) {
+    await interaction.reply({
+      content: "This message does not have any components.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  const selectMenu = (selectedMenuMessage.components[0] as ActionRow<StringSelectMenuComponent>)
+    .components[0] as StringSelectMenuComponent;
+  if (!selectMenu || selectMenu.type !== 3 || !selectMenu.customId.startsWith("rp_")) {
+    await interaction.reply({
+      content: "This is not a valid role panel select menu.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const currentOptions = selectMenu.options;
   const roles = [];
   const memberRoles = member.roles.cache.map((role) => role.position);
   const highestMemberRole = Math.max(...memberRoles);
@@ -59,9 +99,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   const botRoles = botMember.roles.cache.map((role) => role.position);
   const highestBotRole = Math.max(...botRoles);
 
-  const panelTitle = interaction.options.getString("title") || "役職パネル";
-
-  for (let i = 0; i <= 6; i++) {
+  for (let i = 0; i <= 2; i++) {
     const role = interaction.options.getRole(`role${i}`);
     if (role) {
       // @everyone ロールのIDを取得
@@ -107,13 +145,19 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     }
   }
 
-  if (!interaction.channel || !interaction.channel.isSendable()) {
-    await interaction.reply({
-      content: "メッセージを送信できるチャンネルではありません",
-      flags: MessageFlags.Ephemeral,
+  for (const option of currentOptions) {
+    // 既に選択肢に存在するロールはスキップ
+    if (roles.some((role) => role.id === option.value)) {
+      continue;
+    }
+
+    // 選択肢のロールを追加
+    roles.push({
+      id: option.value,
+      name: option.label,
     });
-    return;
   }
+
   // 役職がなければ終了
   if (roles.length === 0) {
     await interaction.reply({
@@ -123,47 +167,45 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     return;
   }
 
-  // セレクトメニューの作成
-  const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId("role-selector")
+  // 役職の重複をチェック
+  const roleIds = roles.map((role) => role.id);
+  const uniqueRoleIds = new Set(roleIds);
+  if (uniqueRoleIds.size !== roleIds.length) {
+    await interaction.reply({
+      content: "同じ役職が複数選択されています",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const panelId = selectMenu.customId;
+  const addedSelectMenu = new StringSelectMenuBuilder()
+    .setCustomId(`${panelId}`)
     .setPlaceholder("ロールを選択してください")
     .setMinValues(0)
     .setMaxValues(roles.length);
 
   // 選択肢を追加
   roles.forEach((role) => {
-    selectMenu.addOptions(
+    addedSelectMenu.addOptions(
       new StringSelectMenuOptionBuilder()
         .setLabel(role.name)
-        .setValue(role.id)
+        .setValue(role.id.toString())
         .setDescription(`${role.name} ロールを取得/解除します`)
     );
   });
-  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
 
-  // パネルの説明を作成
-  let description = "下のメニューから希望するロールを選択してください。\n";
-  description += "すでに持っているロールを選択すると解除されます。\n\n";
+  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(addedSelectMenu);
 
-  const send = new EmbedBuilder()
-    .setColor(config.color.success)
-    .setTitle(panelTitle)
-    .setDescription(description)
-    .setTimestamp();
+  const editEmbed = selectedMenuMessage.embeds[0];
 
-  await interaction.channel.send({
-    embeds: [send],
+  selectedMenuMessage.edit({
+    embeds: [editEmbed],
     components: [row],
   });
 
-  const replyEmbed = new EmbedBuilder()
-    .setColor(config.color.success)
-    .setTitle("役職パネル作成完了")
-    .setDescription("役職パネルが作成されました。")
-    .setTimestamp();
-
   await interaction.reply({
-    embeds: [replyEmbed],
+    content: "役職が追加されました",
     flags: MessageFlags.Ephemeral,
   });
 };
