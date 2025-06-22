@@ -47,7 +47,7 @@
     "dotenv": "^16.5.0",
     "fs": "^0.0.1-security",
     "install": "^0.13.0",
-    "node-cron": "^3.0.3",
+    "node-cron": "^4.1.1",
     "rss-parser": "^3.13.0",
     "sodium": "^3.0.2",
     "voicevox.js": "^0.6.0"
