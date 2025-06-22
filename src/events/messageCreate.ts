@@ -1,54 +1,34 @@
-/*
-const { getVoiceConnection } = require("@discordjs/voice");
-const zBotTextPreprocessor = require("../ttsUtils/TextPreprocessor");
-const zBotTextToSpeech = require("../ttsUtils/TextToSpeech");
-
-const Discord = require("discord.js");
-module.exports = {
-  name: "messageCreate",
-  async execute(message, client) {
-    const { zBotGData } = message.client;
-    if (message.author.bot) return;
-
-    const guildId = message.guildId;
-    const memberId = message.member.id;
-
-    //const { getVoiceConnection } = require("@discordjs/voice");
-    const connection = getVoiceConnection(guildId);
-
-    if (!connection) return;
-
-    const guildConfig = zBotGData.initGuildConfigIfUndefined(guildId);
-
-    const onEventTextChannelId = message.channel.id;
-    const targetTextChannelId = guildConfig.textChannelId;
-
-    if (onEventTextChannelId !== targetTextChannelId) return;
-
-    const memberSpeakerConfig = zBotGData.initMemberSpeakerConfigIfUndefined(guildId, memberId);
-
-    const text = message.content;
-    const dictionary = zBotGData.initGuildDictionaryIfUndefined(guildId);
-
-    //const zBotTextPreprocessor = require("./zBotTextPreprocessor");
-    const splitedText = zBotTextPreprocessor(text, dictionary);
-
-    const speaker = memberSpeakerConfig;
-    const player = connection.state.subscription.player;
-    const queue = zBotGData.initGuildQueueIfUndefined(guildId);
-
-    //const zBotTextToSpeech = require("./zBotTextToSpeech");
-    await zBotTextToSpeech(splitedText, speaker, player, queue);
-
-    return;
-  },
-};
-
-*/
+import { readTtsConnection } from "@/lib/dataUtils";
+import { createAudioPlayer, createAudioResource, getVoiceConnection } from "@discordjs/voice";
 import { Client, Message } from "discord.js";
+import { RPC, Generate, Query } from "voicevox.js";
+import { Readable } from "stream";
 export const name = "messageCreate";
 export const execute = async (message: Message, client: Client) => {
   if (message.author.bot) return;
+  if (!message.guild) return;
+  const channel = message.channel;
+  if (!channel.isTextBased()) return;
+  const voiceConnectionData = await readTtsConnection(message.guild.id, channel.id);
+  if (!voiceConnectionData) return;
+  const connection = getVoiceConnection(voiceConnectionData.guild);
+  if (!connection) return;
+  if (process.env.VOICEBOX_API_URL === undefined) {
+    console.error("VOICEBOX_API_URL is not set.");
+    return;
+  } else {
+    const headers = {
+      Authorization: `ApiKey ${process.env.VOICEBOX_API_KEY}`,
+    };
+    await RPC.connect(process.env.VOICEBOX_API_URL, headers);
+    const query = await Query.getTalkQuery(message.content, 0);
+    const audio = await Generate.generate(0, query);
+    const player = createAudioPlayer();
+    connection.subscribe(player);
+    const audioStream = Readable.from(audio);
+    const resource = createAudioResource(audioStream);
+    player.play(resource);
+  }
 };
 
 export default {
