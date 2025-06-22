@@ -9,9 +9,9 @@ import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
 
-export const handlingCommands = subCommandHandling("admin/tts");
+export const handlingCommands = subCommandHandling("general/tts");
 export const data = addSubCommand(
-  "admin/tts",
+  "general/tts",
   new SlashCommandBuilder().setName("tts").setDescription("テキスト読み上げを管理します。")
 );
 export const guildOnly = true;
