@@ -43,10 +43,23 @@ async function putToDiscordWithDiffCheck(
 
   const existing = (await rest.get(route)) as RESTPostAPIChatInputApplicationCommandsJSONBody[];
 
+  // 名前をキーにしたMapに変換
+  const existingMap = new Map<string, RESTPostAPIChatInputApplicationCommandsJSONBody>();
+  existing.forEach((cmd) => existingMap.set(cmd.name, cmd));
+
+  // 長さが違うだけで更新対象にする
+  if (array.length !== existing.length) {
+    console.info(`[Update] Command count changed: ${existing.length} -> ${array.length}`);
+  }
+
   const shouldUpdate =
     array.length !== existing.length ||
-    array.some((cmd, i) => {
-      const existingCmd = existing[i];
+    array.some((cmd) => {
+      const existingCmd = existingMap.get(cmd.name);
+      if (!existingCmd) {
+        // 新規コマンドあり
+        return true;
+      }
       return !areCommandsEqual(cmd, existingCmd);
     });
 

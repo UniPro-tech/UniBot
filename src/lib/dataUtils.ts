@@ -100,7 +100,64 @@ export const readSelected = async (
   }
 };
 
+export const writeTtsConnection = async (
+  guild: string,
+  textChannel: string[],
+  voiceChannel: string
+): Promise<void> => {
+  try {
+    await prismaClient.ttsConnection.upsert({
+      where: { guild, voiceChannel },
+      update: { textChannel },
+      create: { guild, textChannel, voiceChannel },
+    });
+  } catch (error) {
+    console.error(
+      `\u001b[31m[${timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    );
+  }
+};
+
+export const readTtsConnection = async (
+  guild: string,
+  textChannel?: string,
+  voiceChannel?: string
+): Promise<{
+  id: string;
+  guild: string;
+  created_at: Date;
+  updated_at: Date;
+  textChannel: string[];
+  voiceChannel: string;
+} | null> => {
+  try {
+    const connection = await prismaClient.ttsConnection.findFirst({
+      where: {
+        guild,
+        ...(textChannel ? { textChannel: { has: textChannel } } : {}),
+        ...(voiceChannel ? { voiceChannel } : {}),
+      },
+    });
+    return connection;
+  } catch (error) {
+    console.error(
+      `\u001b[31m[${timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} error]An Error Occured.\nDatails:\n${error}\u001b[0m`
+    );
+    return null;
+  }
+};
+
 export default {
   writeConfig,
   readConfig,
+  writeSelected,
+  readSelected,
+  writeTtsConnection,
+  readTtsConnection,
 };

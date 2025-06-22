@@ -3,18 +3,18 @@ import {
   EmbedBuilder,
   CommandInteractionOptionResolver,
   ChatInputCommandInteraction,
+  TextChannel,
 } from "discord.js";
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
 
-export const handlingCommands = subCommandHandling("admin/maintenance");
+export const handlingCommands = subCommandHandling("admin/tts");
 export const data = addSubCommand(
-  "admin/maintenance",
-  new SlashCommandBuilder().setName("maintenance").setDescription("メンテナンスモード")
+  "admin/tts",
+  new SlashCommandBuilder().setName("tts").setDescription("テキスト読み上げを管理します。")
 );
 export const guildOnly = true;
-export const adminGuildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const command = handlingCommands.get(
@@ -41,6 +41,10 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       .setTimestamp()
       .setThumbnail(interaction.user.displayAvatarURL())
       .addFields([
+        {
+          name: "実行コマンド",
+          value: `\`\`\`\n/${interaction.commandName}\n\`\`\``,
+        },
         {
           name: "サブコマンド",
           value: `\`\`\`\n/${(
@@ -82,7 +86,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       .setColor(interaction.client.config.color.error)
       .setTimestamp();
 
-    await interaction.reply({ embeds: [messageEmbed] });
+    await (interaction.channel as TextChannel).send({ embeds: [messageEmbed] });
     const logChannel = await GetLogChannel(interaction.client);
     if (logChannel) {
       logChannel.send({ embeds: [messageEmbed] });

@@ -6,6 +6,10 @@ LOGCH_GUILD_ID="YOUR_GUILD_ID"
 ROLE_ADMIN="YOUR_ADMIN_ROLE_ID"
 TEST_GUILD="YOUR_TEST_GUILD_ID"
 
+## TTS
+VOICEVOX_API_URL="http://localhost:50021"
+VOICEVOX_API_KEY="YOUR_VOICEVOX_API_KEY(OPTION)"
+
 # Prisma Database URL
 DATABASE_URL="postgresql://root:secret@localhost:5432/unibot?schema=public"
 
