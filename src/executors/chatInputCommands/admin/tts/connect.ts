@@ -6,6 +6,7 @@ import {
 } from "discord.js";
 import config from "@/config";
 import { joinVoiceChannel } from "@discordjs/voice";
+import { writeTtsConnection } from "@/lib/dataUtils";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("connect")
@@ -17,17 +18,21 @@ export const execute = async (interaction: CommandInteraction) => {
     return;
   }
   await interaction.reply("Now connecting...");
-  const channel = (interaction.member as GuildMember).voice.channel;
-  if (!channel) {
+  const voiceChannel = (interaction.member as GuildMember).voice.channel;
+  if (!voiceChannel) {
     await interaction.followUp("ボイスチャンネルに参加していません。");
     return;
   }
   const connection = await joinVoiceChannel({
-    channelId: channel.id,
-    guildId: channel.guild.id,
-    adapterCreator: channel.guild.voiceAdapterCreator,
+    channelId: voiceChannel.id,
+    guildId: voiceChannel.guild.id,
+    adapterCreator: voiceChannel.guild.voiceAdapterCreator,
   });
-  await interaction.editReply("Connection OK");
+  connection.once("ready", async () => {
+    console.info("Connected to voice channel");
+    await interaction.editReply("Connection OK");
+    writeTtsConnection(voiceChannel.guild.id, [interaction.channel?.id as string], voiceChannel.id);
+  });
 };
 
 export default {

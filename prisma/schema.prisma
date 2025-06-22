@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Config {
+model config {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   key        String   @unique @map("_key")
   created_at DateTime @default(now())
@@ -28,4 +28,13 @@ model selectedData {
   updated_at DateTime @updatedAt
   type       String   @map("_type")
   data       String   @map("_data")
+}
+
+model ttsConnection {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  guild      String   @map("_guild") @unique
+  textChannel String[]   @map("_textChannel")
+  voiceChannel String   @map("_voiceChannel") @unique
 }
