@@ -17,6 +17,20 @@ export const data = addSubCommand(
 export const guildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
+  if (!interaction.inGuild()) {
+    await interaction.reply({
+      content: "このコマンドはサーバー内でのみ使用できます。",
+      ephemeral: true,
+    });
+    return;
+  }
+  if (!process.env.VOICEVOX_API_URL) {
+    await interaction.reply({
+      content: "VOICEVOX API URLが設定されていません。\nこのBotはTTSを使用できません。",
+      ephemeral: true,
+    });
+    return;
+  }
   const command = handlingCommands.get(
     (interaction.options as CommandInteractionOptionResolver).getSubcommand()
   );
