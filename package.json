@@ -39,7 +39,7 @@
     "@discordjs/rest": "^2.5.1",
     "@discordjs/voice": "^0.18.0",
     "@prisma/client": "^6.10.1",
-    "@types/node": "^22.15.32",
+    "@types/node": "^24.0.3",
     "axios": "^1.10.0",
     "child_process": "^1.0.2",
     "discord-api-types": "^0.37.120",
