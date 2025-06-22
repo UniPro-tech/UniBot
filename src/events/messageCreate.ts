@@ -1,5 +1,11 @@
 import { readTtsConnection } from "@/lib/dataUtils";
-import { createAudioPlayer, createAudioResource, getVoiceConnection } from "@discordjs/voice";
+import {
+  AudioPlayer,
+  createAudioPlayer,
+  createAudioResource,
+  getVoiceConnection,
+  VoiceConnectionReadyState,
+} from "@discordjs/voice";
 import { Client, Message } from "discord.js";
 import { RPC, Generate, Query } from "voicevox.js";
 import { Readable } from "stream";
@@ -13,7 +19,6 @@ export const execute = async (message: Message, client: Client) => {
   if (!voiceConnectionData) return;
   const connection = getVoiceConnection(voiceConnectionData.guild);
   if (!connection) return;
-  console.log(`initialized`);
   if (process.env.VOICEBOX_API_URL === undefined) {
     console.error("VOICEBOX_API_URL is not set.");
     return;
@@ -21,7 +26,6 @@ export const execute = async (message: Message, client: Client) => {
     let text = "";
     if (message.content.length > 100) text = message.content.slice(0, 100) + "以下省略";
     else text = message.content;
-    console.log(`splitted`);
     if (message.attachments.size > 0) {
       const attachmentTypes: string[] = [];
       message.attachments.forEach((attachment) => {
@@ -47,17 +51,24 @@ export const execute = async (message: Message, client: Client) => {
         text += `（${attachmentTypes.join("と")}が添付されました）`;
       }
     }
-    console.log(`detected attachments`);
     const headers = {
       Authorization: `ApiKey ${process.env.VOICEBOX_API_KEY}`,
     };
     await RPC.connect(process.env.VOICEBOX_API_URL, headers);
     const query = await Query.getTalkQuery(text, 0);
     const audio = await Generate.generate(0, query);
-    const player = createAudioPlayer();
-    connection.subscribe(player);
     const audioStream = Readable.from(audio);
     const resource = createAudioResource(audioStream);
+    let player;
+    if ((connection.state as VoiceConnectionReadyState).subscription?.player) {
+      player = (connection.state as VoiceConnectionReadyState).subscription?.player as AudioPlayer;
+      while (player.state.status === "playing") {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+    } else {
+      player = createAudioPlayer();
+      connection.subscribe(player);
+    }
     player.play(resource);
   }
 };
