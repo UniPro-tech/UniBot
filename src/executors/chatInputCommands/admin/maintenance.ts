@@ -14,6 +14,7 @@ export const data = addSubCommand(
   new SlashCommandBuilder().setName("maintenance").setDescription("メンテナンスモード")
 );
 export const guildOnly = true;
+export const adminGuildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const command = handlingCommands.get(
