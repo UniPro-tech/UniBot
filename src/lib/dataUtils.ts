@@ -125,7 +125,14 @@ export const readTtsConnection = async (
   guild: string,
   textChannel?: string,
   voiceChannel?: string
-): Promise<{ textChannel: string[] } | null> => {
+): Promise<{
+  id: string;
+  guild: string;
+  created_at: Date;
+  updated_at: Date;
+  textChannel: string[];
+  voiceChannel: string;
+} | null> => {
   try {
     const connection = await prismaClient.ttsConnection.findFirst({
       where: {
@@ -134,7 +141,7 @@ export const readTtsConnection = async (
         ...(voiceChannel ? { voiceChannel } : {}),
       },
     });
-    return connection ? { textChannel: connection.textChannel } : null;
+    return connection;
   } catch (error) {
     console.error(
       `\u001b[31m[${timeUtils.timeToJSTstamp(
