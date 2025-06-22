@@ -116,7 +116,7 @@ export const writeTtsConnection = async (
       `\u001b[31m[${timeUtils.timeToJSTstamp(
         Date.now(),
         true
-      )} error]An Error Occured.\nDatails:\n${error}\u001b[0m`
+      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
     );
   }
 };
