@@ -19,8 +19,8 @@ export const execute = async (message: Message, client: Client) => {
   if (!voiceConnectionData) return;
   const connection = getVoiceConnection(voiceConnectionData.guild);
   if (!connection) return;
-  if (process.env.VOICEBOX_API_URL === undefined) {
-    console.error("VOICEBOX_API_URL is not set.");
+  if (process.env.VOICEVOX_API_URL === undefined) {
+    console.error("VOICEVOX_API_URL is not set.");
     return;
   } else {
     let text = "";
