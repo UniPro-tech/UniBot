@@ -12,8 +12,11 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | t
     apt-get update && \
     apt-get install -y gh
 
+RUN apt-get update && apt-get install -y python3 make g++ ffmpeg && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
-RUN bun install
+COPY bun.lock ./
+RUN bun install --trust-all
 
 COPY . .
 
