@@ -42,7 +42,7 @@
     "@types/node": "^22.15.32",
     "axios": "^1.10.0",
     "child_process": "^1.0.2",
-    "discord-api-types": "^0.37.120",
+    "discord-api-types": "^0.38.12",
     "discord.js": "^14.20.0",
     "dotenv": "^16.5.0",
     "fs": "^0.0.1-security",
