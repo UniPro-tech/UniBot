@@ -52,9 +52,9 @@ export const execute = async (message: Message, client: Client) => {
       }
     }
     const headers = {
-      Authorization: `ApiKey ${process.env.VOICEBOX_API_KEY}`,
+      Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
     };
-    await RPC.connect(process.env.VOICEBOX_API_URL, headers);
+    await RPC.connect(process.env.VOICEVOX_API_URL, headers);
     const query = await Query.getTalkQuery(text, 0);
     const audio = await Generate.generate(0, query);
     const audioStream = Readable.from(audio);
