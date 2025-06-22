@@ -1,22 +1,11 @@
-import {
-  CommandInteraction,
-  GuildMember,
-  GuildMemberRoleManager,
-  SlashCommandSubcommandBuilder,
-} from "discord.js";
-import config from "@/config";
+import { CommandInteraction, GuildMember, SlashCommandSubcommandBuilder } from "discord.js";
 import { joinVoiceChannel } from "@discordjs/voice";
 import { writeTtsConnection } from "@/lib/dataUtils";
 
 export const data = new SlashCommandSubcommandBuilder()
-  .setName("connect")
+  .setName("join")
   .setDescription("Connect to the voice channel.");
-export const adminGuildOnly = true;
 export const execute = async (interaction: CommandInteraction) => {
-  if (!(interaction.member?.roles as GuildMemberRoleManager).cache.has(config.adminRoleId)) {
-    interaction.reply("権限がありません");
-    return;
-  }
   await interaction.reply("Now connecting...");
   const voiceChannel = (interaction.member as GuildMember).voice.channel;
   if (!voiceChannel) {
@@ -37,6 +26,5 @@ export const execute = async (interaction: CommandInteraction) => {
 
 export default {
   data,
-  adminGuildOnly,
   execute,
 };

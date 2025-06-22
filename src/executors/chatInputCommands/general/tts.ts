@@ -12,10 +12,9 @@ import config from "@/config";
 export const handlingCommands = subCommandHandling("admin/tts");
 export const data = addSubCommand(
   "admin/tts",
-  new SlashCommandBuilder().setName("tts_dev").setDescription("テキスト読み上げを管理します。")
+  new SlashCommandBuilder().setName("tts").setDescription("テキスト読み上げを管理します。")
 );
 export const guildOnly = true;
-export const adminGuildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const command = handlingCommands.get(
