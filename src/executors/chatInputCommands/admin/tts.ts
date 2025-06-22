@@ -1,9 +1,9 @@
 import {
   SlashCommandBuilder,
   EmbedBuilder,
-  CommandInteraction,
   CommandInteractionOptionResolver,
   ChatInputCommandInteraction,
+  TextChannel,
 } from "discord.js";
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
@@ -15,6 +15,7 @@ export const data = addSubCommand(
   new SlashCommandBuilder().setName("tts_dev").setDescription("テキスト読み上げを管理します。")
 );
 export const guildOnly = true;
+export const adminGuildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const command = handlingCommands.get(
@@ -86,7 +87,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       .setColor(interaction.client.config.color.error)
       .setTimestamp();
 
-    await interaction.reply({ embeds: [messageEmbed] });
+    await (interaction.channel as TextChannel).send({ embeds: [messageEmbed] });
     const logChannel = await GetLogChannel(interaction.client);
     if (logChannel) {
       logChannel.send({ embeds: [messageEmbed] });
