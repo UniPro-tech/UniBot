@@ -13,11 +13,15 @@ export const execute = async (message: Message, client: Client) => {
   if (!voiceConnectionData) return;
   const connection = getVoiceConnection(voiceConnectionData.guild);
   if (!connection) return;
+  console.log(`initialized`);
   if (process.env.VOICEBOX_API_URL === undefined) {
     console.error("VOICEBOX_API_URL is not set.");
     return;
   } else {
-    let text = message.content;
+    let text = "";
+    if (message.content.length > 100) text = message.content.slice(0, 100) + "以下省略";
+    else text = message.content;
+    console.log(`splitted`);
     if (message.attachments.size > 0) {
       const attachmentTypes: string[] = [];
       message.attachments.forEach((attachment) => {
@@ -43,6 +47,7 @@ export const execute = async (message: Message, client: Client) => {
         text += `（${attachmentTypes.join("と")}が添付されました）`;
       }
     }
+    console.log(`detected attachments`);
     const headers = {
       Authorization: `ApiKey ${process.env.VOICEBOX_API_KEY}`,
     };
