@@ -17,11 +17,37 @@ export const execute = async (message: Message, client: Client) => {
     console.error("VOICEBOX_API_URL is not set.");
     return;
   } else {
+    let text = message.content;
+    if (message.attachments.size > 0) {
+      const attachmentTypes: string[] = [];
+      message.attachments.forEach((attachment) => {
+        if (attachment?.contentType?.startsWith("audio/")) {
+          attachmentTypes.push("音声ファイル");
+          return;
+        }
+        if (attachment?.contentType?.startsWith("image/")) {
+          attachmentTypes.push("画像ファイル");
+          return;
+        }
+        if (attachment?.contentType?.startsWith("video/")) {
+          attachmentTypes.push("動画ファイル");
+          return;
+        }
+        if (attachment?.contentType?.startsWith("text/")) {
+          attachmentTypes.push("テキストファイル");
+          return;
+        }
+        attachmentTypes.push("不明なファイル");
+      });
+      if (attachmentTypes.length > 0) {
+        text += `（${attachmentTypes.join("と")}が添付されました）`;
+      }
+    }
     const headers = {
       Authorization: `ApiKey ${process.env.VOICEBOX_API_KEY}`,
     };
     await RPC.connect(process.env.VOICEBOX_API_URL, headers);
-    const query = await Query.getTalkQuery(message.content, 0);
+    const query = await Query.getTalkQuery(text, 0);
     const audio = await Generate.generate(0, query);
     const player = createAudioPlayer();
     connection.subscribe(player);
