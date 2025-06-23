@@ -107,8 +107,8 @@ export const writeTtsConnection = async (
 ): Promise<void> => {
   try {
     await prismaClient.ttsConnection.upsert({
-      where: { guild, voiceChannel },
-      update: { textChannel },
+      where: { guild },
+      update: { voiceChannel, textChannel },
       create: { guild, textChannel, voiceChannel },
     });
   } catch (error) {
