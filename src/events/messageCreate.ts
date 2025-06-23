@@ -6,7 +6,7 @@ import {
   getVoiceConnection,
   VoiceConnectionReadyState,
 } from "@discordjs/voice";
-import { Client, Message } from "discord.js";
+import { Client, Message, MessageFlags } from "discord.js";
 import { RPC, Generate, Query } from "voicevox.js";
 import { Readable } from "stream";
 export const name = "messageCreate";
@@ -15,14 +15,23 @@ export const execute = async (message: Message, client: Client) => {
   if (!message.guild) return;
   const channel = message.channel;
   if (!channel.isTextBased()) return;
-  const voiceConnectionData = await readTtsConnection(message.guild.id, channel.id);
-  if (!voiceConnectionData) return;
-  const connection = getVoiceConnection(voiceConnectionData.guild);
-  if (!connection) return;
   if (process.env.VOICEVOX_API_URL === undefined) {
-    console.error("VOICEVOX_API_URL is not set.");
+    console.error("[ERROR] VOICEVOX_API_URL is not set.");
     return;
   } else {
+    const voiceConnectionData = await readTtsConnection(message.guild.id, channel.id);
+    if (!voiceConnectionData) return;
+    const connection = getVoiceConnection(voiceConnectionData.guild);
+    if (!connection) return;
+    if (message.flags.toArray().includes("SuppressNotifications")) return;
+    if (message.content == "skip" || message.content == "s") {
+      const player = (connection.state as VoiceConnectionReadyState).subscription
+        ?.player as AudioPlayer;
+      if (player) {
+        player.stop(true);
+      }
+      return;
+    }
     let text = "";
     if (message.content.length > 100) text = message.content.slice(0, 100) + "以下省略";
     else text = message.content;
