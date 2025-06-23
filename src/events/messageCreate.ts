@@ -22,7 +22,8 @@ export const execute = async (message: Message, client: Client) => {
     const voiceConnectionData = await readTtsConnection(message.guild.id, channel.id);
     if (!voiceConnectionData) return;
     const connection = getVoiceConnection(voiceConnectionData.guild);
-    if (!connection || message.flags.toArray().includes("SuppressNotifications")) return;
+    if (!connection) return;
+    if (message.flags.toArray().includes("SuppressNotifications")) return;
     if (message.content == "skip" || message.content == "s") {
       const player = (connection.state as VoiceConnectionReadyState).subscription
         ?.player as AudioPlayer;
