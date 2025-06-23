@@ -11,7 +11,7 @@
         "@types/node": "^24.0.3",
         "axios": "^1.10.0",
         "child_process": "^1.0.2",
-        "discord-api-types": "^0.38.12",
+        "discord-api-types": "^0.38.13",
         "discord.js": "^14.20.0",
         "dotenv": "^16.5.0",
         "fs": "^0.0.1-security",
@@ -19,7 +19,7 @@
         "node-cron": "^4.1.1",
         "rss-parser": "^3.13.0",
         "sodium": "^3.0.2",
-        "voicevox.js": "^0.6.0",
+        "voicevox.js": "^0.6.2",
       },
       "devDependencies": {
         "@types/node-cron": "^3.0.11",
@@ -246,7 +246,7 @@
 
     "util-deprecate": ["util-deprecate@1.0.2", "", {}, "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="],
 
-    "voicevox.js": ["voicevox.js@0.6.2", "", { "dependencies": { "axios": "^1.10.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-YcC6hmTz8Z8n+nk09cTkiuXkSCko2FdcbLNP7dcEz3orpwbN3e1UOOxVuJyH5VMJfmjS3U0W7ABrzA1LN613lA=="],
+    "voicevox.js": ["voicevox.js@0.6.3", "", { "dependencies": { "axios": "^1.10.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-3YmMLoFQeFykDTsWCxFjA/Xorcgkglp46uL0jAAvRRggGameVl+LnonSSAj0pHhH7/9YhmychoPdB0xNiVkd4w=="],
 
     "webidl-conversions": ["webidl-conversions@3.0.1", "", {}, "sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ=="],
 
