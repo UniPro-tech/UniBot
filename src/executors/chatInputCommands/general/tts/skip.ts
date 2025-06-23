@@ -32,7 +32,7 @@ export const execute = async (interaction: CommandInteraction) => {
   }
   await interaction.reply({
     content: "現在のオーディオをスキップしました。",
-    flags: [MessageFlags.Ephemeral],
+    flags: ["SuppressNotifications"],
   });
 };
 
