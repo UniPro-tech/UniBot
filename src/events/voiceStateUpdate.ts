@@ -6,9 +6,9 @@ export const execute = async (oldState: VoiceState) => {
   const channel = oldState.channel;
   if (!channel) return;
   if (channel.members.size > 1) return;
-  const connectionData = await readTtsConnection(oldState.guild.id, channel.id);
+  const connectionData = await readTtsConnection(oldState.guild.id, undefined, channel.id);
   if (!connectionData) return;
-  const connection = getVoiceConnection(channel.id);
+  const connection = getVoiceConnection(oldState.guild.id);
   if (!connection || connection.state.status == "destroyed") return;
   connection.destroy();
   const textChannel = oldState.guild.channels.cache.get(
