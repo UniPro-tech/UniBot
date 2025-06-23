@@ -5,14 +5,20 @@ import {
   ChatInputCommandInteraction,
   TextChannel,
 } from "discord.js";
-import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
+import { addSubCommand, addSubCommandGroup, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
 
-export const handlingCommands = subCommandHandling("general/tts");
-export const data = addSubCommand(
-  "general/tts",
-  new SlashCommandBuilder().setName("tts").setDescription("テキスト読み上げを管理します。")
+export const handlingCommands = subCommandHandling(
+  "general/tts/group",
+  subCommandHandling("general/tts/sub")
+);
+export const data = addSubCommandGroup(
+  "general/tts/group",
+  addSubCommand(
+    "general/tts/sub",
+    new SlashCommandBuilder().setName("tts").setDescription("テキスト読み上げを管理します。")
+  ) as SlashCommandBuilder
 );
 export const guildOnly = true;
 
@@ -31,9 +37,14 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     });
     return;
   }
-  const command = handlingCommands.get(
-    (interaction.options as CommandInteractionOptionResolver).getSubcommand()
-  );
+  const command =
+    (interaction.options as CommandInteractionOptionResolver).getSubcommandGroup() != null
+      ? handlingCommands.get(
+          (interaction.options as CommandInteractionOptionResolver).getSubcommandGroup() as string
+        )
+      : handlingCommands.get(
+          (interaction.options as CommandInteractionOptionResolver).getSubcommand()
+        );
   if (!command) {
     console.info(
       `[Not Found] Command: ${(
