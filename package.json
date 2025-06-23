@@ -38,6 +38,7 @@
     "@discordjs/opus": "^0.10.0",
     "@discordjs/rest": "^2.5.1",
     "@discordjs/voice": "^0.18.0",
+    "@nakanoaas/uuid58": "^1.0.4",
     "@prisma/client": "^6.10.1",
     "@types/node": "^24.0.3",
     "axios": "^1.10.0",
@@ -50,7 +51,7 @@
     "node-cron": "^4.1.1",
     "rss-parser": "^3.13.0",
     "sodium": "^3.0.2",
-    "voicevox.js": "^0.6.3"
+    "voicevox.js": "^0.6.4"
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",
