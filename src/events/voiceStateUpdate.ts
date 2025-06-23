@@ -42,6 +42,14 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
       : `${oldState.member?.displayName} がボイスチャンネル <#${oldState.channel?.name}> から退出しました。`;
   const connection = getVoiceConnection(oldState.guild.id || newState.guild.id);
   if (connection && connection.state.status !== "destroyed") {
+    const headers = {
+      Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
+    };
+    if (!RPC.rpc) await RPC.connect(process.env.VOICEVOX_API_URL as string, headers);
+    const query = await Query.getTalkQuery(text, 0);
+    const audio = await Generate.generate(0, query);
+    const audioStream = Readable.from(audio);
+    const resource = createAudioResource(audioStream);
     let player = connection.state.subscription?.player;
     if (player) {
       while (player.state.status === "playing") {
@@ -51,14 +59,6 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
       player = createAudioPlayer();
       connection.subscribe(player);
     }
-    const headers = {
-      Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
-    };
-    if (!RPC.rpc) await RPC.connect(process.env.VOICEVOX_API_URL as string, headers);
-    const query = await Query.getTalkQuery(text, 0);
-    const audio = await Generate.generate(0, query);
-    const audioStream = Readable.from(audio);
-    const resource = createAudioResource(audioStream);
     player.play(resource);
   }
 };
