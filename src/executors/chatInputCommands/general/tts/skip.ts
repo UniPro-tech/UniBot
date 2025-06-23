@@ -30,6 +30,10 @@ export const execute = async (interaction: CommandInteraction) => {
   if (player) {
     player.stop(true);
   }
+  await interaction.reply({
+    content: "現在のオーディオをスキップしました。",
+    flags: [MessageFlags.Ephemeral],
+  });
 };
 
 export default {
