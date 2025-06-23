@@ -1,5 +1,10 @@
 import { readTtsConnection } from "@/lib/dataUtils";
-import { createAudioPlayer, createAudioResource, getVoiceConnection } from "@discordjs/voice";
+import {
+  AudioPlayer,
+  createAudioPlayer,
+  createAudioResource,
+  getVoiceConnection,
+} from "@discordjs/voice";
 import { ChannelType, EmbedBuilder, TextChannel, VoiceState } from "discord.js";
 import { Readable } from "stream";
 import { RPC, Query, Generate } from "voicevox.js";
@@ -52,8 +57,14 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
     const resource = createAudioResource(audioStream);
     let player = connection.state.subscription?.player;
     if (player) {
-      while (player.state.status === "playing") {
-        await new Promise((resolve) => setTimeout(resolve, 50));
+      if (player.state.status === "playing") {
+        await new Promise((resolve) => {
+          (player as AudioPlayer).once("stateChange", (oldState, newState) => {
+            if (newState.status === "idle") {
+              resolve(null);
+            }
+          });
+        });
       }
     } else {
       player = createAudioPlayer();
