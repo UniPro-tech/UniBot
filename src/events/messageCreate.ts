@@ -72,11 +72,17 @@ export const execute = async (message: Message, client: Client) => {
     const audio = await Generate.generate(0, query);
     const audioStream = Readable.from(audio);
     const resource = createAudioResource(audioStream);
-    let player;
-    if ((connection.state as VoiceConnectionReadyState).subscription?.player) {
-      player = (connection.state as VoiceConnectionReadyState).subscription?.player as AudioPlayer;
-      while (player.state.status === "playing") {
-        await new Promise((resolve) => setTimeout(resolve, 50));
+    let player: AudioPlayer | undefined = (connection.state as VoiceConnectionReadyState)
+      .subscription?.player as AudioPlayer;
+    if (player) {
+      if (player.state.status === "playing") {
+        await new Promise((resolve) => {
+          (player as AudioPlayer).once("stateChange", (oldState, newState) => {
+            if (newState.status === "idle") {
+              resolve(null);
+            }
+          });
+        });
       }
     } else {
       player = createAudioPlayer();
