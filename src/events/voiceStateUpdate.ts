@@ -32,6 +32,7 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
     logChannel.send({ embeds: [logEmbed] });
     return;
   }
+  if (newState.member?.user.bot || oldState.member?.user.bot) return;
   const type = newState.channel ? (oldState.channel ? "switch" : "join") : "leave";
   const text =
     type === "switch"
