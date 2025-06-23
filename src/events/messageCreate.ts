@@ -6,7 +6,7 @@ import {
   getVoiceConnection,
   VoiceConnectionReadyState,
 } from "@discordjs/voice";
-import { Client, Message } from "discord.js";
+import { Client, Message, MessageFlags } from "discord.js";
 import { RPC, Generate, Query } from "voicevox.js";
 import { Readable } from "stream";
 export const name = "messageCreate";
@@ -22,8 +22,8 @@ export const execute = async (message: Message, client: Client) => {
     const voiceConnectionData = await readTtsConnection(message.guild.id, channel.id);
     if (!voiceConnectionData) return;
     const connection = getVoiceConnection(voiceConnectionData.guild);
-    if (!connection) return;
-    if (message.content == "skip") {
+    if (!connection || message.flags.toArray().includes("SuppressNotifications")) return;
+    if (message.content == "skip" || message.content == "s") {
       const player = (connection.state as VoiceConnectionReadyState).subscription
         ?.player as AudioPlayer;
       if (player) {
