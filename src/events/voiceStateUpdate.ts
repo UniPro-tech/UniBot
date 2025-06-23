@@ -36,10 +36,10 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
   const type = newState.channel ? (oldState.channel ? "switch" : "join") : "leave";
   const text =
     type === "switch"
-      ? `${newState.member?.displayName} がボイスチャンネルを <#${oldState.channel?.name}> から <#${newState.channel?.name}> に切り替えました。`
+      ? `${newState.member?.displayName} がボイスチャンネルを ${oldState.channel?.name} から ${newState.channel?.name} に切り替えました。`
       : type === "join"
-      ? `${newState.member?.displayName} がボイスチャンネル <#${newState.channel?.name}> に参加しました。`
-      : `${oldState.member?.displayName} がボイスチャンネル <#${oldState.channel?.name}> から退出しました。`;
+      ? `${newState.member?.displayName} がボイスチャンネル ${newState.channel?.name} に参加しました。`
+      : `${oldState.member?.displayName} がボイスチャンネル ${oldState.channel?.name} から退出しました。`;
   const connection = getVoiceConnection(oldState.guild.id || newState.guild.id);
   if (connection && connection.state.status !== "destroyed") {
     const headers = {
