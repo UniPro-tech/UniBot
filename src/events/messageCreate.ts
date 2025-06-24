@@ -64,10 +64,12 @@ export const execute = async (message: Message, client: Client) => {
     text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1");
     // それ以外のhttp/httpsリンクは「リンク省略」にしとくね！
     text = text.replace(/https?:\/\/\S+/g, "リンク省略");
-    const headers = {
-      Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
-    };
-    await RPC.connect(process.env.VOICEVOX_API_URL, headers);
+    if (!RPC.rpc) {
+      const headers = {
+        Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
+      };
+      await RPC.connect(process.env.VOICEVOX_API_URL, headers);
+    }
     const query = await Query.getTalkQuery(text, 0);
     const audio = await Generate.generate(0, query);
     const audioStream = Readable.from(audio);
