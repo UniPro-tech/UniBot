@@ -26,7 +26,7 @@ export const execute = async (interaction: CommandInteraction) => {
     const player = createAudioPlayer();
     connection.subscribe(player);
     const text = `${voiceChannel.name}に接続しました。`;
-    if (RPC.rpc) {
+    if (!RPC.rpc) {
       const headers = {
         Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
       };

@@ -64,7 +64,7 @@ export const execute = async (message: Message, client: Client) => {
     text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1");
     // それ以外のhttp/httpsリンクは「リンク省略」にしとくね！
     text = text.replace(/https?:\/\/\S+/g, "リンク省略");
-    if (RPC.rpc) {
+    if (!RPC.rpc) {
       const headers = {
         Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
       };
