@@ -1,6 +1,8 @@
 import { CommandInteraction, GuildMember, SlashCommandSubcommandBuilder } from "discord.js";
-import { joinVoiceChannel } from "@discordjs/voice";
+import { createAudioPlayer, createAudioResource, joinVoiceChannel } from "@discordjs/voice";
 import { writeTtsConnection } from "@/lib/dataUtils";
+import { Readable } from "stream";
+import { RPC, Query, Generate } from "voicevox.js";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("join")
@@ -21,6 +23,20 @@ export const execute = async (interaction: CommandInteraction) => {
     console.info("Connected to voice channel");
     await interaction.editReply("Connection OK");
     writeTtsConnection(voiceChannel.guild.id, [interaction.channel?.id as string], voiceChannel.id);
+    const player = createAudioPlayer();
+    connection.subscribe(player);
+    const text = `${voiceChannel.name}に接続しました。`;
+    if (RPC.rpc) {
+      const headers = {
+        Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
+      };
+      await RPC.connect(process.env.VOICEVOX_API_URL as string, headers);
+    }
+    const query = await Query.getTalkQuery(text, 0);
+    const audio = await Generate.generate(0, query);
+    const audioStream = Readable.from(audio);
+    const resource = createAudioResource(audioStream);
+    player.play(resource);
   });
 };
 
