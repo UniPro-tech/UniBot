@@ -1,12 +1,12 @@
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction } from "discord.js";
 import path from "path";
 
 export const guildOnly = false;
 export const data = new SlashCommandBuilder()
   .setName("about")
   .setDescription("このBotについての情報を表示します。");
-export const execute = async (interaction: CommandInteraction) => {
+export const execute = async (interaction: ChatInputCommandInteraction) => {
   const packageData = await import(path.resolve(__dirname, "../../../../package.json"));
   const embed = new EmbedBuilder()
     .setColor(0x0099ff)

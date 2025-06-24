@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from "@discordjs/builders";
 import config from "@/config";
-import { CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
+import { ChatInputCommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
 export const guildOnly = false;
 
@@ -12,7 +12,7 @@ export const data = new SlashCommandBuilder()
       .setName("target")
       .setDescription("ここにユーザーを指定してそのユーザーのアイコンのURLを取得します。")
   );
-export const execute = async (interaction: CommandInteraction) => {
+export const execute = async (interaction: ChatInputCommandInteraction) => {
   const user = (interaction.options as CommandInteractionOptionResolver).getUser("target");
   if (user) {
     const embed = new EmbedBuilder()
