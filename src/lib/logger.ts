@@ -47,7 +47,7 @@ export const writeChatInputCommandInteractionLog = async (
       },
       {
         name: "Command",
-        value: `\`\`\`\n\/${commandName} ${subcommandGroup ? subcommandGroup : ""} ${
+        value: `\`\`\`\n\/${commandName} ${subcommandGroup || ""} ${
           subcommand ? subcommand : ""
         }\n\`\`\``,
       },
