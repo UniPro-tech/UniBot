@@ -55,6 +55,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     ]);
   selectMenu.setMinValues(1).setMaxValues(1);
   components.push(new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu));
+  components.reverse();
   await interaction.reply({
     content: "Please select a speaker:",
     components,
