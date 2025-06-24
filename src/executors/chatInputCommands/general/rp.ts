@@ -32,41 +32,6 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     console.info(
       `[Run] ${(interaction.options as CommandInteractionOptionResolver).getSubcommand()}`
     );
-
-    const logEmbed = new EmbedBuilder()
-      .setTitle("サブコマンド実行ログ")
-      .setDescription(`${interaction.user} がサブコマンドを実行しました。`)
-      .setColor(interaction.client.config.color.success)
-      .setTimestamp()
-      .setThumbnail(interaction.user.displayAvatarURL())
-      .addFields([
-        {
-          name: "実行コマンド",
-          value: `\`\`\`\n/${interaction.commandName}\n\`\`\``,
-        },
-        {
-          name: "サブコマンド",
-          value: `\`\`\`\n/${(
-            interaction.options as CommandInteractionOptionResolver
-          ).getSubcommand()}\n\`\`\``,
-        },
-        {
-          name: "実行サーバー",
-          value:
-            "```\n" + interaction.inGuild()
-              ? `${interaction.guild?.name} (${interaction.guild?.id})`
-              : "DM" + "\n```",
-        },
-        {
-          name: "実行ユーザー",
-          value: "```\n" + `${interaction.user.tag}(${interaction.user.id})` + "\n```",
-        },
-      ])
-      .setFooter({ text: `${interaction.id}` });
-    const channel = await GetLogChannel(interaction.client);
-    if (channel) {
-      channel.send({ embeds: [logEmbed] });
-    }
   } catch (error) {
     console.error(error);
     const logEmbed = new EmbedBuilder()

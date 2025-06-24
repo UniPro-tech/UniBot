@@ -1,5 +1,6 @@
 import config from "@/config";
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
+import { writeChatInputCommandInteractionLog } from "@/lib/logger";
 import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 
 const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction) => {
@@ -42,37 +43,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
         interaction.commandName
       }`
     );
-
-    const logEmbed = new EmbedBuilder()
-      .setTitle("コマンド実行ログ")
-      .setDescription(`${interaction.user} がコマンドを実行しました。`)
-      .setColor(config.color.success)
-      .setTimestamp()
-      .setThumbnail(interaction.user.displayAvatarURL())
-      .addFields([
-        {
-          name: "コマンド",
-          value: `\`\`\`\n/${interaction.commandName}\n\`\`\``,
-        },
-        {
-          name: "実行サーバー",
-          value:
-            "```\n" +
-            (interaction.inGuild()
-              ? `${interaction.guild?.name} (${interaction.guild?.id})`
-              : "DM") +
-            "\n```",
-        },
-        {
-          name: "実行ユーザー",
-          value: "```\n" + `${interaction.user.tag}(${interaction.user.id})` + "\n```",
-        },
-      ])
-      .setFooter({ text: `${interaction.id}` });
-    const channel = await GetLogChannel(interaction.client);
-    if (channel) {
-      channel.send({ embeds: [logEmbed] });
-    }
+    await writeChatInputCommandInteractionLog(interaction);
   } catch (error) {
     console.error(
       `[${interaction.client.functions.timeUtils.timeToJSTstamp(
