@@ -38,6 +38,7 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
     return;
   }
   if (newState.member?.user.bot || oldState.member?.user.bot) return;
+  if (newState.channel?.id === oldState.channel?.id) return;
   const type = newState.channel ? (oldState.channel ? "switch" : "join") : "leave";
   const text =
     type === "switch"
