@@ -63,7 +63,8 @@ export const execute = async (message: Message, client: Client) => {
     // まずMarkdown形式のリンクは、リンク部分だけ消して名前だけ残すよ！
     text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1");
     // それ以外のhttp/httpsリンクは「リンク省略」にしとくね！
-    text = text.replace(/https?:\/\/\S+/g, "リンク省略");
+    text = text.replace(/https?:\/\/\S+/g, "、リンク省略、");
+    text = text.replace(/[\r\n]/g, "、");
     if (!RPC.rpc) {
       const headers = {
         Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
