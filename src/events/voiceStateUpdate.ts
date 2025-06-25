@@ -5,18 +5,23 @@ import {
   createAudioResource,
   getVoiceConnection,
 } from "@discordjs/voice";
-import { ChannelType, EmbedBuilder, TextChannel, VoiceState } from "discord.js";
+import { EmbedBuilder, TextChannel, VoiceState } from "discord.js";
 import { Readable } from "stream";
 import { RPC, Query, Generate } from "voicevox.js";
 export const name = "voiceStateUpdate";
 export const execute = async (oldState: VoiceState, newState: VoiceState) => {
-  const channel = oldState.channel || newState.channel;
-  const connectionData = channel
-    ? await readTtsConnection(oldState.guild.id, undefined, channel.id)
-    : undefined;
-  if (!connectionData) return;
+  const oldChannel = oldState.channel;
+  const newChannel = newState.channel;
+  const currentChannel = newChannel
+    ? newState.guild.members.cache.get(newState.client.user?.id)?.voice?.channel
+    : oldChannel
+    ? oldState.guild.members.cache.get(oldState.client.user?.id)?.voice?.channel
+    : null;
+  if (!currentChannel) return;
+  if (!(oldChannel?.id === currentChannel.id || newChannel?.id === currentChannel.id)) return;
   if (oldState.channel && oldState.channel.members.size === 1) {
-    if (channel?.type !== ChannelType.GuildVoice) return;
+    const connectionData = await readTtsConnection(oldState.guild.id, undefined, currentChannel.id);
+    if (!connectionData) return;
     const connection = getVoiceConnection(oldState.guild.id);
     if (!connection || connection.state.status == "destroyed") return;
     connection.destroy();
@@ -39,21 +44,20 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
     logChannel.send({ embeds: [logEmbed] });
     return;
   }
-  if (newState.member?.user.bot || oldState.member?.user.bot) return;
-  if (newState.channel?.id === oldState.channel?.id) return;
   if (
-    newState.channel?.id != connectionData?.voiceChannel ||
-    oldState.channel?.id != connectionData?.voiceChannel
+    newState.member?.user.id === newState.client.user?.id ||
+    oldState.member?.user.id === oldState.client.user?.id
   )
     return;
+  if (newState.channel?.id === oldState.channel?.id) return;
 
   const type = newState.channel ? (oldState.channel ? "switch" : "join") : "leave";
   const text =
     type === "switch"
-      ? `${newState.member?.displayName} がボイスチャンネルを ${oldState.channel?.name} から ${newState.channel?.name} に切り替えました。`
+      ? `${newState.member?.displayName} が ${oldState.channel?.name} から ${newState.channel?.name} に切り替えました。`
       : type === "join"
-      ? `${newState.member?.displayName} がボイスチャンネル ${newState.channel?.name} に参加しました。`
-      : `${oldState.member?.displayName} がボイスチャンネル ${oldState.channel?.name} から退出しました。`;
+      ? `${newState.member?.displayName} が ${newState.channel?.name} に参加しました。`
+      : `${oldState.member?.displayName} が ${oldState.channel?.name} から退出しました。`;
   const connection = getVoiceConnection(oldState.guild.id || newState.guild.id);
   if (connection && connection.state.status !== "destroyed") {
     const headers = {
