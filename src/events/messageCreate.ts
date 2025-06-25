@@ -36,28 +36,23 @@ export const execute = async (message: Message, client: Client) => {
     if (message.content.length > 100) text = message.content.slice(0, 100) + "以下省略";
     else text = message.content;
     if (message.attachments.size > 0) {
-      const attachmentTypes: string[] = [];
+      const typeCount: Record<string, number> = {};
       message.attachments.forEach((attachment) => {
+        let type = "不明なファイル";
         if (attachment?.contentType?.startsWith("audio/")) {
-          attachmentTypes.push("音声ファイル");
-          return;
+          type = "音声ファイル";
+        } else if (attachment?.contentType?.startsWith("image/")) {
+          type = "画像ファイル";
+        } else if (attachment?.contentType?.startsWith("video/")) {
+          type = "動画ファイル";
+        } else if (attachment?.contentType?.startsWith("text/")) {
+          type = "テキストファイル";
         }
-        if (attachment?.contentType?.startsWith("image/")) {
-          attachmentTypes.push("画像ファイル");
-          return;
-        }
-        if (attachment?.contentType?.startsWith("video/")) {
-          attachmentTypes.push("動画ファイル");
-          return;
-        }
-        if (attachment?.contentType?.startsWith("text/")) {
-          attachmentTypes.push("テキストファイル");
-          return;
-        }
-        attachmentTypes.push("不明なファイル");
+        typeCount[type] = (typeCount[type] || 0) + 1;
       });
-      if (attachmentTypes.length > 0) {
-        text += `（${attachmentTypes.join("と")}が添付されました）`;
+      const typeStrings = Object.entries(typeCount).map(([type, count]) => `${count}個の${type}`);
+      if (typeStrings.length > 0) {
+        text += `（${typeStrings.join("と")}が添付されました）`;
       }
     }
     // まずMarkdown形式のリンクは、リンク部分だけ消して名前だけ残すよ！
