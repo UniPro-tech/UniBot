@@ -10,11 +10,13 @@ import { Readable } from "stream";
 import { RPC, Query, Generate } from "voicevox.js";
 export const name = "voiceStateUpdate";
 export const execute = async (oldState: VoiceState, newState: VoiceState) => {
-  const channel = oldState.channel;
-  if (channel && channel.members.size === 1) {
-    if (channel.type !== ChannelType.GuildVoice) return;
-    const connectionData = await readTtsConnection(oldState.guild.id, undefined, channel.id);
-    if (!connectionData) return;
+  const channel = oldState.channel || newState.channel;
+  const connectionData = channel
+    ? await readTtsConnection(oldState.guild.id, undefined, channel.id)
+    : undefined;
+  if (!connectionData) return;
+  if (oldState.channel && oldState.channel.members.size === 1) {
+    if (channel?.type !== ChannelType.GuildVoice) return;
     const connection = getVoiceConnection(oldState.guild.id);
     if (!connection || connection.state.status == "destroyed") return;
     connection.destroy();
@@ -39,6 +41,12 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
   }
   if (newState.member?.user.bot || oldState.member?.user.bot) return;
   if (newState.channel?.id === oldState.channel?.id) return;
+  if (
+    newState.channel?.id != connectionData?.voiceChannel ||
+    oldState.channel?.id != connectionData?.voiceChannel
+  )
+    return;
+
   const type = newState.channel ? (oldState.channel ? "switch" : "join") : "leave";
   const text =
     type === "switch"
