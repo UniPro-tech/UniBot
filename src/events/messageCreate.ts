@@ -141,8 +141,6 @@ export const execute = async (message: Message, client: Client) => {
   // 7. 改行をカンマに変換
   text = text.replace(/[\r\n]/g, "、");
 
-  console.log(text);
-
   // VOICEVOXの接続と音声再生
   if (!RPC.rpc) {
     const headers = { Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}` };
