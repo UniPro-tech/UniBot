@@ -31,10 +31,19 @@ model selectedData {
 }
 
 model ttsConnection {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  guild        String   @map("_guild") @unique
+  textChannel  String[] @map("_textChannel")
+  voiceChannel String   @map("_voiceChannel") @unique
+}
+
+model ttsPreference {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  guild      String   @map("_guild") @unique
-  textChannel String[]   @map("_textChannel")
-  voiceChannel String   @map("_voiceChannel") @unique
+  user       String   @map("_user") @unique
+  key        String   @map("_key")
+  value      String   @map("_value")
 }
