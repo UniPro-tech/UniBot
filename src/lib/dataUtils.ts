@@ -153,6 +153,40 @@ export const readTtsConnection = async (
   }
 };
 
+export const writeTtsPreference = async (user: string, key: string, value: object) => {
+  try {
+    await prismaClient.ttsPreference.upsert({
+      where: { user, key },
+      update: { value: JSON.stringify(value) },
+      create: { user, key, value: JSON.stringify(value) },
+    });
+  } catch (error) {
+    console.error(
+      `\u001b[31m[${timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} error]An Error Occured.\nDatails:\n${error}\u001b[0m`
+    );
+  }
+};
+
+export const readTtsPreference = async (user: string, key: string): Promise<object | null> => {
+  try {
+    const preference = await prismaClient.ttsPreference.findFirst({
+      where: { user, key },
+    });
+    return preference ? JSON.parse(preference.value) : null;
+  } catch (error) {
+    console.error(
+      `\u001b[31m[${timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} error]An Error Occured.\nDatails:\n${error}\u001b[0m`
+    );
+    return null;
+  }
+};
+
 export default {
   writeConfig,
   readConfig,
@@ -160,4 +194,6 @@ export default {
   readSelected,
   writeTtsConnection,
   readTtsConnection,
+  writeTtsPreference,
+  readTtsPreference,
 };

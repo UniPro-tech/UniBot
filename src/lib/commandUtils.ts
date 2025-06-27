@@ -1,4 +1,5 @@
 import { ChatInputCommand } from "@/executors/types/ChatInputCommand";
+import { StringSelectMenu } from "@/executors/types/StringSelectMenu";
 import {
   Collection,
   SlashCommandBuilder,
@@ -94,6 +95,35 @@ export const addSubCommandGroup = (name: string, data: SlashCommandBuilder) => {
   }
   console.log(`\u001b[32m[Init]Added ${name}'s SubCommandGroups\u001b[0m`);
   return data;
+};
+
+export const subSelectMenusHandling = (
+  name: string,
+  collection?: Collection<string, StringSelectMenu>
+) => {
+  if (!collection) {
+    collection = new Collection<string, StringSelectMenu>();
+  }
+  console.info(`\u001b[32m===Load ${name}'s SubSelectMenu Executing Data===\u001b[0m`);
+  const commandFiles = fs
+    .readdirSync(path.resolve(__dirname, `../executors/selectMenus/${name}`))
+    .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
+  for (const file of commandFiles) {
+    const command = require(path.resolve(
+      __dirname,
+      `../executors/selectMenus/${name}/${file}`
+    )) as StringSelectMenu;
+    try {
+      collection.set(command.name, command);
+      console.info(`[Subcommand]${command.name} has been loaded.`);
+    } catch (error) {
+      console.error(
+        `\u001b[31m[error]An Error Occurred in ${command.name}\nDetails:\n ${error}\u001b[0m`
+      );
+    }
+  }
+  console.info(`\u001b[32m===${name} loaded===\u001b[0m`);
+  return collection;
 };
 
 export default {

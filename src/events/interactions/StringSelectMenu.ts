@@ -4,7 +4,7 @@ import config from "@/config";
 
 const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
   try {
-    const [prefix, id] = interaction.customId.split("_");
+    const [prefix] = interaction.customId.split("_");
     const executionDefine =
       interaction.client.interactionExecutorsCollections.stringSelectMenus.get(prefix);
     if (!executionDefine) {
@@ -22,7 +22,7 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
         true
       )} info] StringSelectMenu -> ${interaction.customId}`
     );
-    await executionDefine.execute(interaction, id);
+    await executionDefine.execute(interaction);
   } catch (error) {
     console.error(
       `[${interaction.client.functions.timeUtils.timeToJSTstamp(

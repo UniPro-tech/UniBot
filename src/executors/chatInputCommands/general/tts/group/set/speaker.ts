@@ -7,12 +7,18 @@ import {
   SlashCommandSubcommandBuilder,
   StringSelectMenuBuilder,
 } from "discord.js";
-import { AudioLibrary } from "voicevox.js";
+import { AudioLibrary, RPC } from "voicevox.js";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("speaker")
   .setDescription("Change the speaker of the TTS");
 export const execute = async (interaction: ChatInputCommandInteraction) => {
+  if (!RPC.rpc) {
+    const headers = {
+      Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
+    };
+    await RPC.connect(process.env.VOICEVOX_API_URL as string, headers);
+  }
   const speakers = await AudioLibrary.getSpeakers();
   if (speakers.length === 0) {
     return interaction.reply({
@@ -40,7 +46,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     speakers.splice(24);
   }
   const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId("tts_speaker_selector")
+    .setCustomId("tts_speaker_select")
     .setPlaceholder("Select a speaker...")
     .addOptions([
       ...speakers.map((speaker) => ({
@@ -55,7 +61,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     ]);
   selectMenu.setMinValues(1).setMaxValues(1);
   components.push(new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu));
-  components.reverse();
+
   await interaction.reply({
     content: "Please select a speaker:",
     components,
