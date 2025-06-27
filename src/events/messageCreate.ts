@@ -1,4 +1,4 @@
-import { readTtsConnection } from "@/lib/dataUtils";
+import { readTtsConnection, readTtsPreference } from "@/lib/dataUtils";
 import {
   AudioPlayer,
   createAudioPlayer,
@@ -70,7 +70,9 @@ export const execute = async (message: Message, client: Client) => {
       };
       await RPC.connect(process.env.VOICEVOX_API_URL, headers);
     }
-    const query = await Query.getTalkQuery(text, 0);
+    const styleId =
+      ((await readTtsPreference(message.author.id, "speaker"))?.styleId as number) || 0;
+    const query = await Query.getTalkQuery(text, styleId);
     const audio = await Generate.generate(0, query);
     const audioStream = Readable.from(audio);
     const resource = createAudioResource(audioStream);
