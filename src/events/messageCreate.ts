@@ -73,7 +73,7 @@ export const execute = async (message: Message, client: Client) => {
     const styleId =
       ((await readTtsPreference(message.author.id, "speaker"))?.styleId as number) || 0;
     const query = await Query.getTalkQuery(text, styleId);
-    const audio = await Generate.generate(0, query);
+    const audio = await Generate.generate(styleId, query);
     const audioStream = Readable.from(audio);
     const resource = createAudioResource(audioStream);
     let player: AudioPlayer | undefined = (connection.state as VoiceConnectionReadyState)
