@@ -170,7 +170,7 @@ export const writeTtsPreference = async (user: string, key: string, value: objec
   }
 };
 
-export const readTtsPreference = async (user: string, key: string): Promise<object | null> => {
+export const readTtsPreference = async (user: string, key: string): Promise<any | null> => {
   try {
     const preference = await prismaClient.ttsPreference.findFirst({
       where: { user, key },
