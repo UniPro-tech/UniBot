@@ -3,7 +3,7 @@ import config from "@/config";
 
 export const name = "rp";
 
-export const execute = async (interaction: StringSelectMenuInteraction, id: string) => {
+export const execute = async (interaction: StringSelectMenuInteraction) => {
   const selected = interaction.values;
   console.log(
     `[${interaction.client.functions.timeUtils.timeToJSTstamp(

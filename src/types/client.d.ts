@@ -3,6 +3,7 @@ import { ChatInputCommand } from "@/executors/types/ChatInputCommand";
 import timeUtils from "@/lib/timeUtils";
 import logUtils from "@/lib/dataUtils";
 import { StringSelectMenu } from "@/executors/types/StringSelectMenu";
+import { Button } from "@/executors/types/Button";
 
 declare module "discord.js" {
   interface Client {
@@ -16,6 +17,7 @@ declare module "discord.js" {
       chatInputCommands: Collection<string, ChatInputCommand>;
       stringSelectMenus: Collection<string, StringSelectMenu>;
       messageContextMenuCommands: Collection<string, ChatInputCommand>;
+      buttons: Collection<string, Button>;
     };
   }
 }

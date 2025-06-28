@@ -1,12 +1,11 @@
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
-import { EmbedBuilder, MessageFlags, StringSelectMenuInteraction } from "discord.js";
+import { ButtonInteraction, EmbedBuilder } from "discord.js";
 import config from "@/config";
 
-const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
+const ButtonExecute = async (interaction: ButtonInteraction) => {
   try {
     const [prefix] = interaction.customId.split("_");
-    const executionDefine =
-      interaction.client.interactionExecutorsCollections.stringSelectMenus.get(prefix);
+    const executionDefine = interaction.client.interactionExecutorsCollections.buttons.get(prefix);
     if (!executionDefine) {
       console.log(
         `[${interaction.client.functions.timeUtils.timeToJSTstamp(
@@ -20,7 +19,7 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
       `[${interaction.client.functions.timeUtils.timeToJSTstamp(
         Date.now(),
         true
-      )} info] StringSelectMenu -> ${interaction.customId}`
+      )} info] Button -> ${interaction.customId}`
     );
     await executionDefine.execute(interaction);
   } catch (error) {
@@ -55,4 +54,4 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
   }
 };
 
-export default StringSelectMenu;
+export default ButtonExecute;

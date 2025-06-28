@@ -31,6 +31,7 @@ client.functions = {
 client.fs = fs;
 
 import {
+  ButtonCollector,
   ChatInputCommandCollector,
   MessageContextMenuCommandCollector,
   StringSelectMenuCollector,
@@ -38,15 +39,18 @@ import {
 import path from "path";
 import { ChatInputCommand } from "./executors/types/ChatInputCommand";
 import { StringSelectMenu } from "./executors/types/StringSelectMenu";
+import { Button } from "./executors/types/Button";
 client.interactionExecutorsCollections = {
   chatInputCommands: new Collection<string, ChatInputCommand>(),
   stringSelectMenus: new Collection<string, StringSelectMenu>(),
   // TODO: ここはMessageContextMenuCommandにする
   messageContextMenuCommands: new Collection<string, ChatInputCommand>(),
+  buttons: new Collection<string, Button>(),
 };
 ChatInputCommandCollector(client);
 StringSelectMenuCollector(client);
 MessageContextMenuCommandCollector(client);
+ButtonCollector(client);
 const eventFiles = fs
   .readdirSync(path.resolve(__dirname, "events"))
   .filter((file) => (file.endsWith(".ts") && !file.endsWith(".d.ts")) || file.endsWith(".js"));
