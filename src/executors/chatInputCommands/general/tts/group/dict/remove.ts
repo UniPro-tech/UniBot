@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ChatInputCommandInteraction,
+  EmbedBuilder,
   MessageFlags,
   PermissionsBitField,
   SlashCommandSubcommandBuilder,
@@ -14,9 +15,15 @@ export const data = new SlashCommandSubcommandBuilder()
   .setName("remove")
   .setDescription("Remove a word from the dictionary");
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  if (!interaction.guild) {
-    return interaction.reply("This command can only be used in a server.");
+  if (interaction.guild === null) {
+    const embed = new EmbedBuilder()
+      .setTitle("エラー")
+      .setDescription("このコマンドはサーバー内でのみ使用できます。")
+      .setColor(interaction.client.config.color.error);
+    await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
+    return;
   }
+  await interaction.deferReply();
   const allWords = await listTtsDictionary(
     interaction.guild.id,
     !(interaction.member?.permissions as PermissionsBitField).has(
@@ -26,7 +33,9 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       : undefined
   );
   if (allWords.length === 0) {
-    return interaction.reply("No words found in the dictionary.");
+    return interaction.editReply({
+      content: "辞書に登録されている単語がありません。",
+    });
   }
   const components = [];
   if (allWords.length > 24) {
@@ -49,20 +58,20 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   }
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId("tts_dict_remove")
-    .setPlaceholder("Select a word to remove")
+    .setPlaceholder("削除する単語を選択...")
     .addOptions(
       allWords.map((word) => ({
         label: word.word,
         value: word.id,
+        description: word.definition,
       }))
     );
   const selectRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
   components.push(selectRow);
 
-  await interaction.reply({
-    content: "Please select a word to remove:",
+  await interaction.editReply({
+    content: "削除する単語を選択してください。",
     components: components,
-    flags: [MessageFlags.Ephemeral],
   });
 };
 

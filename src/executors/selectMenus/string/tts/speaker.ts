@@ -12,13 +12,16 @@ export const name = "speaker";
 
 export const execute = async (interaction: StringSelectMenuInteraction) => {
   if (interaction.values[0] === "cancel") {
-    await interaction.reply({
-      content: "Selection cancelled.",
-      flags: [MessageFlags.Ephemeral],
+    await interaction.deferUpdate();
+    await interaction.editReply({
+      content: "設定をキャンセルしました。",
+      components: [],
     });
-    await interaction.message.delete().catch(() => {});
     return;
   }
+  await interaction.deferReply({
+    flags: [MessageFlags.Ephemeral],
+  });
   switch (interaction.customId.split("_")[2]) {
     case "select":
       if (!RPC.rpc) {
@@ -31,23 +34,32 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
       const speakerDetail = await AudioLibrary.getSpeaker(speakerId);
       const styleSelector = new StringSelectMenuBuilder()
         .setCustomId("tts_speaker_style")
-        .setPlaceholder("Select a style...")
+        .setPlaceholder("スタイルを選択...")
         .addOptions(
           speakerDetail.styles.map((style) => ({
             label: style.name,
             value: style.id.toString(),
           }))
         );
-      await interaction.reply({
+      await interaction.editReply({
+        content: `${speakerDetail.name} を選択しました。スタイルを選択してください。`,
         components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(styleSelector)],
-        flags: [MessageFlags.Ephemeral],
       });
       break;
     case "style":
       const styleId = parseInt(interaction.values[0]);
-      await interaction.reply({
-        content: `You selected style ${styleId}.`,
-        flags: [MessageFlags.Ephemeral],
+      if (!RPC.rpc) {
+        const headers = {
+          Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
+        };
+        await RPC.connect(process.env.VOICEVOX_API_URL as string, headers);
+      }
+      const speakers = await AudioLibrary.getSpeakers();
+      const speakerData = speakers.find((s) => s.styles.find((st) => st.id === styleId));
+      await interaction.editReply({
+        content: `${speakerData!.name} の ${
+          speakerData!.styles.find((st) => st.id === styleId)!.name
+        } を設定しました。`,
       });
       writeTtsPreference(interaction.user.id, "speaker", {
         styleId,

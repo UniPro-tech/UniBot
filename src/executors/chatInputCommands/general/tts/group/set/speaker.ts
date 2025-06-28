@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ChatInputCommandInteraction,
+  EmbedBuilder,
   MessageFlags,
   SlashCommandSubcommandBuilder,
   StringSelectMenuBuilder,
@@ -12,8 +13,11 @@ import { AudioLibrary, RPC } from "voicevox.js";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("speaker")
-  .setDescription("Change the speaker of the TTS");
+  .setDescription("話者を選択");
 export const execute = async (interaction: ChatInputCommandInteraction) => {
+  await interaction.deferReply({
+    flags: [MessageFlags.Ephemeral],
+  });
   if (!RPC.rpc) {
     const headers = {
       Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
@@ -22,9 +26,12 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   }
   const speakers = await AudioLibrary.getSpeakers();
   if (speakers.length === 0) {
-    return interaction.reply({
-      content: "No speakers available. Please ask bot admin to add a speaker first.",
-      ephemeral: true,
+    const embed = new EmbedBuilder()
+      .setTitle("Error: 利用可能な話者がいません")
+      .setDescription("現在、利用可能な話者がいません。詳しくは管理者へお問い合わせください。")
+      .setColor(interaction.client.config.color.error);
+    return interaction.editReply({
+      embeds: [embed],
     });
   }
   speakers.sort((a, b) => a.name.localeCompare(b.name));
@@ -48,25 +55,24 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   }
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId("tts_speaker_select")
-    .setPlaceholder("Select a speaker...")
+    .setPlaceholder("話者を選択...")
     .addOptions([
       ...speakers.map((speaker) => ({
         label: speaker.name,
         value: uuid58Encode(speaker.speakerUuid),
       })),
       {
-        label: "Cancel",
+        label: "キャンセル",
         value: "cancel",
-        description: "Cancel the selection",
+        description: "選択をキャンセル",
       },
     ]);
   selectMenu.setMinValues(1).setMaxValues(1);
   components.push(new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu));
 
-  await interaction.reply({
-    content: "Please select a speaker:",
+  await interaction.editReply({
+    content: "話者を選択してください。",
     components,
-    flags: [MessageFlags.Ephemeral],
   });
 };
 
