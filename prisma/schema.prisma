@@ -56,6 +56,7 @@ model ttsDictionary {
   updated_at DateTime @updatedAt
   user       String   @map("_user")
   guild      String   @map("_guild")
-  word       String   @map("_word") @unique
+  word       String   @map("_word")
   definition String   @map("_definition")
+  @@unique([guild, word])
 }
