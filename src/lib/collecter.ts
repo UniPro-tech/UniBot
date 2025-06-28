@@ -58,10 +58,9 @@ export const MessageContextMenuCommandCollector = async (client: Client) => {
     .readdirSync(path.resolve(__dirname, `../executors/messageContextMenuCommands`))
     .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
   for (const file of commandFiles) {
-    const menuDefine = await import(path.resolve(
-      __dirname,
-      `../executors/messageContextMenuCommands/${file}`
-    ));
+    const menuDefine = await import(
+      path.resolve(__dirname, `../executors/messageContextMenuCommands/${file}`)
+    );
     try {
       client.interactionExecutorsCollections.messageContextMenuCommands.set(
         menuDefine.name,
@@ -73,4 +72,22 @@ export const MessageContextMenuCommandCollector = async (client: Client) => {
     }
   }
   console.info(`\u001b[32m===MessageContextMenuCommand Executing Data Loaded===\u001b[0m`);
+};
+
+export const ButtonCollector = async (client: Client) => {
+  console.info(`\u001b[32m===Load Button Executing Data===\u001b[0m`);
+  client.interactionExecutorsCollections.buttons = new Collection();
+  const commandFiles = fs
+    .readdirSync(path.resolve(__dirname, `../executors/buttons`))
+    .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
+  for (const file of commandFiles) {
+    const menuDefine = await import(path.resolve(__dirname, `../executors/buttons/${file}`));
+    try {
+      client.interactionExecutorsCollections.buttons.set(menuDefine.name, menuDefine);
+      console.info(`[Init]${menuDefine.name} has been loaded.`);
+    } catch (error) {
+      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
+    }
+  }
+  console.info(`\u001b[32m===Button Executing Data Loaded===\u001b[0m`);
 };
