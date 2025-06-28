@@ -6,7 +6,6 @@ import {
 } from "discord.js";
 import { uuid58Decode } from "@nakanoaas/uuid58";
 import { AudioLibrary, RPC } from "voicevox.js";
-import { write } from "fs";
 import { writeTtsPreference } from "@/lib/dataUtils";
 
 export const name = "speaker";
@@ -41,6 +40,7 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
         );
       await interaction.reply({
         components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(styleSelector)],
+        flags: [MessageFlags.Ephemeral],
       });
       break;
     case "style":
