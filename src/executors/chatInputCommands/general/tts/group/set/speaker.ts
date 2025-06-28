@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ChatInputCommandInteraction,
+  MessageFlags,
   SlashCommandSubcommandBuilder,
   StringSelectMenuBuilder,
 } from "discord.js";
@@ -27,17 +28,18 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     });
   }
   speakers.sort((a, b) => a.name.localeCompare(b.name));
+  console.log(speakers);
   const components = [];
   if (speakers.length > 24) {
     const pagenation = [
       new ButtonBuilder()
-        .setCustomId("tts_speaker_page_prev_" + interaction.user.id)
+        .setCustomId("tts_speaker_page_prev")
         .setLabel("Previous")
         .setStyle(ButtonStyle.Primary)
         .setEmoji("⬅️")
         .setDisabled(true),
       new ButtonBuilder()
-        .setCustomId("tts_speaker_page_next_" + interaction.user.id)
+        .setCustomId("tts_speaker_page_next_2")
         .setLabel("Next")
         .setStyle(ButtonStyle.Primary)
         .setEmoji("➡️"),
@@ -65,6 +67,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   await interaction.reply({
     content: "Please select a speaker:",
     components,
+    flags: [MessageFlags.Ephemeral],
   });
 };
 
