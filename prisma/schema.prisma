@@ -51,12 +51,13 @@ model ttsPreference {
 }
 
 model ttsDictionary {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  user       String   @map("_user")
-  guild      String   @map("_guild")
-  word       String   @map("_word")
-  definition String   @map("_definition")
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  user           String   @map("_user")
+  guild          String   @map("_guild")
+  word           String   @map("_word")
+  definition     String   @map("_definition")
+  case_sensitive Boolean  @map("_caseSensitive") @default(false)
   @@unique([guild, word])
 }

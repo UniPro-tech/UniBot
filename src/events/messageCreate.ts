@@ -144,11 +144,13 @@ export const execute = async (message: Message, client: Client) => {
 
   const dict = await listTtsDictionary(message.guild!.id);
 
-  // 8. 辞書変換をテキストに適用（注釈なし、置換のみ）
+  // 8. 辞書変換をテキストに適用（注釈なし、置換のみ、大小文字区別なし）
   if (Array.isArray(dict) && dict.length > 0) {
-    for (const { word, definition } of dict) {
-      if (!text.includes(word)) continue;
-      text = text.replaceAll(word, definition);
+    for (const { word, definition, caseSensitive } of dict) {
+      // 正規表現でエスケープ（記号とかに対応するため）
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escapedWord, caseSensitive ? "g" : "gi");
+      text = text.replace(regex, definition);
     }
   }
 
