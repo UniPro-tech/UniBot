@@ -43,7 +43,9 @@ model ttsPreference {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  user       String   @map("_user") @unique
+  user       String   @map("_user")
   key        String   @map("_key")
   value      String   @map("_value")
+
+  @@unique([user, key])
 }
