@@ -143,7 +143,6 @@ export const execute = async (message: Message, client: Client) => {
   text = text.replace(/[\r\n]/g, "、");
 
   const dict = await listTtsDictionary(message.guild!.id);
-  console.log(dict);
 
   // 8. 辞書変換をテキストに適用（注釈なし、置換のみ）
   if (Array.isArray(dict) && dict.length > 0) {
@@ -152,8 +151,6 @@ export const execute = async (message: Message, client: Client) => {
       text = text.replaceAll(word, definition);
     }
   }
-
-  console.log(text);
 
   // VOICEVOXの接続と音声再生
   if (!RPC.rpc) {
