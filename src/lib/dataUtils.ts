@@ -156,7 +156,7 @@ export const readTtsConnection = async (
 export const writeTtsPreference = async (user: string, key: string, value: object) => {
   try {
     await prismaClient.ttsPreference.upsert({
-      where: { user, key },
+      where: { user_key: { user, key } },
       update: { value: JSON.stringify(value) },
       create: { user, key, value: JSON.stringify(value) },
     });
