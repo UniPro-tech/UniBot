@@ -1,4 +1,4 @@
-import { readTtsConnection, readTtsPreference } from "@/lib/dataUtils";
+import { listTtsDictionary, readTtsConnection, readTtsPreference } from "@/lib/dataUtils";
 import {
   AudioPlayer,
   createAudioPlayer,
@@ -89,8 +89,7 @@ export const execute = async (message: Message, client: Client) => {
       text += `（${typeStrings.join("と")}が添付されました）`;
     }
   }
-  const styleId =
-    ((await readTtsPreference(message.author.id, "speaker"))?.styleId as number) || 0;
+  const styleId = ((await readTtsPreference(message.author.id, "speaker"))?.styleId as number) || 0;
 
   // 5. メンション類の置換
 
@@ -142,6 +141,19 @@ export const execute = async (message: Message, client: Client) => {
 
   // 7. 改行をカンマに変換
   text = text.replace(/[\r\n]/g, "、");
+
+  const dict = await listTtsDictionary(message.guild!.id);
+  console.log(dict);
+
+  // 8. 辞書変換をテキストに適用（注釈なし、置換のみ）
+  if (Array.isArray(dict) && dict.length > 0) {
+    for (const { word, definition } of dict) {
+      if (!text.includes(word)) continue;
+      text = text.replaceAll(word, definition);
+    }
+  }
+
+  console.log(text);
 
   // VOICEVOXの接続と音声再生
   if (!RPC.rpc) {
