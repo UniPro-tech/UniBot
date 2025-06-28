@@ -49,3 +49,13 @@ model ttsPreference {
 
   @@unique([user, key])
 }
+
+model ttsDictionary {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user       String   @map("_user")
+  guild      String   @map("_guild")
+  word       String   @map("_word") @unique
+  definition String   @map("_definition")
+}
