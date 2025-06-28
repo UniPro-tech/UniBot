@@ -1,4 +1,4 @@
-import { listTtsDictionary, writeTtsDictionary } from "@/lib/dataUtils";
+import { listTtsDictionary } from "@/lib/dataUtils";
 import {
   ActionRowBuilder,
   ButtonBuilder,
