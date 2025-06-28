@@ -80,7 +80,7 @@ export const addSubCommandGroup = (name: string, data: SlashCommandBuilder) => {
   console.log(`\u001b[32m[Init]Adding ${name}'s SubCommandGroups\u001b[0m`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
-    .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
+    .filter((file) => (file.endsWith(".js") || file.endsWith(".ts")) && !file.endsWith(".d.ts"));
   for (const file of commandFiles) {
     const command = require(path.resolve(
       __dirname,
