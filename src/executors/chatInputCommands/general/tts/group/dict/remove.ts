@@ -23,7 +23,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
     return;
   }
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
   const allWords = await listTtsDictionary(
     interaction.guild.id,
     !(interaction.member?.permissions as PermissionsBitField).has(
