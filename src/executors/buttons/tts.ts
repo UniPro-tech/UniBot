@@ -151,13 +151,13 @@ export const execute = async (interaction: ButtonInteraction) => {
               if (allWords.length > parseInt(id[4]) * 25) {
                 const pagenation = [
                   new ButtonBuilder()
-                    .setCustomId("tts_speaker_page_prev_" + id[4])
+                    .setCustomId("tts_dict_page_prev_" + id[4])
                     .setLabel("Previous")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("⬅️")
                     .setDisabled(false),
                   new ButtonBuilder()
-                    .setCustomId("tts_speaker_page_next_" + (parseInt(id[4]) + 1).toString())
+                    .setCustomId("tts_dict_page_next_" + (parseInt(id[4]) + 1).toString())
                     .setLabel("Next")
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji("➡️")
