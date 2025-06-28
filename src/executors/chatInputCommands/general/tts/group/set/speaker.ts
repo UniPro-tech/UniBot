@@ -28,7 +28,6 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     });
   }
   speakers.sort((a, b) => a.name.localeCompare(b.name));
-  console.log(speakers);
   const components = [];
   if (speakers.length > 24) {
     const pagenation = [
