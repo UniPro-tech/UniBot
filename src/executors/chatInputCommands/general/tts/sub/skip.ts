@@ -1,4 +1,10 @@
-import { CommandInteraction, MessageFlags, SlashCommandSubcommandBuilder } from "discord.js";
+import {
+  CommandInteraction,
+  Embed,
+  EmbedBuilder,
+  MessageFlags,
+  SlashCommandSubcommandBuilder,
+} from "discord.js";
 import { AudioPlayer, getVoiceConnection, VoiceConnectionReadyState } from "@discordjs/voice";
 import { readTtsConnection } from "@/lib/dataUtils";
 
@@ -11,18 +17,20 @@ export const execute = async (interaction: CommandInteraction) => {
     interaction.channel?.id as string
   );
   if (!voiceConnectionData) {
-    await interaction.reply({
-      content: "ボイスチャンネルに参加していません。",
-      flags: [MessageFlags.Ephemeral],
-    });
+    const embed = new EmbedBuilder()
+      .setTitle("ボイスチャンネルに参加していません")
+      .setDescription("ボイスチャンネルに参加していないため、オーディオをスキップできません。")
+      .setColor(interaction.client.config.color.error);
+    await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
     return;
   }
   const connection = getVoiceConnection(voiceConnectionData.guild);
   if (!connection) {
-    await interaction.reply({
-      content: "ボイスチャンネルに参加していません。",
-      flags: [MessageFlags.Ephemeral],
-    });
+    const embed = new EmbedBuilder()
+      .setTitle("ボイスチャンネルに接続していません")
+      .setDescription("ボイスチャンネルに接続していないため、オーディオをスキップできません。")
+      .setColor(interaction.client.config.color.error);
+    await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
     return;
   }
   const player = (connection.state as VoiceConnectionReadyState).subscription
@@ -30,10 +38,11 @@ export const execute = async (interaction: CommandInteraction) => {
   if (player) {
     player.stop(true);
   }
-  await interaction.reply({
-    content: "現在のオーディオをスキップしました。",
-    flags: ["SuppressNotifications"],
-  });
+  const embed = new EmbedBuilder()
+    .setTitle("オーディオをスキップしました")
+    .setDescription("現在のオーディオをスキップしました。")
+    .setColor(interaction.client.config.color.success);
+  await interaction.reply({ embeds: [embed] });
 };
 
 export default {

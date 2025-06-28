@@ -1,4 +1,10 @@
-import { CommandInteraction, GuildMember, SlashCommandSubcommandBuilder } from "discord.js";
+import {
+  CommandInteraction,
+  EmbedBuilder,
+  GuildMember,
+  SlashCommandSubcommandBuilder,
+  TextChannel,
+} from "discord.js";
 import { createAudioPlayer, createAudioResource, joinVoiceChannel } from "@discordjs/voice";
 import { writeTtsConnection } from "@/lib/dataUtils";
 import { Readable } from "stream";
@@ -6,9 +12,9 @@ import { RPC, Query, Generate } from "voicevox.js";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("join")
-  .setDescription("Connect to the voice channel.");
+  .setDescription("ボイスチャンネルに参加します。");
 export const execute = async (interaction: CommandInteraction) => {
-  await interaction.reply("Now connecting...");
+  await interaction.deferReply();
   const voiceChannel = (interaction.member as GuildMember).voice.channel;
   if (!voiceChannel) {
     await interaction.followUp("ボイスチャンネルに参加していません。");
@@ -21,7 +27,21 @@ export const execute = async (interaction: CommandInteraction) => {
   });
   connection.once("ready", async () => {
     console.info("Connected to voice channel");
-    await interaction.editReply("Connection OK");
+    const embed = new EmbedBuilder()
+      .setTitle("TTSボイスチャンネル接続")
+      .setDescription(`ボイスチャンネルに接続しました。`)
+      .addFields([
+        {
+          name: "ボイスチャンネル名",
+          value: `<#${voiceChannel.id}>`,
+        },
+        {
+          name: "テキストチャンネル名",
+          value: `<#${(interaction.channel! as TextChannel).id}>`,
+        },
+      ])
+      .setColor(interaction.client.config.color.success);
+    await interaction.editReply({ embeds: [embed] });
     writeTtsConnection(voiceChannel.guild.id, [interaction.channel?.id as string], voiceChannel.id);
     const player = createAudioPlayer();
     connection.subscribe(player);

@@ -1,5 +1,6 @@
 import Discord, { Client } from "discord.js";
 import { registerAllCommands } from "@/lib/executorsRegister";
+import path from "path";
 
 export const name = "ready";
 export const execute = async (client: Client) => {
@@ -71,7 +72,92 @@ export const execute = async (client: Client) => {
     );
     return;
   } else {
-    channel.send("Discordログインしました!");
+    const packageData = await import(path.resolve(__dirname, "../../../../package.json"));
+    const embed = new Discord.EmbedBuilder()
+      .setTitle("Bot Ready")
+      .setDescription("Bot is ready and logged in successfully!")
+      .setColor(client.config.color.success)
+      .addFields([
+        {
+          name: "Bot Name",
+          value: client.user.tag,
+          inline: true,
+        },
+        {
+          name: "Bot ID",
+          value: client.user.id,
+          inline: true,
+        },
+        {
+          name: "Guilds",
+          value: `${client.guilds.cache.size} servers`,
+          inline: true,
+        },
+        {
+          name: "Users",
+          value: `${client.users.cache.size} users`,
+          inline: true,
+        },
+        {
+          name: "Channels",
+          value: `${client.channels.cache.size} channels`,
+          inline: true,
+        },
+      ])
+      .setFooter({
+        text: `Bot Name: ${client.user.tag}`,
+        iconURL: client.user.displayAvatarURL(),
+      })
+      .setTimestamp();
+    if (packageData.description) {
+      embed.setDescription(packageData.description);
+    }
+    if (packageData.version) {
+      embed.addFields({
+        name: "Version",
+        value: packageData.version,
+        inline: true,
+      });
+    }
+    if (packageData.license) {
+      embed.addFields({
+        name: "License",
+        value: packageData.license,
+        inline: true,
+      });
+    }
+    if (packageData.author) {
+      embed.addFields({
+        name: "Authors",
+        value: packageData.author.name,
+        inline: false,
+      });
+    }
+    if (packageData.repository) {
+      embed.addFields({
+        name: "Repository",
+        value: packageData.repository.url,
+        inline: false,
+      });
+    }
+    if (packageData.homepage) {
+      embed.setURL(packageData.homepage);
+    }
+    if (packageData.contributors) {
+      let temp = [];
+      for (let i = 0; i < packageData.contributors.length; i++) {
+        temp[
+          i
+        ] = `- [${packageData.contributors[i].name}](${packageData.contributors[i].url}) <[${packageData.contributors[i].email}](mailto:${packageData.contributors[i].email})>`;
+      }
+      embed.addFields({ name: "Contributors", value: temp.join("\n") });
+    }
+    embed.setThumbnail(
+      client.user?.displayAvatarURL({
+        size: 1024,
+      })
+    );
+    channel.send({ embeds: [embed] });
   }
   console.log(
     `[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${

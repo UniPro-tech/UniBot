@@ -28,7 +28,12 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
     const textChannel = oldState.guild.channels.cache.get(
       connectionData.textChannel[0] as string
     ) as TextChannel;
-    textChannel.send("ボイスチャンネルから誰もいなくなったので、接続を切断しました。");
+    const embed = new EmbedBuilder()
+      .setTitle("ボイスチャンネル切断")
+      .setDescription(`<#${oldState.channel.id}> が無人になったため切断しました。`)
+      .setColor(oldState.client.config.color.success)
+      .setTimestamp();
+    textChannel.send({ embeds: [embed] });
     const logEmbed = new EmbedBuilder()
       .setTitle("ボイスチャンネル切断ログ")
       .setDescription(`<#${oldState.channel.id}> が無人になったため切断しました。`)
