@@ -28,4 +28,4 @@ spec:
           persistentVolumeClaim:
             claimName: logs
       imagePullSecrets:
-        - name: harbor-registry-secret
+        - name: internal-harbor
