@@ -9,6 +9,12 @@ export const data = new SlashCommandSubcommandBuilder()
   )
   .addStringOption((option) =>
     option.setName("definition").setDescription("The definition of the word").setRequired(true)
+  )
+  .addBooleanOption((option) =>
+    option
+      .setName("case_sensitive")
+      .setDescription("Whether the word should be case-sensitive (default: false)")
+      .setRequired(false)
   );
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const word = interaction.options.getString("word");
@@ -24,7 +30,13 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     return;
   }
 
-  await writeTtsDictionary(interaction.user.id, interaction.guild.id, word, definition);
+  await writeTtsDictionary(
+    interaction.user.id,
+    interaction.guild.id,
+    word,
+    definition,
+    interaction.options.getBoolean("case_sensitive") ?? false
+  );
 
   await interaction.reply(`Added "${word}" to the dictionary with definitions: ${definition}`);
 };

@@ -191,7 +191,8 @@ export const writeTtsDictionary = async (
   user: string,
   guild: string,
   word: string,
-  definition: string
+  definition: string,
+  caseSensitive: boolean = false
 ) => {
   try {
     await prismaClient.ttsDictionary.create({
@@ -200,6 +201,7 @@ export const writeTtsDictionary = async (
         guild,
         word,
         definition,
+        case_sensitive: caseSensitive,
       },
     });
   } catch (error) {
@@ -232,6 +234,9 @@ export const readTtsDictionary = async (
         guild: true,
         word: true,
         definition: true,
+        case_sensitive: true,
+        created_at: true,
+        updated_at: true,
       },
       orderBy: [{ created_at: "asc" }, { updated_at: "asc" }],
     });
@@ -257,6 +262,9 @@ export const listTtsDictionary = async (
     guild: string;
     word: string;
     definition: string;
+    caseSensitive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
   }>
 > => {
   try {
@@ -268,10 +276,23 @@ export const listTtsDictionary = async (
         guild: true,
         word: true,
         definition: true,
+        case_sensitive: true,
+        created_at: true,
+        updated_at: true,
       },
       orderBy: [{ created_at: "asc" }, { updated_at: "asc" }],
     });
-    return entries;
+    const formattedEntries = entries.map((entry) => ({
+      id: entry.id,
+      user: entry.user,
+      guild: entry.guild,
+      word: entry.word,
+      definition: entry.definition,
+      caseSensitive: entry.case_sensitive,
+      createdAt: entry.created_at,
+      updatedAt: entry.updated_at,
+    }));
+    return formattedEntries;
   } catch (error) {
     console.error(
       `\u001b[31m[${timeUtils.timeToJSTstamp(
