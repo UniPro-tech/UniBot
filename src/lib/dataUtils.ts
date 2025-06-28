@@ -187,6 +187,122 @@ export const readTtsPreference = async (user: string, key: string): Promise<any 
   }
 };
 
+export const writeTtsDictionary = async (
+  user: string,
+  guild: string,
+  word: string,
+  definition: string
+) => {
+  try {
+    await prismaClient.ttsDictionary.create({
+      data: {
+        user,
+        guild,
+        word,
+        definition,
+      },
+    });
+  } catch (error) {
+    console.error(
+      `\u001b[31m[${timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    );
+  }
+};
+
+export const readTtsDictionary = async (
+  user: string,
+  guild: string,
+  word: string
+): Promise<{
+  id: string;
+  user: string;
+  guild: string;
+  word: string;
+  definition: string;
+} | null> => {
+  try {
+    const entry = await prismaClient.ttsDictionary.findFirst({
+      where: { user, guild, word },
+      select: {
+        id: true,
+        user: true,
+        guild: true,
+        word: true,
+        definition: true,
+      },
+      orderBy: [{ created_at: "asc" }, { updated_at: "asc" }],
+    });
+    return entry;
+  } catch (error) {
+    console.error(
+      `\u001b[31m[${timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    );
+    return null;
+  }
+};
+
+export const listTtsDictionary = async (
+  guild: string,
+  user?: string
+): Promise<
+  Array<{
+    id: string;
+    user: string;
+    guild: string;
+    word: string;
+    definition: string;
+  }>
+> => {
+  try {
+    const entries = await prismaClient.ttsDictionary.findMany({
+      where: { user, guild },
+      select: {
+        id: true,
+        user: true,
+        guild: true,
+        word: true,
+        definition: true,
+      },
+      orderBy: [{ created_at: "asc" }, { updated_at: "asc" }],
+    });
+    return entries;
+  } catch (error) {
+    console.error(
+      `\u001b[31m[${timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    );
+    return [];
+  }
+};
+
+export const removeTtsDictionary = async (
+  guild?: string,
+  word?: string,
+  user?: string,
+  id?: string
+): Promise<void> => {
+  try {
+    await prismaClient.ttsDictionary.deleteMany({
+      where: { user, guild, word, id },
+    });
+  } catch (error) {
+    console.error(
+      `\u001b[31m[${timeUtils.timeToJSTstamp(
+        Date.now(),
+        true
+      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    );
+  }
+};
+
 export default {
   writeConfig,
   readConfig,
@@ -196,4 +312,6 @@ export default {
   readTtsConnection,
   writeTtsPreference,
   readTtsPreference,
+  writeTtsDictionary,
+  readTtsDictionary,
 };
