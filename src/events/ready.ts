@@ -1,4 +1,4 @@
-import Discord, { Client } from "discord.js";
+import Discord, { Client, EmbedBuilder } from "discord.js";
 import { registerAllCommands } from "@/lib/executorsRegister";
 import path from "path";
 
@@ -72,8 +72,8 @@ export const execute = async (client: Client) => {
     );
     return;
   } else {
-    const packageData = await import(path.resolve(__dirname, "../../../../package.json"));
-    const embed = new Discord.EmbedBuilder()
+    const packageData = await import(path.resolve(__dirname, "../../package.json"));
+    const embed = new EmbedBuilder()
       .setTitle("Bot Ready")
       .setDescription("Bot is ready and logged in successfully!")
       .setColor(client.config.color.success)
@@ -157,6 +157,7 @@ export const execute = async (client: Client) => {
         size: 1024,
       })
     );
+    console.debug(`[debug] Bot is ready and logged in as ${client.user.tag}`);
     channel.send({ embeds: [embed] });
   }
   console.log(
