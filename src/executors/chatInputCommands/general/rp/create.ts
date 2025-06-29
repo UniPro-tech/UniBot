@@ -13,21 +13,15 @@ import { randomUUID } from "crypto";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("create")
-  .setDescription("リアクションパネルを作成します")
+  .setDescription("リアクションパネルを作成")
   .addRoleOption((option) =>
-    option.setName("role0").setDescription("付与するロールを選択してください").setRequired(true)
+    option.setName("role0").setDescription("付与するロールを選択").setRequired(true)
   )
   .addStringOption((option) =>
-    option
-      .setName("title")
-      .setDescription("役職パネルの名前を設定してください(任意、デフォルトでは役職パネル)")
+    option.setName("title").setDescription("役職パネルの名前を設定(任意、デフォルトでは役職パネル)")
   )
-  .addRoleOption((option) =>
-    option.setName("role1").setDescription("付与するロールを選択してください(任意)")
-  )
-  .addRoleOption((option) =>
-    option.setName("role2").setDescription("付与するロールを選択してください(任意)")
-  );
+  .addRoleOption((option) => option.setName("role1").setDescription("付与するロールを選択(任意)"))
+  .addRoleOption((option) => option.setName("role2").setDescription("付与するロールを選択(任意)"));
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const member = interaction.member as GuildMember;

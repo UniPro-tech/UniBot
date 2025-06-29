@@ -9,7 +9,7 @@ import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 
 export const data = addSubCommand(
   "general/tts/group/dict",
-  new SlashCommandSubcommandGroupBuilder().setName("dict").setDescription("Dictionary settings")
+  new SlashCommandSubcommandGroupBuilder().setName("dict").setDescription("TTSの辞書を管理")
 );
 export const handlingCommand = subCommandHandling("general/tts/group/dict");
 export const execute = async (interaction: ChatInputCommandInteraction) => {

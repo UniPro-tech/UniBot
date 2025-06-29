@@ -13,7 +13,7 @@ import { AudioLibrary, RPC } from "voicevox.js";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("speaker")
-  .setDescription("話者を選択");
+  .setDescription("TTSの話者を選択");
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply({
     flags: [MessageFlags.Ephemeral],

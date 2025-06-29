@@ -5,7 +5,7 @@ import path from "path";
 export const guildOnly = false;
 export const data = new SlashCommandBuilder()
   .setName("about")
-  .setDescription("このBotについての情報を表示します。");
+  .setDescription("Botについての情報を表示");
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const packageData = await import(path.resolve(__dirname, "../../../../package.json"));
   const embed = new EmbedBuilder()

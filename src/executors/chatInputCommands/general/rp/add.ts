@@ -14,28 +14,16 @@ import { readSelected, SelectedDataType } from "@/lib/dataUtils";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("add")
-  .setDescription("リアクションパネルにロールを追加します")
+  .setDescription("リアクションパネルにロールを追加")
   .addRoleOption((option) =>
-    option.setName("role0").setDescription("追加するロールを選択してください").setRequired(true)
+    option.setName("role0").setDescription("追加するロールを選択").setRequired(true)
   )
-  .addRoleOption((option) =>
-    option.setName("role1").setDescription("追加するロールを選択してください(任意)")
-  )
-  .addRoleOption((option) =>
-    option.setName("role2").setDescription("追加するロールを選択してください(任意)")
-  )
-  .addRoleOption((option) =>
-    option.setName("role3").setDescription("追加するロールを選択してください(任意)")
-  )
-  .addRoleOption((option) =>
-    option.setName("role4").setDescription("追加するロールを選択してください(任意)")
-  )
-  .addRoleOption((option) =>
-    option.setName("role5").setDescription("追加するロールを選択してください(任意)")
-  )
-  .addRoleOption((option) =>
-    option.setName("role6").setDescription("追加するロールを選択してください(任意)")
-  );
+  .addRoleOption((option) => option.setName("role1").setDescription("追加するロールを選択(任意)"))
+  .addRoleOption((option) => option.setName("role2").setDescription("追加するロールを選択(任意)"))
+  .addRoleOption((option) => option.setName("role3").setDescription("追加するロールを選択(任意)"))
+  .addRoleOption((option) => option.setName("role4").setDescription("追加するロールを選択(任意)"))
+  .addRoleOption((option) => option.setName("role5").setDescription("追加するロールを選択(任意)"))
+  .addRoleOption((option) => option.setName("role6").setDescription("追加するロールを選択(任意)"));
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const member = interaction.member as GuildMember;

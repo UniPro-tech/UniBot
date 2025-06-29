@@ -6,7 +6,7 @@ export const guildOnly = false;
 
 export const data = new SlashCommandBuilder()
   .setName("avatar")
-  .setDescription("アイコンのURLを取得します。")
+  .setDescription("アイコンのURLを取得")
   .addUserOption((option) =>
     option
       .setName("target")

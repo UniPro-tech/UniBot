@@ -18,7 +18,7 @@ export const data = new SlashCommandSubcommandBuilder()
   .addBooleanOption((option) =>
     option
       .setName("case_sensitive")
-      .setDescription("大文字小文字の区別をするか (default: false)")
+      .setDescription("大文字小文字の区別をするか (デフォルト: false)")
       .setRequired(false)
   );
 export const execute = async (interaction: ChatInputCommandInteraction) => {

@@ -9,7 +9,7 @@ import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 
 export const data = addSubCommand(
   "general/tts/group/set",
-  new SlashCommandSubcommandGroupBuilder().setName("set").setDescription("Change TTS settings")
+  new SlashCommandSubcommandGroupBuilder().setName("set").setDescription("TTSの設定を変更")
 );
 export const handlingCommand = subCommandHandling("general/tts/group/set");
 export const execute = async (interaction: ChatInputCommandInteraction) => {

@@ -13,11 +13,11 @@ import {
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("remove")
-  .setDescription("Remove a word from the dictionary");
+  .setDescription("TTS辞書から単語を削除");
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   if (interaction.guild === null) {
     const embed = new EmbedBuilder()
-      .setTitle("エラー")
+      .setTitle("Error - サーバー専用コマンド")
       .setDescription("このコマンドはサーバー内でのみ使用できます。")
       .setColor(interaction.client.config.color.error);
     await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
