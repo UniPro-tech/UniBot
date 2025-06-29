@@ -126,19 +126,24 @@ process.on("uncaughtException", (error) => {
   });
 });
 
-process.on("unhandledRejection", (reason, promise) => {
-  console.error(
-    `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(
-      Date.now(),
-      true
-    )}] ${reason}\u001b[0m\n`,
-    promise
-  );
+process.on("unhandledRejection", (reason: any, promise) => {
+  const timestamp = client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
+  let reasonText = "";
+
+  if (reason instanceof Error) {
+    reasonText = reason.stack || reason.message;
+  } else {
+    reasonText = typeof reason === "object" ? JSON.stringify(reason, null, 2) : String(reason);
+  }
+
+  console.error(`\u001b[31m[${timestamp}] ${reasonText}\u001b[0m`, promise);
+
   const embed = new EmbedBuilder()
     .setTitle("ERROR - unhandledRejection")
-    .setDescription("```\n" + reason + "\n```")
+    .setDescription("```\n" + reasonText + "\n```")
     .setColor(config.color.error)
     .setTimestamp();
+
   client.channels.fetch(config.logch.error).then((channel: Channel | null) => {
     if (!channel || !(channel instanceof TextChannel)) {
       console.error("Error: Log Channel is invalid.");
