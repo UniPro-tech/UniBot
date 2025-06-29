@@ -1,5 +1,6 @@
 import {
   ActionRowBuilder,
+  EmbedBuilder,
   MessageFlags,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
@@ -56,10 +57,27 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
       }
       const speakers = await AudioLibrary.getSpeakers();
       const speakerData = speakers.find((s) => s.styles.find((st) => st.id === styleId));
+      const embed = new EmbedBuilder()
+        .setTitle("TTS話者設定")
+        .setDescription(`話者を設定しました。`)
+        .addFields({
+          name: "話者名",
+          value: speakerData!.name,
+          inline: true,
+        })
+        .addFields({
+          name: "スタイル名",
+          value: speakerData!.styles.find((st) => st.id === styleId)!.name,
+          inline: true,
+        })
+        .setColor(interaction.client.config.color.success)
+        .setFooter({
+          text: "TTS設定",
+          iconURL: interaction.client.user?.displayAvatarURL() || "",
+        })
+        .setTimestamp();
       await interaction.editReply({
-        content: `${speakerData!.name} の ${
-          speakerData!.styles.find((st) => st.id === styleId)!.name
-        } を設定しました。`,
+        embeds: [embed],
       });
       writeTtsPreference(interaction.user.id, "speaker", {
         styleId,

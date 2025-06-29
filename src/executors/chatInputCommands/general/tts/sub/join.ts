@@ -17,7 +17,12 @@ export const execute = async (interaction: CommandInteraction) => {
   await interaction.deferReply();
   const voiceChannel = (interaction.member as GuildMember).voice.channel;
   if (!voiceChannel) {
-    await interaction.followUp("ボイスチャンネルに参加していません。");
+    const embed = new EmbedBuilder()
+      .setTitle("Error - TTSボイスチャンネル接続失敗")
+      .setDescription("ボイスチャンネルに参加していません。")
+      .setColor(interaction.client.config.color.error)
+      .setTimestamp();
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
   const connection = await joinVoiceChannel({
@@ -42,7 +47,6 @@ export const execute = async (interaction: CommandInteraction) => {
       ])
       .setColor(interaction.client.config.color.success);
     await interaction.editReply({ embeds: [embed] });
-    writeTtsConnection(voiceChannel.guild.id, [interaction.channel?.id as string], voiceChannel.id);
     const player = createAudioPlayer();
     connection.subscribe(player);
     const text = `${voiceChannel.name}に接続しました。`;
@@ -57,6 +61,7 @@ export const execute = async (interaction: CommandInteraction) => {
     const audioStream = Readable.from(audio);
     const resource = createAudioResource(audioStream);
     player.play(resource);
+    writeTtsConnection(voiceChannel.guild.id, [interaction.channel?.id as string], voiceChannel.id);
   });
 };
 

@@ -101,7 +101,7 @@ export const execute = async (message: Message, client: Client) => {
     let username = "ユーザー省略";
     try {
       const user = await client.users.fetch(userId);
-      username = user.username;
+      username = user.displayName;
     } catch {}
     text = text.replace(match[0], `、${username}、`);
   }

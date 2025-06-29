@@ -14,7 +14,7 @@ export const execute = async (interaction: CommandInteraction) => {
   const channel = (interaction.member as GuildMember).voice.channel;
   if (!channel) {
     const embed = new EmbedBuilder()
-      .setTitle("ボイスチャンネルに参加していません")
+      .setTitle("Error - VC未接続")
       .setDescription("ボイスチャンネルに参加していないため、接続を切断できません。")
       .setColor(interaction.client.config.color.error);
     await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
@@ -23,7 +23,7 @@ export const execute = async (interaction: CommandInteraction) => {
   const connection = await getVoiceConnection(channel.guild.id);
   if (!connection) {
     const embed = new EmbedBuilder()
-      .setTitle("ボイスチャンネルに接続していません")
+      .setTitle("Error - VC未接続")
       .setDescription("ボイスチャンネルに接続していないため、切断できません。")
       .setColor(interaction.client.config.color.error);
     await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });

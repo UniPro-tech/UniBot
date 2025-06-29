@@ -4,6 +4,7 @@ import {
   CommandInteractionOptionResolver,
   ChatInputCommandInteraction,
   TextChannel,
+  MessageFlags,
 } from "discord.js";
 import { addSubCommand, addSubCommandGroup, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
@@ -24,16 +25,26 @@ export const guildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   if (!interaction.inGuild()) {
+    const embed = new EmbedBuilder()
+      .setTitle("Error - サーバー専用コマンド")
+      .setDescription("このコマンドはサーバー内でのみ使用できます。")
+      .setColor(config.color.error)
+      .setTimestamp();
     await interaction.reply({
-      content: "このコマンドはサーバー内でのみ使用できます。",
-      ephemeral: true,
+      embeds: [embed],
+      flags: [MessageFlags.Ephemeral],
     });
     return;
   }
   if (!process.env.VOICEVOX_API_URL) {
+    const embed = new EmbedBuilder()
+      .setTitle("Error - VOICEVOX API URLが設定されていません")
+      .setDescription("このBotはTTSを使用できません。")
+      .setColor(config.color.error)
+      .setTimestamp();
     await interaction.reply({
-      content: "VOICEVOX API URLが設定されていません。\nこのBotはTTSを使用できません。",
-      ephemeral: true,
+      embeds: [embed],
+      flags: [MessageFlags.Ephemeral],
     });
     return;
   }

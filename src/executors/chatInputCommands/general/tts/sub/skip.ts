@@ -18,7 +18,7 @@ export const execute = async (interaction: CommandInteraction) => {
   );
   if (!voiceConnectionData) {
     const embed = new EmbedBuilder()
-      .setTitle("ボイスチャンネルに参加していません")
+      .setTitle("Error - VC未接続")
       .setDescription("ボイスチャンネルに参加していないため、オーディオをスキップできません。")
       .setColor(interaction.client.config.color.error);
     await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
@@ -27,7 +27,7 @@ export const execute = async (interaction: CommandInteraction) => {
   const connection = getVoiceConnection(voiceConnectionData.guild);
   if (!connection) {
     const embed = new EmbedBuilder()
-      .setTitle("ボイスチャンネルに接続していません")
+      .setTitle("Error - VC未接続")
       .setDescription("ボイスチャンネルに接続していないため、オーディオをスキップできません。")
       .setColor(interaction.client.config.color.error);
     await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
