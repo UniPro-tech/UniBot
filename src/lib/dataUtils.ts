@@ -205,12 +205,7 @@ export const writeTtsDictionary = async (
       },
     });
   } catch (error) {
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
-    );
+    throw error;
   }
 };
 

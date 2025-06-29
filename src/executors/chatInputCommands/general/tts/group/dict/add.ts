@@ -1,4 +1,5 @@
 import { writeTtsDictionary } from "@/lib/dataUtils";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
@@ -22,34 +23,47 @@ export const data = new SlashCommandSubcommandBuilder()
       .setRequired(false)
   );
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  if (interaction.guild === null) {
+  try {
+    if (interaction.guild === null) {
+      const embed = new EmbedBuilder()
+        .setTitle("エラー")
+        .setDescription("このコマンドはサーバー内でのみ使用できます。")
+        .setColor(interaction.client.config.color.error);
+      await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
+      return;
+    }
+
+    const word = interaction.options.getString("word");
+    const definition = interaction.options.getString("definition");
+
+    await writeTtsDictionary(
+      interaction.user.id,
+      interaction.guild.id,
+      word!,
+      definition!,
+      interaction.options.getBoolean("case_sensitive") ?? false
+    );
+
     const embed = new EmbedBuilder()
-      .setTitle("エラー")
-      .setDescription("このコマンドはサーバー内でのみ使用できます。")
-      .setColor(interaction.client.config.color.error);
-    await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
-    return;
+      .setTitle("単語を辞書に追加しました！")
+      .addFields([
+        { name: "単語", value: word!, inline: true },
+        { name: "読み", value: definition!, inline: true },
+      ])
+      .setColor(interaction.client.config.color.success);
+    await interaction.reply({ embeds: [embed] });
+  } catch (error) {
+    if ((error as PrismaClientKnownRequestError).code === "P2002") {
+      const embed = new EmbedBuilder()
+        .setTitle("エラー")
+        .setDescription("この単語はすでに辞書に存在します。")
+        .setColor(interaction.client.config.color.error);
+      await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
+      return;
+    } else {
+      throw error; // 他のエラーは上位で処理
+    }
   }
-
-  const word = interaction.options.getString("word");
-  const definition = interaction.options.getString("definition");
-
-  await writeTtsDictionary(
-    interaction.user.id,
-    interaction.guild.id,
-    word!,
-    definition!,
-    interaction.options.getBoolean("case_sensitive") ?? false
-  );
-
-  const embed = new EmbedBuilder()
-    .setTitle("単語を辞書に追加しました！")
-    .addFields([
-      { name: "単語", value: word!, inline: true },
-      { name: "読み", value: definition!, inline: true },
-    ])
-    .setColor(interaction.client.config.color.success);
-  await interaction.reply({ embeds: [embed] });
 };
 
 export default {
