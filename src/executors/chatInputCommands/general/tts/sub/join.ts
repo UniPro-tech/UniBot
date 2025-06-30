@@ -5,7 +5,12 @@ import {
   SlashCommandSubcommandBuilder,
   TextChannel,
 } from "discord.js";
-import { createAudioPlayer, createAudioResource, joinVoiceChannel } from "@discordjs/voice";
+import {
+  createAudioPlayer,
+  createAudioResource,
+  getVoiceConnection,
+  joinVoiceChannel,
+} from "@discordjs/voice";
 import { writeTtsConnection } from "@/lib/dataUtils";
 import { Readable } from "stream";
 import { RPC, Query, Generate } from "voicevox.js";
@@ -20,6 +25,16 @@ export const execute = async (interaction: CommandInteraction) => {
     const embed = new EmbedBuilder()
       .setTitle("Error - TTSボイスチャンネル接続失敗")
       .setDescription("ボイスチャンネルに参加していません。")
+      .setColor(interaction.client.config.color.error)
+      .setTimestamp();
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+  const existingConnection = getVoiceConnection(interaction.guild!.id);
+  if (existingConnection) {
+    const embed = new EmbedBuilder()
+      .setTitle("Error - 既に接続中")
+      .setDescription("既にボイスチャンネルに接続しています。")
       .setColor(interaction.client.config.color.error)
       .setTimestamp();
     await interaction.editReply({ embeds: [embed] });
