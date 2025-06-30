@@ -45,7 +45,7 @@
     "child_process": "^1.0.2",
     "discord-api-types": "^0.38.13",
     "discord.js": "^14.21.0",
-    "dotenv": "^16.6.1",
+    "dotenv": "^17.0.0",
     "fs": "^0.0.1-security",
     "install": "^0.13.0",
     "node-cron": "^4.1.1",
