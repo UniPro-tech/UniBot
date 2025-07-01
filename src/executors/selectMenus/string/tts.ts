@@ -8,7 +8,9 @@ export const name = "tts";
 const handlingCommands = subSelectMenusHandling("string/tts");
 
 export const execute = async (interaction: StringSelectMenuInteraction) => {
-  const commands = handlingCommands.get(interaction.customId.split("_")[1]);
+  const [, commandKey] = interaction.customId.split("_");
+  const commands = handlingCommands.get(commandKey);
+
   if (!commands) {
     console.log(
       `[${interaction.client.functions.timeUtils.timeToJSTstamp(
@@ -18,33 +20,37 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
     );
     return;
   }
-  commands.execute(interaction).catch(async (error) => {
+
+  try {
+    await commands.execute(interaction);
+  } catch (error) {
+    const time = interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
     console.error(
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occurred in ${interaction.customId}\nDetails:\n${error}`
+      `[${time} error] An Error Occurred in ${interaction.customId}\nDetails:\n${error}`
     );
+
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")
-      .setDescription("```\n" + (error as any).toString() + "\n```")
+      .setDescription("```\n" + String(error) + "\n```")
       .setColor(config.color.error)
       .setTimestamp();
 
-    const channel = await GetErrorChannel(interaction.client);
-    if (channel) {
-      channel.send({ embeds: [logEmbed] });
+    const errorChannel = await GetErrorChannel(interaction.client);
+    if (errorChannel) {
+      errorChannel.send({ embeds: [logEmbed] });
     }
-    const messageEmbed = new EmbedBuilder()
+
+    const userEmbed = new EmbedBuilder()
       .setTitle("すみません。エラーが発生しました。")
-      .setDescription("```\n" + error + "\n```")
+      .setDescription("```\n" + String(error) + "\n```")
       .setColor(config.color.error)
       .setTimestamp();
+
     if (interaction.channel && interaction.channel.isSendable()) {
       await interaction.channel.send({
-        embeds: [messageEmbed],
+        embeds: [userEmbed],
         flags: MessageFlags.SuppressEmbeds,
       });
     }
-  });
+  }
 };

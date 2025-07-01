@@ -1,6 +1,5 @@
 import {
   CommandInteraction,
-  Embed,
   EmbedBuilder,
   MessageFlags,
   SlashCommandSubcommandBuilder,
@@ -11,38 +10,66 @@ import { readTtsConnection } from "@/lib/dataUtils";
 export const data = new SlashCommandSubcommandBuilder()
   .setName("skip")
   .setDescription("Skip the current audio.");
+
 export const execute = async (interaction: CommandInteraction) => {
-  const voiceConnectionData = await readTtsConnection(
-    interaction.guild?.id as string,
-    interaction.channel?.id as string
-  );
-  if (!voiceConnectionData) {
-    const embed = new EmbedBuilder()
-      .setTitle("Error - VC未接続")
-      .setDescription("ボイスチャンネルに参加していないため、オーディオをスキップできません。")
-      .setColor(interaction.client.config.color.error);
-    await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
+  const guildId = interaction.guild?.id;
+  const channelId = interaction.channel?.id;
+  if (!guildId || !channelId) {
+    await interaction.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Error - 情報不足")
+          .setDescription("ギルドまたはチャンネル情報が取得できませんでした。")
+          .setColor(interaction.client.config.color.error),
+      ],
+      flags: [MessageFlags.Ephemeral],
+    });
     return;
   }
+
+  const voiceConnectionData = await readTtsConnection(guildId, channelId);
+  if (!voiceConnectionData) {
+    await interaction.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Error - VC未接続")
+          .setDescription("ボイスチャンネルに参加してないからスキップできません。")
+          .setColor(interaction.client.config.color.error),
+      ],
+      flags: [MessageFlags.Ephemeral],
+    });
+    return;
+  }
+
   const connection = getVoiceConnection(voiceConnectionData.guild);
   if (!connection) {
-    const embed = new EmbedBuilder()
-      .setTitle("Error - VC未接続")
-      .setDescription("ボイスチャンネルに接続していないため、オーディオをスキップできません。")
-      .setColor(interaction.client.config.color.error);
-    await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
+    await interaction.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Error - VC未接続")
+          .setDescription("ボイスチャンネルに接続してないからスキップできません。")
+          .setColor(interaction.client.config.color.error),
+      ],
+      flags: [MessageFlags.Ephemeral],
+    });
     return;
   }
-  const player = (connection.state as VoiceConnectionReadyState).subscription
-    ?.player as AudioPlayer;
+
+  const player = (connection.state as VoiceConnectionReadyState).subscription?.player as
+    | AudioPlayer
+    | undefined;
   if (player) {
     player.stop(true);
   }
-  const embed = new EmbedBuilder()
-    .setTitle("オーディオをスキップしました")
-    .setDescription("現在のオーディオをスキップしました。")
-    .setColor(interaction.client.config.color.success);
-  await interaction.reply({ embeds: [embed] });
+
+  await interaction.reply({
+    embeds: [
+      new EmbedBuilder()
+        .setTitle("オーディオをスキップしました")
+        .setDescription("今流れてたオーディオをスキップしました。")
+        .setColor(interaction.client.config.color.success),
+    ],
+  });
 };
 
 export default {

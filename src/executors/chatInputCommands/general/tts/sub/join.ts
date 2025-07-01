@@ -18,64 +18,78 @@ import { RPC, Query, Generate } from "voicevox.js";
 export const data = new SlashCommandSubcommandBuilder()
   .setName("join")
   .setDescription("ボイスチャンネルに参加します。");
+
+const createErrorEmbed = (title: string, description: string, color: number) =>
+  new EmbedBuilder().setTitle(title).setDescription(description).setColor(color).setTimestamp();
+
+const createSuccessEmbed = (voiceChannelId: string, textChannelId: string, color: number) =>
+  new EmbedBuilder()
+    .setTitle("TTSボイスチャンネル接続")
+    .setDescription("ボイスチャンネルに接続しました。")
+    .addFields([
+      { name: "ボイスチャンネル名", value: `<#${voiceChannelId}>` },
+      { name: "テキストチャンネル名", value: `<#${textChannelId}>` },
+    ])
+    .setColor(color);
+
+const connectVoiceVox = async () => {
+  if (!RPC.rpc) {
+    const headers = {
+      Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
+    };
+    await RPC.connect(process.env.VOICEVOX_API_URL as string, headers);
+  }
+};
+
 export const execute = async (interaction: CommandInteraction) => {
   await interaction.deferReply();
-  const voiceChannel = (interaction.member as GuildMember).voice.channel;
+
+  const member = interaction.member as GuildMember;
+  const voiceChannel = member.voice.channel;
+  const config = interaction.client.config;
+
   if (!voiceChannel) {
-    const embed = new EmbedBuilder()
-      .setTitle("Error - TTSボイスチャンネル接続失敗")
-      .setDescription("ボイスチャンネルに参加していません。")
-      .setColor(interaction.client.config.color.error)
-      .setTimestamp();
+    const embed = createErrorEmbed(
+      "Error - TTSボイスチャンネル接続失敗",
+      "ボイスチャンネルに参加していません。",
+      config.color.error
+    );
     await interaction.editReply({ embeds: [embed] });
     return;
   }
-  const existingConnection = getVoiceConnection(interaction.guild!.id);
-  if (existingConnection) {
-    const embed = new EmbedBuilder()
-      .setTitle("Error - 既に接続中")
-      .setDescription("既にボイスチャンネルに接続しています。")
-      .setColor(interaction.client.config.color.error)
-      .setTimestamp();
+
+  if (getVoiceConnection(interaction.guild!.id)) {
+    const embed = createErrorEmbed(
+      "Error - 既に接続中",
+      "既にボイスチャンネルに接続しています。",
+      config.color.error
+    );
     await interaction.editReply({ embeds: [embed] });
     return;
   }
-  const connection = await joinVoiceChannel({
+
+  const connection = joinVoiceChannel({
     channelId: voiceChannel.id,
     guildId: voiceChannel.guild.id,
     adapterCreator: voiceChannel.guild.voiceAdapterCreator,
   });
+
   connection.once("ready", async () => {
-    console.info("Connected to voice channel");
-    const embed = new EmbedBuilder()
-      .setTitle("TTSボイスチャンネル接続")
-      .setDescription(`ボイスチャンネルに接続しました。`)
-      .addFields([
-        {
-          name: "ボイスチャンネル名",
-          value: `<#${voiceChannel.id}>`,
-        },
-        {
-          name: "テキストチャンネル名",
-          value: `<#${(interaction.channel! as TextChannel).id}>`,
-        },
-      ])
-      .setColor(interaction.client.config.color.success);
+    const textChannelId = (interaction.channel! as TextChannel).id;
+    const embed = createSuccessEmbed(voiceChannel.id, textChannelId, config.color.success);
     await interaction.editReply({ embeds: [embed] });
+
     const player = createAudioPlayer();
     connection.subscribe(player);
+
     const text = `${voiceChannel.name}に接続しました。`;
-    if (!RPC.rpc) {
-      const headers = {
-        Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
-      };
-      await RPC.connect(process.env.VOICEVOX_API_URL as string, headers);
-    }
+    await connectVoiceVox();
     const query = await Query.getTalkQuery(text, 0);
     const audio = await Generate.generate(0, query);
     const audioStream = Readable.from(audio);
     const resource = createAudioResource(audioStream);
     player.play(resource);
+
     writeTtsConnection(voiceChannel.guild.id, [interaction.channel?.id as string], voiceChannel.id);
   });
 };

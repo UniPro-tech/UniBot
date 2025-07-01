@@ -22,46 +22,63 @@ export const data = new SlashCommandSubcommandBuilder()
       .setDescription("大文字小文字の区別をするか (デフォルト: false)")
       .setRequired(false)
   );
+
+const createEmbed = (
+  title: string,
+  description: string,
+  color: number,
+  fields?: { name: string; value: string; inline?: boolean }[]
+) => {
+  const embed = new EmbedBuilder().setTitle(title).setColor(color);
+  if (description) embed.setDescription(description);
+  if (fields) embed.addFields(fields);
+  return embed;
+};
+
 export const execute = async (interaction: ChatInputCommandInteraction) => {
+  if (!interaction.guild) {
+    const embed = createEmbed(
+      "エラー",
+      "このコマンドはサーバー内でのみ使用できます。",
+      interaction.client.config.color.error
+    );
+    await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
+    return;
+  }
+
+  const word = interaction.options.getString("word", true);
+  const definition = interaction.options.getString("definition", true);
+  const caseSensitive = interaction.options.getBoolean("case_sensitive") ?? false;
+
   try {
-    if (interaction.guild === null) {
-      const embed = new EmbedBuilder()
-        .setTitle("エラー")
-        .setDescription("このコマンドはサーバー内でのみ使用できます。")
-        .setColor(interaction.client.config.color.error);
-      await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
-      return;
-    }
-
-    const word = interaction.options.getString("word");
-    const definition = interaction.options.getString("definition");
-
     await writeTtsDictionary(
       interaction.user.id,
       interaction.guild.id,
-      word!,
-      definition!,
-      interaction.options.getBoolean("case_sensitive") ?? false
+      word,
+      definition,
+      caseSensitive
     );
 
-    const embed = new EmbedBuilder()
-      .setTitle("単語を辞書に追加しました！")
-      .addFields([
-        { name: "単語", value: word!, inline: true },
-        { name: "読み", value: definition!, inline: true },
-      ])
-      .setColor(interaction.client.config.color.success);
+    const embed = createEmbed(
+      "単語を辞書に追加しました！",
+      "",
+      interaction.client.config.color.success,
+      [
+        { name: "単語", value: word, inline: true },
+        { name: "読み", value: definition, inline: true },
+      ]
+    );
     await interaction.reply({ embeds: [embed] });
   } catch (error) {
     if ((error as PrismaClientKnownRequestError).code === "P2002") {
-      const embed = new EmbedBuilder()
-        .setTitle("エラー")
-        .setDescription("この単語はすでに辞書に存在します。")
-        .setColor(interaction.client.config.color.error);
+      const embed = createEmbed(
+        "エラー",
+        "この単語はすでに辞書に存在します。",
+        interaction.client.config.color.error
+      );
       await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
-      return;
     } else {
-      throw error; // 他のエラーは上位で処理
+      throw error;
     }
   }
 };

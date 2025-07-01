@@ -5,49 +5,37 @@ import config from "@/config";
 const MessageContextMenuCommandExecute = async (
   interaction: MessageContextMenuCommandInteraction
 ) => {
-  console.log(
-    `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-      Date.now(),
-      true
-    )} info] MessageContextMenu ->${interaction.commandName}`
-  );
+  const time = () => `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}`;
+
+  console.log(`${time()} info] MessageContextMenu ->${interaction.commandName}`);
+
   const command = interaction.client.interactionExecutorsCollections.messageContextMenuCommands.get(
     interaction.commandName
   );
+
   if (!command) {
-    console.log(
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} info] Not Found: ${interaction.commandName}`
-    );
+    console.log(`${time()} info] Not Found: ${interaction.commandName}`);
     return;
   }
+
   if (!interaction.inGuild() && command.guildOnly) {
     const embed = new EmbedBuilder()
       .setTitle("エラー")
       .setDescription("このコマンドはDMでは実行できません。")
       .setColor(interaction.client.config.color.error);
-    interaction.reply({ embeds: [embed] });
-    console.log(
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] DM Only: ${
-        interaction.commandName
-      }`
-    );
+
+    await interaction.reply({ embeds: [embed] });
+    console.log(`${time()} info] DM Only: ${interaction.commandName}`);
     return;
   }
 
   try {
     await command.execute(interaction);
-    console.info(
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} run] ${
-        interaction.commandName
-      }`
-    );
+    console.info(`${time()} run] ${interaction.commandName}`);
 
     const logEmbed = new EmbedBuilder()
       .setTitle("コマンド実行ログ")
-      .setDescription(`${interaction.user} がコマンドを実行しました。`)
+      .setDescription(`${interaction.user} がコマンドを実行したよ！`)
       .setColor(config.color.success)
       .setTimestamp()
       .setThumbnail(interaction.user.displayAvatarURL())
@@ -71,38 +59,32 @@ const MessageContextMenuCommandExecute = async (
         },
       ])
       .setFooter({ text: `${interaction.id}` });
-    const channel = await GetLogChannel(interaction.client);
-    if (channel) {
-      channel.send({ embeds: [logEmbed] });
-    }
+
+    const logChannel = await GetLogChannel(interaction.client);
+    if (logChannel) await logChannel.send({ embeds: [logEmbed] });
   } catch (error) {
     console.error(
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occurred in ${interaction.commandName}\nDetails:\n${error}`
+      `${time()} error]An Error Occurred in ${interaction.commandName}\nDetails:\n${error}`
     );
-    const logEmbed = new EmbedBuilder()
+
+    const errorEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")
       .setDescription("```\n" + (error as any).toString() + "\n```")
       .setColor(config.color.error)
       .setTimestamp();
 
-    const channel = await GetErrorChannel(interaction.client);
-    if (channel) {
-      channel.send({ embeds: [logEmbed] });
-    }
-    const messageEmbed = new EmbedBuilder()
+    const errorChannel = await GetErrorChannel(interaction.client);
+    if (errorChannel) await errorChannel.send({ embeds: [errorEmbed] });
+
+    const userEmbed = new EmbedBuilder()
       .setTitle("すみません。エラーが発生しました。")
       .setDescription("```\n" + error + "\n```")
       .setColor(config.color.error)
       .setTimestamp();
 
-    await interaction.reply({ embeds: [messageEmbed] });
+    await interaction.reply({ embeds: [userEmbed] }).catch(() => {});
     const logChannel = await GetLogChannel(interaction.client);
-    if (logChannel) {
-      logChannel.send({ embeds: [messageEmbed] });
-    }
+    if (logChannel) await logChannel.send({ embeds: [userEmbed] });
   }
 };
 

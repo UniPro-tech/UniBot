@@ -11,41 +11,41 @@ import config from "@/config.js";
 export const name = "RPを選択";
 
 export const data = new ContextMenuCommandBuilder()
-  .setName("RPを選択")
-  .setType(ApplicationCommandType.Message)
+  .setName(name)
   .setType(ApplicationCommandType.Message);
 
 export const execute = async (interaction: MessageContextMenuCommandInteraction) => {
-  if (
-    interaction.targetMessage.author.id !== interaction.client.user.id ||
-    !(
-      interaction.targetMessage.components[0] &&
-      interaction.targetMessage.components[0].type === 1 &&
-      interaction.targetMessage.components[0].components[0].customId?.startsWith("rp_")
-    )
-  ) {
-    const messageEmbed = new EmbedBuilder()
+  const targetMsg = interaction.targetMessage;
+  const isRolePanel =
+    targetMsg.author.id === interaction.client.user.id &&
+    targetMsg.components[0]?.type === 1 &&
+    targetMsg.components[0].components[0]?.customId?.startsWith("rp_");
+
+  if (!isRolePanel) {
+    const errorEmbed = new EmbedBuilder()
       .setTitle("ロールパネルではありません")
       .setColor(config.color.error)
       .setTimestamp();
     await interaction.reply({
-      embeds: [messageEmbed],
+      embeds: [errorEmbed],
       flags: [MessageFlags.Ephemeral],
     });
     return;
   }
+
   await writeSelected({
     user: interaction.user.id,
     type: "Message",
-    data: interaction.targetMessage.id,
+    data: targetMsg.id,
   } as SelectedData);
-  const messageEmbed = new EmbedBuilder()
+
+  const successEmbed = new EmbedBuilder()
     .setTitle("ロールパネルを選択しました")
     .setColor(config.color.success)
     .setTimestamp();
+
   await interaction.reply({
-    embeds: [messageEmbed],
+    embeds: [successEmbed],
     flags: [MessageFlags.Ephemeral],
   });
-  return;
 };

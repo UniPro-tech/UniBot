@@ -11,45 +11,35 @@ export const data = addSubCommand(
   "general/tts/group/dict",
   new SlashCommandSubcommandGroupBuilder().setName("dict").setDescription("TTSの辞書を管理")
 );
+
 export const handlingCommand = subCommandHandling("general/tts/group/dict");
+
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  const command = handlingCommand.get(
-    (interaction.options as CommandInteractionOptionResolver).getSubcommand()
-  );
+  const subcommand = (interaction.options as CommandInteractionOptionResolver).getSubcommand();
+  const command = handlingCommand.get(subcommand);
+
   if (!command) {
-    console.info(
-      `[Not Found] Command: ${(
-        interaction.options as CommandInteractionOptionResolver
-      ).getSubcommand()}`
-    );
+    console.info(`[Not Found] Command: ${subcommand}`);
     return;
   }
+
   try {
     await command.execute(interaction);
-    console.info(
-      `[Run] ${(interaction.options as CommandInteractionOptionResolver).getSubcommand()}`
-    );
+    console.info(`[Run] ${subcommand}`);
   } catch (error) {
-    console.error(
-      `[Error] ${(interaction.options as CommandInteractionOptionResolver).getSubcommand()}`,
-      error
-    );
-    const logChannel = await GetLogChannel(interaction.client);
-    if (logChannel) {
-      const embed = new EmbedBuilder()
-        .setTitle("TTS Command Error")
-        .setDescription(`Error executing command: ${error}`)
-        .setColor("Red");
-      await logChannel.send({ embeds: [embed] });
-    }
-    const errorChannel = await GetErrorChannel(interaction.client);
-    if (errorChannel) {
-      const embed = new EmbedBuilder()
-        .setTitle("TTS Command Error")
-        .setDescription(`Error executing command: ${error}`)
-        .setColor("Red");
-      await errorChannel.send({ embeds: [embed] });
-    }
+    console.error(`[Error] ${subcommand}`, error);
+
+    const embed = new EmbedBuilder()
+      .setTitle("TTS Command Error")
+      .setDescription(`Error executing command: ${error}`)
+      .setColor(interaction.client.config.color.error);
+
+    const [logChannel, errorChannel] = await Promise.all([
+      GetLogChannel(interaction.client),
+      GetErrorChannel(interaction.client),
+    ]);
+
+    if (logChannel) await logChannel.send({ embeds: [embed] });
+    if (errorChannel) await errorChannel.send({ embeds: [embed] });
   }
-  return;
 };

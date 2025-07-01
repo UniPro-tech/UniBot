@@ -16,45 +16,43 @@ export const data = addSubCommand(
 export const guildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  const command = handlingCommands.get(
-    (interaction.options as CommandInteractionOptionResolver).getSubcommand()
-  );
+  const subcommand = (interaction.options as CommandInteractionOptionResolver).getSubcommand();
+  const command = handlingCommands.get(subcommand);
+
   if (!command) {
-    console.info(
-      `[Not Found] Command: ${(
-        interaction.options as CommandInteractionOptionResolver
-      ).getSubcommand()}`
-    );
+    console.info(`[Not Found] Command: ${subcommand}`);
     return;
   }
+
   try {
     await command.execute(interaction);
-    console.info(
-      `[Run] ${(interaction.options as CommandInteractionOptionResolver).getSubcommand()}`
-    );
+    console.info(`[Run] ${subcommand}`);
   } catch (error) {
     console.error(error);
+
+    const errorMsg = (error as Error).toString();
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")
-      .setDescription("```\n" + (error as any).toString() + "\n```")
+      .setDescription(`\`\`\`\n${errorMsg}\n\`\`\``)
       .setColor(config.color.error)
       .setTimestamp();
 
-    const channel = await GetErrorChannel(interaction.client);
-    if (channel) {
-      channel.send({ embeds: [logEmbed] });
+    const errorChannel = await GetErrorChannel(interaction.client);
+    if (errorChannel) {
+      errorChannel.send({ embeds: [logEmbed] });
     }
+
     const messageEmbed = new EmbedBuilder()
-      .setTitle("すみません、エラーが発生しました...")
-      .setDescription("```\n" + error + "\n```")
-      .setColor(interaction.client.config.color.error)
+      .setTitle("すみません。エラーが発生しました。")
+      .setDescription(`\`\`\`\n${errorMsg}\n\`\`\``)
+      .setColor(config.color.error)
       .setTimestamp();
 
     await interaction.reply({ embeds: [messageEmbed] });
+
     const logChannel = await GetLogChannel(interaction.client);
     if (logChannel) {
       logChannel.send({ embeds: [messageEmbed] });
     }
   }
-  return;
 };

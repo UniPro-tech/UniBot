@@ -14,6 +14,7 @@ export const handlingCommands = subCommandHandling(
   "general/tts/group",
   subCommandHandling("general/tts/sub")
 );
+
 export const data = addSubCommandGroup(
   "general/tts/group",
   addSubCommand(
@@ -21,77 +22,84 @@ export const data = addSubCommandGroup(
     new SlashCommandBuilder().setName("tts").setDescription("テキスト読み上げを管理します。")
   ) as SlashCommandBuilder
 );
+
 export const guildOnly = true;
+
+const replyWithError = async (
+  interaction: ChatInputCommandInteraction,
+  title: string,
+  description: string
+) => {
+  const embed = new EmbedBuilder()
+    .setTitle(title)
+    .setDescription(description)
+    .setColor(config.color.error)
+    .setTimestamp();
+  await interaction.reply({
+    embeds: [embed],
+    flags: [MessageFlags.Ephemeral],
+  });
+};
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   if (!interaction.inGuild()) {
-    const embed = new EmbedBuilder()
-      .setTitle("Error - サーバー専用コマンド")
-      .setDescription("このコマンドはサーバー内でのみ使用できます。")
-      .setColor(config.color.error)
-      .setTimestamp();
-    await interaction.reply({
-      embeds: [embed],
-      flags: [MessageFlags.Ephemeral],
-    });
-    return;
-  }
-  if (!process.env.VOICEVOX_API_URL) {
-    const embed = new EmbedBuilder()
-      .setTitle("Error - VOICEVOX API URLが設定されていません")
-      .setDescription("このBotはTTSを使用できません。")
-      .setColor(config.color.error)
-      .setTimestamp();
-    await interaction.reply({
-      embeds: [embed],
-      flags: [MessageFlags.Ephemeral],
-    });
-    return;
-  }
-  const command =
-    (interaction.options as CommandInteractionOptionResolver).getSubcommandGroup() != null
-      ? handlingCommands.get(
-          (interaction.options as CommandInteractionOptionResolver).getSubcommandGroup() as string
-        )
-      : handlingCommands.get(
-          (interaction.options as CommandInteractionOptionResolver).getSubcommand()
-        );
-  if (!command) {
-    console.info(
-      `[Not Found] Command: ${(
-        interaction.options as CommandInteractionOptionResolver
-      ).getSubcommand()}`
+    await replyWithError(
+      interaction,
+      "Error - サーバー専用コマンド",
+      "このコマンドはサーバー内でのみ使用できます。"
     );
     return;
   }
+
+  if (!process.env.VOICEVOX_API_URL) {
+    await replyWithError(
+      interaction,
+      "Error - VOICEVOX API URLが設定されていません",
+      "このBotはTTSを使用できません。"
+    );
+    return;
+  }
+
+  const options = interaction.options as CommandInteractionOptionResolver;
+  const group = options.getSubcommandGroup();
+  const sub = options.getSubcommand();
+  const command = group ? handlingCommands.get(group) : handlingCommands.get(sub);
+
+  if (!command) {
+    console.info(`[Not Found] Command: ${sub}`);
+    return;
+  }
+
   try {
     await command.execute(interaction);
-    console.info(
-      `[Run] ${(interaction.options as CommandInteractionOptionResolver).getSubcommand()}`
-    );
+    console.info(`[Run] ${sub}`);
   } catch (error) {
     console.error(error);
+
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")
       .setDescription("```\n" + (error as any).toString() + "\n```")
       .setColor(config.color.error)
       .setTimestamp();
 
-    const channel = await GetErrorChannel(interaction.client);
-    if (channel) {
-      channel.send({ embeds: [logEmbed] });
+    const errorChannel = await GetErrorChannel(interaction.client);
+    if (errorChannel) {
+      errorChannel.send({ embeds: [logEmbed] });
     }
+
     const messageEmbed = new EmbedBuilder()
-      .setTitle("すみません、エラーが発生しました...")
+      .setTitle("すみません。エラーが発生しました。")
       .setDescription("```\n" + error + "\n```")
       .setColor(interaction.client.config.color.error)
       .setTimestamp();
 
-    await (interaction.channel as TextChannel).send({ embeds: [messageEmbed] });
+    if (interaction.channel) {
+      await (interaction.channel as TextChannel).send({ embeds: [messageEmbed] });
+    }
+
     const logChannel = await GetLogChannel(interaction.client);
     if (logChannel) {
       logChannel.send({ embeds: [messageEmbed] });
     }
   }
-  return;
 };

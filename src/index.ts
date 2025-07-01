@@ -1,4 +1,3 @@
-//import cron from "node-cron";
 import {
   Client,
   GatewayIntentBits,
@@ -8,6 +7,20 @@ import {
   Channel,
   TextChannel,
 } from "discord.js";
+import fs from "fs";
+import path from "path";
+import config from "@/config";
+import timeUtils from "@/lib/timeUtils";
+import logUtils from "@/lib/dataUtils";
+import {
+  ButtonCollector,
+  ChatInputCommandCollector,
+  MessageContextMenuCommandCollector,
+  StringSelectMenuCollector,
+} from "@/lib/collecter";
+import { ChatInputCommand } from "./executors/types/ChatInputCommand";
+import { StringSelectMenu } from "./executors/types/StringSelectMenu";
+import { Button } from "./executors/types/Button";
 
 const client = new Client({
   intents: [
@@ -19,138 +32,79 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-import fs from "fs";
-import config from "@/config";
-import timeUtils from "@/lib/timeUtils";
-import logUtils from "@/lib/dataUtils";
+// Attach utilities and config to client
 client.config = config;
-client.functions = {
-  timeUtils: timeUtils,
-  logUtils: logUtils,
-};
+client.functions = { timeUtils, logUtils };
 client.fs = fs;
 
-import {
-  ButtonCollector,
-  ChatInputCommandCollector,
-  MessageContextMenuCommandCollector,
-  StringSelectMenuCollector,
-} from "@/lib/collecter";
-import path from "path";
-import { ChatInputCommand } from "./executors/types/ChatInputCommand";
-import { StringSelectMenu } from "./executors/types/StringSelectMenu";
-import { Button } from "./executors/types/Button";
+// Setup interaction executor collections
 client.interactionExecutorsCollections = {
   chatInputCommands: new Collection<string, ChatInputCommand>(),
   stringSelectMenus: new Collection<string, StringSelectMenu>(),
-  // TODO: ここはMessageContextMenuCommandにする
   messageContextMenuCommands: new Collection<string, ChatInputCommand>(),
   buttons: new Collection<string, Button>(),
 };
+
+// Register collectors
 ChatInputCommandCollector(client);
 StringSelectMenuCollector(client);
 MessageContextMenuCommandCollector(client);
 ButtonCollector(client);
+
+// Dynamically load event files
+const eventDir = path.resolve(__dirname, "events");
 const eventFiles = fs
-  .readdirSync(path.resolve(__dirname, "events"))
+  .readdirSync(eventDir)
   .filter((file) => (file.endsWith(".ts") && !file.endsWith(".d.ts")) || file.endsWith(".js"));
+
 for (const file of eventFiles) {
-  const event = require(path.resolve(__dirname, `./events/${file}`));
-  if (event.once) {
-    try {
-      client.once(event.name, (...args) => event.execute(...args, client));
-    } catch (error) {
-      console.error(
-        `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
-        error
-      );
-    }
-  } else {
-    try {
-      client.on(event.name, (...args) => event.execute(...args, client));
-    } catch (error) {
-      console.error(
-        `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
-        error
-      );
-    }
+  const event = require(path.join(eventDir, file));
+  const handler = (...args: any[]) => event.execute(...args, client);
+  try {
+    event.once ? client.once(event.name, handler) : client.on(event.name, handler);
+  } catch (error) {
+    console.error(
+      `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
+      error
+    );
   }
 }
 
-// TODO:ここ下の3行のコメントアウトを外し、いい感じにする
-//const { rssGet } = require("./lib/rss.cjs");
-
-//cron.schedule("*/1-59 * * * *", async () => {
-/*  console.log("Cron job start");
-  const files = fs.readdirSync("./log/v1/feed");
-  for (const file of files) {
-    const datas = await JSON.parse(
-      fs.readFileSync(`./log/v1/feed/${file}.log`).toString()
-    );
-    datas.forEach(async (data, index) => {
-      console.log(data.url);
-      const items = await rssGet(data.url);
-      const channel = client.channels.cache.get(file.replace(".log", ""));
-      for (const item of items) {
-        if (item.pubDate <= data.lastDate) continue;
-        console.log("send");
-        const embed = new EmbedBuilder()
-          .setTitle(item.title)
-          .setURL(item.link)
-          .setDescription(item.content)
-          .setColor(config.color.success)
-          .setTimestamp();
-        channel.send({ embeds: [embed] });
-        datas[index].lastDate = items[0].pubDate;
-        client.function.logUtils.write(datas, `v1/feed/${file}`);
-      }
-    });
-  }
-});
-*/
-
-// エラー処理 (これ入れないとエラーで落ちる。本当は良くないかもしれない)
-process.on("uncaughtException", (error) => {
-  console.error(`[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}] ${error.stack}`);
+// Error handling
+const sendErrorEmbed = async (title: string, description: string) => {
   const embed = new EmbedBuilder()
-    .setTitle("ERROR - uncaughtException")
-    .setDescription("```\n" + error.stack + "\n```")
+    .setTitle(title)
+    .setDescription("```\n" + description + "\n```")
     .setColor(config.color.error)
     .setTimestamp();
-  client.channels.fetch(config.logch.error).then((channel: Channel | null) => {
-    if (!channel || !(channel instanceof TextChannel)) {
+  try {
+    const channel = await client.channels.fetch(config.logch.error);
+    if (channel && channel instanceof TextChannel) {
+      channel.send({ embeds: [embed] });
+    } else {
       console.error("Error: Log Channel is invalid.");
-      return;
     }
-    channel.send({ embeds: [embed] });
-  });
+  } catch (err) {
+    console.error("Failed to send error embed:", err);
+  }
+};
+
+process.on("uncaughtException", (error) => {
+  const timestamp = client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
+  console.error(`[${timestamp}] ${error.stack}`);
+  sendErrorEmbed("ERROR - uncaughtException", error.stack || String(error));
 });
 
 process.on("unhandledRejection", (reason: any, promise) => {
   const timestamp = client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
   let reasonText = "";
-
   if (reason instanceof Error) {
     reasonText = reason.stack || reason.message;
   } else {
     reasonText = typeof reason === "object" ? JSON.stringify(reason, null, 2) : String(reason);
   }
-
   console.error(`\u001b[31m[${timestamp}] ${reasonText}\u001b[0m`, promise);
-
-  const embed = new EmbedBuilder()
-    .setTitle("ERROR - unhandledRejection")
-    .setDescription("```\n" + reasonText + "\n```")
-    .setColor(config.color.error)
-    .setTimestamp();
-
-  client.channels.fetch(config.logch.error).then((channel: Channel | null) => {
-    if (!channel || !(channel instanceof TextChannel)) {
-      console.error("Error: Log Channel is invalid.");
-      return;
-    }
-    channel.send({ embeds: [embed] });
-  });
+  sendErrorEmbed("ERROR - unhandledRejection", reasonText);
 });
 
 client.login(config.token);
