@@ -44,7 +44,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
   const components = [];
 
-  if (allWords.length > 24) {
+  if (allWords.length > 25) {
     const prevBtn = new ButtonBuilder()
       .setCustomId("tts_dict_remove_page_prev_1")
       .setDisabled(true)
@@ -53,7 +53,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       .setStyle(ButtonStyle.Primary);
 
     const nextBtn = new ButtonBuilder()
-      .setCustomId("tts_dict_remove_page_next_1")
+      .setCustomId("tts_dict_remove_page_next_2")
       .setLabel("Next")
       .setEmoji("▶️")
       .setStyle(ButtonStyle.Primary);

@@ -17,19 +17,19 @@ import { listTtsDictionary } from "@/lib/dataUtils";
 export const name = "tts";
 
 const getPaginationButtons = (
-  type: "speaker" | "dict",
-  page: number,
+  type: string,
+  currentPage: number,
   hasPrev: boolean,
   hasNext: boolean
 ) => [
   new ButtonBuilder()
-    .setCustomId(`tts_${type}_page_prev_${page}`)
+    .setCustomId(`tts_${type}_page_prev_${currentPage - 1}`)
     .setLabel("Previous")
     .setStyle(ButtonStyle.Primary)
     .setEmoji("⬅️")
     .setDisabled(!hasPrev),
   new ButtonBuilder()
-    .setCustomId(`tts_${type}_page_next_${hasNext ? page + 1 : page}`)
+    .setCustomId(`tts_${type}_page_next_${currentPage + 1}`)
     .setLabel("Next")
     .setStyle(ButtonStyle.Primary)
     .setEmoji("➡️")
@@ -39,7 +39,7 @@ const getPaginationButtons = (
 const getSpeakerSelectMenu = (speakers: any[]) =>
   new StringSelectMenuBuilder()
     .setCustomId("tts_speaker_select")
-    .setPlaceholder("Select a speaker...")
+    .setPlaceholder("話者を選択...")
     .addOptions([
       ...speakers.map((speaker) => ({
         label: speaker.name,
@@ -48,7 +48,7 @@ const getSpeakerSelectMenu = (speakers: any[]) =>
       {
         label: "Cancel",
         value: "cancel",
-        description: "Cancel the selection",
+        description: "選択をキャンセル",
       },
     ])
     .setMinValues(1)
@@ -56,8 +56,8 @@ const getSpeakerSelectMenu = (speakers: any[]) =>
 
 const getDictSelectMenu = (words: any[]) =>
   new StringSelectMenuBuilder()
-    .setCustomId("tts_speaker_select")
-    .setPlaceholder("Select a speaker...")
+    .setCustomId("tts_dict_select")
+    .setPlaceholder("単語を選択...")
     .addOptions(
       words.map((word) => ({
         label: word.word,
@@ -123,19 +123,19 @@ export const execute = async (interaction: ButtonInteraction) => {
           : undefined
       );
 
-      if (id.length >= 5 && id[2] === "page") {
-        const page = parseInt(id[4]);
+      if (id.length >= 5 && id[3] === "page") {
+        const page = parseInt(id[5]);
         const pageSize = 25;
         const total = allWords.length;
         let pagedWords: any[] = [];
         let hasPrev = page > 1;
         let hasNext = total > page * pageSize;
 
-        if (id[3] === "next" || id[3] === "prev") {
+        if (id[4] === "next" || id[4] === "prev") {
           pagedWords = allWords.slice((page - 1) * pageSize, page * pageSize);
           components.push(
             new ActionRowBuilder<ButtonBuilder>().addComponents(
-              getPaginationButtons("dict", page, hasPrev, hasNext)
+              getPaginationButtons("dict_remove", page, hasPrev, hasNext)
             )
           );
         }

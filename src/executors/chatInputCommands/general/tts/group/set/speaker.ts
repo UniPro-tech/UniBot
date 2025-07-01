@@ -23,7 +23,7 @@ const createErrorEmbed = (color: number) =>
 
 const createPaginationButtons = () => [
   new ButtonBuilder()
-    .setCustomId("tts_speaker_page_prev")
+    .setCustomId("tts_speaker_page_prev_1")
     .setLabel("Previous")
     .setStyle(ButtonStyle.Primary)
     .setEmoji("⬅️")
