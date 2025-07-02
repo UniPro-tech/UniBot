@@ -5,7 +5,7 @@ import {
   createAudioResource,
   getVoiceConnection,
 } from "@discordjs/voice";
-import { EmbedBuilder, TextChannel, VoiceState } from "discord.js";
+import { EmbedBuilder, TextChannel, VoiceBasedChannel, VoiceState } from "discord.js";
 import { Readable } from "stream";
 import { RPC, Query, Generate } from "voicevox.js";
 
@@ -25,7 +25,10 @@ const sendEmbed = async (
   await channel.send({ embeds: [embed] });
 };
 
-const getCurrentChannel = (oldState: VoiceState, newState: VoiceState) => {
+const getCurrentChannel = (
+  oldState: VoiceState,
+  newState: VoiceState
+): VoiceBasedChannel | null | undefined => {
   if (newState.channel) {
     return newState.guild.members.cache.get(newState.client.user?.id!)?.voice?.channel;
   }
@@ -35,7 +38,11 @@ const getCurrentChannel = (oldState: VoiceState, newState: VoiceState) => {
   return null;
 };
 
-const handleDisconnect = async (oldState: VoiceState, currentChannel: any) => {
+const handleDisconnect = async (
+  oldState: VoiceState,
+  currentChannel: VoiceBasedChannel | null | undefined
+) => {
+  if (!currentChannel || oldState.channel?.id !== currentChannel.id) return;
   const connectionData = await readTtsConnection(oldState.guild.id, undefined, currentChannel.id);
   if (!connectionData) return;
   const connection = getVoiceConnection(oldState.guild.id);
