@@ -1,7 +1,9 @@
 import {
+  ChannelType,
   CommandInteraction,
   EmbedBuilder,
   GuildMember,
+  MessageFlags,
   SlashCommandSubcommandBuilder,
   TextChannel,
 } from "discord.js";
@@ -90,7 +92,21 @@ export const execute = async (interaction: CommandInteraction) => {
     const resource = createAudioResource(audioStream);
     player.play(resource);
 
-    writeTtsConnection(voiceChannel.guild.id, [interaction.channel?.id as string], voiceChannel.id);
+    let textChannel: string[] = [textChannelId];
+    if (interaction.channel?.type !== ChannelType.GuildVoice) {
+      textChannel.push(voiceChannel.id);
+      voiceChannel.send({
+        flags: [MessageFlags.SuppressNotifications],
+        embeds: [
+          new EmbedBuilder({
+            title: "TTSボイスチャンネル接続",
+            description: `このチャンネルに参加したためチャットにも接続しました。\n\nボイスチャンネル: <#${voiceChannel.id}>\nテキストチャンネル: <#${textChannelId}>`,
+            color: config.color.success,
+          }),
+        ],
+      });
+    }
+    writeTtsConnection(voiceChannel.guild.id, textChannel, voiceChannel.id);
   });
 };
 
