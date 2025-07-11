@@ -306,12 +306,6 @@ export const removeTtsDictionary = async (
   id?: string
 ): Promise<void> => {
   try {
-    console.log(
-      `\u001b[33m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} info]Removing TTS dictionary entry: ${word} for user: ${user} in guild: ${guild}\u001b[0m`
-    );
     await prismaClient.ttsDictionary.deleteMany({
       where: { user, guild, word, id },
     });

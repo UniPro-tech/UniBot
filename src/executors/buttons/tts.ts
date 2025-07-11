@@ -54,9 +54,9 @@ const getSpeakerSelectMenu = (speakers: any[]) =>
     .setMinValues(1)
     .setMaxValues(1);
 
-const getDictSelectMenu = (words: any[]) =>
+const getDictSelectMenu = (words: any[], action: string) =>
   new StringSelectMenuBuilder()
-    .setCustomId("tts_dict_select")
+    .setCustomId(`tts_dict_${action}`)
     .setPlaceholder("単語を選択...")
     .addOptions(
       words.map((word) => ({
@@ -141,7 +141,7 @@ export const execute = async (interaction: ButtonInteraction) => {
         }
         components.push(
           new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-            getDictSelectMenu(pagedWords)
+            getDictSelectMenu(pagedWords, id[2])
           )
         );
       }
