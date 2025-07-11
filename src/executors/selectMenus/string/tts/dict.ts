@@ -17,6 +17,7 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
   }
 
   if (action === "remove") {
+    console.log(`Removing TTS dictionary entry: ${selectedValue}`);
     removeTtsDictionary(undefined, undefined, undefined, selectedValue);
     await interaction.reply({
       content: "単語が削除されました。",
