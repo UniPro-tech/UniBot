@@ -81,3 +81,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 - etc
 
 <!-- GitAds-Verify: 8LHQDSXRPPRKTF1MAZBJ8AKDI8XDP4S7 -->
+
+## GitAds Sponsored
+[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=unipro-tech/unibot@github)](https://gitads.dev/v1/ad-track?source=unipro-tech/unibot@github)
