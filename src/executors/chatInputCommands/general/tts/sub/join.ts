@@ -12,6 +12,7 @@ import {
   createAudioResource,
   getVoiceConnection,
   joinVoiceChannel,
+  VoiceConnectionStatus,
 } from "@discordjs/voice";
 import { writeTtsConnection } from "@/lib/dataUtils";
 import { Readable } from "stream";
@@ -107,6 +108,19 @@ export const execute = async (interaction: CommandInteraction) => {
       });
     }
     writeTtsConnection(voiceChannel.guild.id, textChannel, voiceChannel.id);
+  });
+
+  connection.on("stateChange", (oldState, newState) => {
+    console.log(`Voice connection state changed: ${oldState.status} -> ${newState.status}`);
+    if (newState.status === VoiceConnectionStatus.Disconnected) {
+      const embed = createErrorEmbed(
+        "Error - TTSボイスチャンネル切断",
+        "ボイスチャンネルから切断されました。",
+        config.color.error
+      );
+      (interaction.channel! as TextChannel).send({ embeds: [embed] });
+      connection.destroy();
+    }
   });
 };
 
