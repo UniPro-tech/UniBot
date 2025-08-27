@@ -39,8 +39,9 @@
     "@discordjs/rest": "^2.5.1",
     "@discordjs/voice": "^0.18.0",
     "@nakanoaas/uuid58": "^1.0.4",
-    "@prisma/client": "^6.10.1",
+    "@prisma/client": "^6.14.0",
     "@types/node": "^24.0.7",
+    "agenda": "^5.0.0",
     "axios": "^1.10.0",
     "child_process": "^1.0.2",
     "discord-api-types": "^0.38.13",
@@ -55,7 +56,7 @@
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",
-    "prisma": "^6.10.1",
+    "prisma": "^6.14.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }

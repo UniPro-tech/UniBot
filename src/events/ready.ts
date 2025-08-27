@@ -104,6 +104,8 @@ export const execute = async (client: Client) => {
   console.debug(`[debug] Bot is ready and logged in as ${client.user.tag}`);
   await channel.send({ embeds: [embed] });
 
+  await client.agenda.start();
+
   console.log(
     `[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${
       client.user.tag

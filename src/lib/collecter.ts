@@ -91,3 +91,21 @@ export const ButtonCollector = async (client: Client) => {
   }
   console.info(`\u001b[32m===Button Executing Data Loaded===\u001b[0m`);
 };
+
+export const ModalSubmitCollector = async (client: Client) => {
+  console.info(`\u001b[32m===Load Modals Executing Data===\u001b[0m`);
+  client.interactionExecutorsCollections.modalSubmitCommands = new Collection();
+  const commandFiles = fs
+    .readdirSync(path.resolve(__dirname, `../executors/modals`))
+    .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
+  for (const file of commandFiles) {
+    const menuDefine = await import(path.resolve(__dirname, `../executors/modals/${file}`));
+    try {
+      client.interactionExecutorsCollections.modalSubmitCommands.set(menuDefine.name, menuDefine);
+      console.info(`[Init]${menuDefine.name} has been loaded.`);
+    } catch (error) {
+      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
+    }
+  }
+  console.info(`\u001b[32m===Modal Executing Data Loaded===\u001b[0m`);
+};

@@ -4,9 +4,11 @@ import timeUtils from "@/lib/timeUtils";
 import logUtils from "@/lib/dataUtils";
 import { StringSelectMenu } from "@/executors/types/StringSelectMenu";
 import { Button } from "@/executors/types/Button";
+import { ModalSubmitCommand } from "@/executors/types/ModalSubmit";
 
 declare module "discord.js" {
   interface Client {
+    agenda: import("agenda").Agenda;
     fs: typeof import("fs");
     config: typeof import("@/config");
     functions: {
@@ -18,6 +20,7 @@ declare module "discord.js" {
       stringSelectMenus: Collection<string, StringSelectMenu>;
       messageContextMenuCommands: Collection<string, ChatInputCommand>;
       buttons: Collection<string, Button>;
+      modalSubmitCommands: Collection<string, ModalSubmitCommand>;
     };
   }
 }

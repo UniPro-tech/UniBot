@@ -6,6 +6,11 @@ import {
   EmbedBuilder,
   Channel,
   TextChannel,
+  TextBasedChannel,
+  VoiceChannel,
+  ForumChannel,
+  ThreadChannel,
+  DMChannel,
 } from "discord.js";
 import fs from "fs";
 import path from "path";
@@ -16,6 +21,7 @@ import {
   ButtonCollector,
   ChatInputCommandCollector,
   MessageContextMenuCommandCollector,
+  ModalSubmitCollector,
   StringSelectMenuCollector,
 } from "@/lib/collecter";
 import { ChatInputCommand } from "./executors/types/ChatInputCommand";
@@ -32,7 +38,32 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
+import Agenda, { Job } from "agenda";
+import { ModalSubmitCommand } from "./executors/types/ModalSubmit";
+if (!process.env.AGENDA_MONGO_URL) {
+  throw new Error("AGENDA_MONGO_URL is not defined in environment variables.");
+}
+const agenda = new Agenda({ db: { address: process.env.AGENDA_MONGO_URL } });
+
+export interface DiscordMessageJobData {
+  channelId: string;
+  message: string;
+}
+
+agenda.define("send discord message", async (job: Job) => {
+  const { channelId, message } = job.attrs.data as DiscordMessageJobData;
+  const channel = client.channels.cache.get(channelId) as
+    | TextChannel
+    | VoiceChannel
+    | ThreadChannel
+    | DMChannel;
+  if (channel) {
+    await channel.send(message);
+  }
+});
+
 // Attach utilities and config to client
+client.agenda = agenda;
 client.config = config;
 client.functions = { timeUtils, logUtils };
 client.fs = fs;
@@ -43,6 +74,7 @@ client.interactionExecutorsCollections = {
   stringSelectMenus: new Collection<string, StringSelectMenu>(),
   messageContextMenuCommands: new Collection<string, ChatInputCommand>(),
   buttons: new Collection<string, Button>(),
+  modalSubmitCommands: new Collection<string, ModalSubmitCommand>(),
 };
 
 // Register collectors
@@ -50,6 +82,7 @@ ChatInputCommandCollector(client);
 StringSelectMenuCollector(client);
 MessageContextMenuCommandCollector(client);
 ButtonCollector(client);
+ModalSubmitCollector(client);
 
 // Dynamically load event files
 const eventDir = path.resolve(__dirname, "events");
