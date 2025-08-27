@@ -23,7 +23,9 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       .setCustomId("time")
       .setLabel("投稿時間")
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder('例: "every day at 12:00"、 "every Monday at 09:00"')
+      .setPlaceholder(
+        '例: "every day at 12:00"、 "every Monday at 09:00"\n詳しくはhelpコマンドを参照'
+      )
       .setRequired(true);
     const contentInput = new TextInputBuilder()
       .setCustomId("message")
@@ -34,6 +36,14 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
     const contentInputRow = new ActionRowBuilder<TextInputBuilder>().addComponents(contentInput);
     const timeInputRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeInput);
+    const descriptionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
+      new TextInputBuilder()
+        .setCustomId("description")
+        .setLabel("説明 (任意)")
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder("この予約投稿の説明を入力してください (任意)")
+        .setRequired(false)
+    );
 
     modal.addComponents(timeInputRow, contentInputRow);
     await interaction.showModal(modal);
