@@ -20,7 +20,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     .setPlaceholder("例: 2024-12-31 23:59")
     .setRequired(true);
   const contentInput = new TextInputBuilder()
-    .setCustomId("content")
+    .setCustomId("message")
     .setLabel("投稿内容")
     .setStyle(TextInputStyle.Paragraph)
     .setPlaceholder("投稿内容を入力してください")
