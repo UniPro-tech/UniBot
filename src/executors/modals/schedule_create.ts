@@ -1,4 +1,4 @@
-import { ModalSubmitInteraction } from "discord.js";
+import { MessageFlags, ModalSubmitInteraction } from "discord.js";
 
 export const name = "schedule_create";
 
@@ -42,6 +42,6 @@ export const execute = async (interaction: ModalSubmitInteraction) => {
       scheduledTime.getTime(),
       true
     )}に送信するようにスケジュールしました。(ジョブID: ${job.attrs._id})`,
-    ephemeral: true,
+    flags: [MessageFlags.Ephemeral],
   });
 };
