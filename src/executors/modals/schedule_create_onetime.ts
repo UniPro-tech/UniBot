@@ -1,6 +1,6 @@
 import { MessageFlags, ModalSubmitInteraction } from "discord.js";
 
-export const name = "schedule_create";
+export const name = "schedule_create_onetime";
 
 export const execute = async (interaction: ModalSubmitInteraction) => {
   const message = interaction.fields.getTextInputValue("message");

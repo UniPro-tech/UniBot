@@ -35,21 +35,23 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@breejs/later": "^4.2.0",
     "@discordjs/opus": "^0.10.0",
-    "@discordjs/rest": "^2.5.1",
+    "@discordjs/rest": "^2.6.0",
     "@discordjs/voice": "^0.18.0",
     "@nakanoaas/uuid58": "^1.0.4",
     "@prisma/client": "^6.14.0",
-    "@types/node": "^24.0.7",
+    "@types/breejs__later": "^4.1.5",
+    "@types/node": "^24.3.0",
     "agenda": "^5.0.0",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "child_process": "^1.0.2",
-    "discord-api-types": "^0.38.13",
-    "discord.js": "^14.21.0",
+    "discord-api-types": "^0.38.21",
+    "discord.js": "^14.22.1",
     "dotenv": "^16.6.1",
     "fs": "^0.0.1-security",
     "install": "^0.13.0",
-    "node-cron": "^4.1.1",
+    "node-cron": "^4.2.1",
     "rss-parser": "^3.13.0",
     "sodium": "^3.0.2",
     "voicevox.js": "^0.8.1"
@@ -58,6 +60,6 @@
     "@types/node-cron": "^3.0.11",
     "prisma": "^6.14.0",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }
