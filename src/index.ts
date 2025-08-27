@@ -4,11 +4,8 @@ import {
   Collection,
   Partials,
   EmbedBuilder,
-  Channel,
   TextChannel,
-  TextBasedChannel,
   VoiceChannel,
-  ForumChannel,
   ThreadChannel,
   DMChannel,
 } from "discord.js";
@@ -38,7 +35,7 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-import Agenda, { Job } from "agenda";
+import { Agenda, Job } from "@hokify/agenda";
 import { ModalSubmitCommand } from "./executors/types/ModalSubmit";
 if (!process.env.AGENDA_MONGO_URL) {
   throw new Error("AGENDA_MONGO_URL is not defined in environment variables.");

@@ -8,7 +8,7 @@ import { ModalSubmitCommand } from "@/executors/types/ModalSubmit";
 
 declare module "discord.js" {
   interface Client {
-    agenda: import("agenda").Agenda;
+    agenda: import("@hokify/agenda").Agenda;
     fs: typeof import("fs");
     config: typeof import("@/config");
     functions: {
