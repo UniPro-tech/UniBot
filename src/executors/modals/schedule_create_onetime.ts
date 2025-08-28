@@ -32,16 +32,25 @@ export const execute = async (interaction: ModalSubmitInteraction) => {
     return;
   }
 
-  const job = await interaction.client.agenda.schedule(scheduledTime, "send discord message", {
-    channelId: interaction.channelId,
+  const job = await interaction.client.functions.jobManager.defineRemindJob(
+    interaction.id,
+    interaction.client
+  );
+  const data = {
+    channelId: interaction.channelId as string,
     message: message,
-  });
+  };
+  await interaction.client.functions.jobManager.scheduleRemindJob(
+    interaction.id,
+    data,
+    scheduledTime.toISOString()
+  );
 
   await interaction.reply({
     content: `メッセージを${interaction.client.functions.timeUtils.timeToJSTstamp(
       scheduledTime.getTime(),
       true
-    )}に送信するようにスケジュールしました。(ジョブID: ${job.attrs._id})`,
+    )}に送信するようにスケジュールしました。(ジョブID: ${interaction.id})`,
     flags: [MessageFlags.Ephemeral],
   });
 };

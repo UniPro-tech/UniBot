@@ -14,6 +14,7 @@ declare module "discord.js" {
     functions: {
       timeUtils: typeof timeUtils;
       logUtils: typeof logUtils;
+      jobManager: typeof import("@/lib/jobManager").default;
     };
     interactionExecutorsCollections: {
       chatInputCommands: Collection<string, ChatInputCommand>;

@@ -105,6 +105,8 @@ export const execute = async (client: Client) => {
   await channel.send({ embeds: [embed] });
 
   await client.agenda.start();
+  await client.agenda.now("purge agenda");
+  client.agenda.every("0 0 * * *", "purge agenda");
 
   console.log(
     `[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${

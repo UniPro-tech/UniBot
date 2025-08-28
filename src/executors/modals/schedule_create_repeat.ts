@@ -15,13 +15,18 @@ export const execute = async (interaction: ModalSubmitInteraction) => {
     return;
   }
 
-  const job = await interaction.client.agenda.every(cronText, "send discord message", {
-    channelId: interaction.channelId,
+  const job = await interaction.client.functions.jobManager.defineRemindJob(
+    interaction.id,
+    interaction.client
+  );
+  const data = {
+    channelId: interaction.channelId as string,
     message: message,
-  });
+  };
+  await interaction.client.functions.jobManager.cronRemindJob(interaction.id, data, cronText);
 
   await interaction.reply({
-    content: `メッセージを${time}に送信するようにスケジュールしました。(ジョブID: ${job.attrs._id})`,
+    content: `メッセージを${time}に送信するようにスケジュールしました。(ジョブID: ${interaction.id})`,
     flags: [MessageFlags.Ephemeral],
   });
 };
