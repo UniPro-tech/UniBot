@@ -34,10 +34,10 @@ const client = new Client({
 
 import { Agenda } from "@hokify/agenda";
 import { ModalSubmitCommand } from "./executors/types/ModalSubmit";
-if (!process.env.AGENDA_MONGO_URL) {
-  throw new Error("AGENDA_MONGO_URL is not defined in environment variables.");
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is not defined in environment variables.");
 }
-export const agenda = new Agenda({ db: { address: process.env.AGENDA_MONGO_URL } });
+export const agenda = new Agenda({ db: { address: process.env.DATABASE_URL } });
 
 import jobManager from "./lib/jobManager";
 
