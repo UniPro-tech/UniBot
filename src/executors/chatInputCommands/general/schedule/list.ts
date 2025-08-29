@@ -1,10 +1,10 @@
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
-  MessageFlags,
   SlashCommandSubcommandBuilder,
 } from "discord.js";
 import config from "@/config";
+import cronstrue from "cronstrue";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("list")
@@ -13,9 +13,10 @@ export const data = new SlashCommandSubcommandBuilder()
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply({ ephemeral: true });
   interaction.client.agenda.now("purge agenda");
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
   const jobs = await interaction.client.agenda.jobs({
     name: /send-discord-message id:.*/,
+    "data.channelId": interaction.channel?.id.toString(),
   });
 
   if (!jobs.length) {
@@ -31,11 +32,15 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     .setTimestamp();
 
   jobs.forEach((job) => {
+    const jobId = job.attrs.name?.toString().trim().split("id:")[1] || "不明";
+    const message = (job.attrs.data as { channelId: string; message: string })?.message || "不明";
+    const nextRunAt = job.attrs.nextRunAt?.getTime() || 0;
+    const cronInterval = job.attrs.repeatInterval?.toString() || null;
     embed.addFields({
-      name: `ジョブID: ${job.attrs.name?.toString().trim().split("id:")[1] || "不明"}`,
-      value: `内容: ${
-        (job.attrs.data as { channelId: string; message: string })?.message || "不明"
-      }\n投稿予定: <t:${Math.floor((job.attrs.nextRunAt?.getTime() ?? 0) / 1000)}:F>`,
+      name: `ジョブID: ${jobId}`,
+      value: `メッセージ: ${message}\n次回実行予定: <t:${Math.floor(
+        nextRunAt / 1000
+      )}:F>\n繰り返し: ${cronInterval ? cronstrue.toString(cronInterval) : "いいえ"}`,
     });
   });
 

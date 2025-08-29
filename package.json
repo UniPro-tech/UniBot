@@ -46,6 +46,7 @@
     "@types/node": "^24.3.0",
     "axios": "^1.11.0",
     "child_process": "^1.0.2",
+    "cronstrue": "^3.2.0",
     "discord-api-types": "^0.38.21",
     "discord.js": "^14.22.1",
     "dotenv": "^16.6.1",

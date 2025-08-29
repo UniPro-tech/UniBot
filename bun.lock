@@ -10,11 +10,12 @@
         "@discordjs/voice": "^0.18.0",
         "@hokify/agenda": "^6.3.0",
         "@nakanoaas/uuid58": "^1.0.4",
-        "@prisma/client": "^6.14.0",
+        "@prisma/client": "^6.15.0",
         "@types/breejs__later": "^4.1.5",
         "@types/node": "^24.3.0",
         "axios": "^1.11.0",
         "child_process": "^1.0.2",
+        "cronstrue": "^3.2.0",
         "discord-api-types": "^0.38.21",
         "discord.js": "^14.22.1",
         "dotenv": "^16.6.1",
@@ -27,7 +28,7 @@
       },
       "devDependencies": {
         "@types/node-cron": "^3.0.11",
-        "prisma": "^6.14.0",
+        "prisma": "^6.15.0",
         "tsconfig-paths": "^4.2.0",
         "typescript": "^5.9.2",
       },
@@ -285,6 +286,8 @@
     "console-control-strings": ["console-control-strings@1.1.0", "", {}, "sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ=="],
 
     "cron-parser": ["cron-parser@4.9.0", "", { "dependencies": { "luxon": "^3.2.1" } }, "sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q=="],
+
+    "cronstrue": ["cronstrue@3.2.0", "", { "bin": { "cronstrue": "bin/cli.js" } }, "sha512-CqpqV5bCei+jmKyIw2Wihz+npXDuSkeExWCItEn5hlpD8+QFMXUU2YW5W3Vh/hFxWwzWhguoGXm5gl1os+L2Hw=="],
 
     "date.js": ["date.js@0.3.3", "", { "dependencies": { "debug": "~3.1.0" } }, "sha512-HgigOS3h3k6HnW011nAb43c5xx5rBXk8P2v/WIT9Zv4koIaVXiH2BURguI78VVp+5Qc076T7OR378JViCnZtBw=="],
 
