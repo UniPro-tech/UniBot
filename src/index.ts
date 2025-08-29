@@ -4,7 +4,6 @@ import {
   Collection,
   Partials,
   EmbedBuilder,
-  Channel,
   TextChannel,
 } from "discord.js";
 import fs from "fs";
@@ -16,6 +15,7 @@ import {
   ButtonCollector,
   ChatInputCommandCollector,
   MessageContextMenuCommandCollector,
+  ModalSubmitCollector,
   StringSelectMenuCollector,
 } from "@/lib/collecter";
 import { ChatInputCommand } from "./executors/types/ChatInputCommand";
@@ -32,9 +32,19 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
+import { Agenda } from "@hokify/agenda";
+import { ModalSubmitCommand } from "./executors/types/ModalSubmit";
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is not defined in environment variables.");
+}
+export const agenda = new Agenda({ db: { address: process.env.DATABASE_URL } });
+
+import jobManager from "./lib/jobManager";
+
 // Attach utilities and config to client
+client.agenda = agenda;
 client.config = config;
-client.functions = { timeUtils, logUtils };
+client.functions = { timeUtils, logUtils, jobManager };
 client.fs = fs;
 
 // Setup interaction executor collections
@@ -43,13 +53,43 @@ client.interactionExecutorsCollections = {
   stringSelectMenus: new Collection<string, StringSelectMenu>(),
   messageContextMenuCommands: new Collection<string, ChatInputCommand>(),
   buttons: new Collection<string, Button>(),
+  modalSubmitCommands: new Collection<string, ModalSubmitCommand>(),
 };
+
+agenda.on("ready", () => {
+  console.log(
+    `\u001b[32m[${client.functions.timeUtils.timeToJSTstamp(
+      Date.now(),
+      true
+    )}] Agenda started successfully.\u001b[0m`
+  );
+});
+
+agenda.on("error", (error) => {
+  console.error(
+    `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(
+      Date.now(),
+      true
+    )}] Agenda connection error: ${error}\u001b[0m`
+  );
+});
+
+agenda.define("purge agenda", async (job, done) => {
+  const jobs = await agenda.jobs();
+  jobs.forEach((job) => {
+    console.log(`List job: ${job.attrs.name} - Next Run At: ${job.attrs.nextRunAt}`);
+    if (job.attrs.nextRunAt == null) console.log(`This job is finished and can be removed.`);
+    if (job.attrs.nextRunAt == null) job.remove();
+  });
+  done();
+});
 
 // Register collectors
 ChatInputCommandCollector(client);
 StringSelectMenuCollector(client);
 MessageContextMenuCommandCollector(client);
 ButtonCollector(client);
+ModalSubmitCollector(client);
 
 // Dynamically load event files
 const eventDir = path.resolve(__dirname, "events");

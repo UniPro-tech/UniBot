@@ -1,6 +1,7 @@
 import { Client, EmbedBuilder, ActivityType, ActivityOptions, TextChannel } from "discord.js";
 import { registerAllCommands } from "@/lib/executorsRegister";
 import path from "path";
+import { redefineJobs } from "@/lib/jobManager";
 
 export const name = "ready";
 
@@ -103,6 +104,11 @@ export const execute = async (client: Client) => {
 
   console.debug(`[debug] Bot is ready and logged in as ${client.user.tag}`);
   await channel.send({ embeds: [embed] });
+
+  await client.agenda.start();
+  await client.agenda.now("purge agenda");
+  client.agenda.every("0 0 * * *", "purge agenda");
+  await redefineJobs(client);
 
   console.log(
     `[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${
