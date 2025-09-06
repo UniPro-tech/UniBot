@@ -13,21 +13,21 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
 
     if (!executor) {
       logger.error(
-        { context: { customId: interaction.customId } },
+        { extra_context: { customId: interaction.customId } },
         "No executor found for this StringSelectMenu"
       );
       return;
     }
 
     logger.info(
-      { context: { customId: interaction.customId } },
+      { extra_context: { customId: interaction.customId } },
       "StringSelectMenu execution started"
     );
     await executor.execute(interaction);
   } catch (error) {
     const errorMsg = (error as Error).toString();
     logger.error(
-      { context: { customId: interaction.customId }, stack_trace: (error as Error).stack },
+      { extra_context: { customId: interaction.customId }, stack_trace: (error as Error).stack },
       "Error executing StringSelectMenu",
       error
     );

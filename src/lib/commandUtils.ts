@@ -22,7 +22,7 @@ export const addSubCommand = (
   data: SlashCommandBuilder | SlashCommandSubcommandGroupBuilder
 ) => {
   const logger = loggingSystem.getLogger({ function: "addSubCommand" });
-  logger.info({ context: { command: name } }, `Adding SubCommands`);
+  logger.info({ extra_context: { command: name } }, `Adding SubCommands`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
@@ -36,9 +36,9 @@ export const addSubCommand = (
     } else */
     data.addSubcommand(command.data as SlashCommandSubcommandBuilder);
 
-    logger.info({ context: { command: command.data.name } }, "Subcommand has been added.");
+    logger.info({ extra_context: { command: command.data.name } }, "Subcommand has been added.");
   }
-  logger.info({ context: { command: name } }, `Added SubCommands`);
+  logger.info({ extra_context: { command: name } }, `Added SubCommands`);
   return data;
 };
 
@@ -57,7 +57,7 @@ export const subCommandHandling = (
   if (!collection) {
     collection = new Collection<string, ChatInputCommand>();
   }
-  logger.info({ context: { command: name } }, `Load SubCommand Executing Data`);
+  logger.info({ extra_context: { command: name } }, `Load SubCommand Executing Data`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
@@ -68,11 +68,11 @@ export const subCommandHandling = (
     )) as ChatInputCommand;
     try {
       collection.set(command.data.name, command);
-      logger.info({ context: { command: command.data.name } }, "Subcommand has been loaded.");
+      logger.info({ extra_context: { command: command.data.name } }, "Subcommand has been loaded.");
     } catch (error) {
       logger.error(
         {
-          context: { command: command.data.name },
+          extra_context: { command: command.data.name },
           error,
           stack_trace: error instanceof Error ? error.stack : undefined,
         },
@@ -86,7 +86,7 @@ export const subCommandHandling = (
 
 export const addSubCommandGroup = (name: string, data: SlashCommandBuilder) => {
   const logger = loggingSystem.getLogger({ function: "addSubCommandGroup" });
-  logger.info({ context: { command: name } }, `Adding SubCommandGroups`);
+  logger.info({ extra_context: { command: name } }, `Adding SubCommandGroups`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
     .filter((file) => (file.endsWith(".js") || file.endsWith(".ts")) && !file.endsWith(".d.ts"));
@@ -100,9 +100,12 @@ export const addSubCommandGroup = (name: string, data: SlashCommandBuilder) => {
     } else */
     data.addSubcommandGroup(command.data as SlashCommandSubcommandGroupBuilder);
 
-    logger.info({ context: { command: command.data.name } }, "SubCommandGroup has been added.");
+    logger.info(
+      { extra_context: { command: command.data.name } },
+      "SubCommandGroup has been added."
+    );
   }
-  logger.info({ context: { command: name } }, `Added ${name}'s SubCommandGroups`);
+  logger.info({ extra_context: { command: name } }, `Added ${name}'s SubCommandGroups`);
   return data;
 };
 
@@ -114,7 +117,7 @@ export const subSelectMenusHandling = (
     collection = new Collection<string, StringSelectMenu>();
   }
   const logger = loggingSystem.getLogger({ function: "subSelectMenusHandling" });
-  logger.info({ context: { command: name } }, `Load SelectMenu Executing Data`);
+  logger.info({ extra_context: { command: name } }, `Load SelectMenu Executing Data`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/selectMenus/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
@@ -125,11 +128,11 @@ export const subSelectMenusHandling = (
     )) as StringSelectMenu;
     try {
       collection.set(command.name, command);
-      logger.info({ context: { command: command.name } }, "SelectMenu has been loaded.");
+      logger.info({ extra_context: { command: command.name } }, "SelectMenu has been loaded.");
     } catch (error) {
       logger.error(
         {
-          context: { command: command.name },
+          extra_context: { command: command.name },
           error,
           stack_trace: error instanceof Error ? error.stack : undefined,
         },
@@ -137,7 +140,7 @@ export const subSelectMenusHandling = (
       );
     }
   }
-  logger.info({ context: { command: name } }, `Command loaded`);
+  logger.info({ extra_context: { command: name } }, `Command loaded`);
   return collection;
 };
 

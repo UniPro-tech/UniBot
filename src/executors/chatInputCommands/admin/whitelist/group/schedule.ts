@@ -25,7 +25,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
 
   if (!command) {
     logger.error(
-      { context: { command: interaction.commandName, subcommand } },
+      { extra_context: { command: interaction.commandName, subcommand } },
       "No command handler found"
     );
     return;
@@ -34,13 +34,13 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   try {
     await command.execute(interaction);
     logger.info(
-      { context: { command: interaction.commandName, subcommand } },
+      { extra_context: { command: interaction.commandName, subcommand } },
       "Command executed successfully"
     );
   } catch (error) {
     logger.error(
       {
-        context: { command: interaction.commandName, subcommand },
+        extra_context: { command: interaction.commandName, subcommand },
         stack_trace: (error as Error).stack,
       },
       "Command execution failed",

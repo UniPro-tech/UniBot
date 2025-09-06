@@ -114,7 +114,7 @@ export const execute = async (interaction: CommandInteraction) => {
 
   connection.on("stateChange", (oldState, newState) => {
     logger.info(
-      { context: { guild: interaction.guild!.id, oldState, newState } },
+      { extra_context: { guild: interaction.guild!.id, oldState, newState } },
       "Voice connection state changed"
     );
     if (newState.status === VoiceConnectionStatus.Disconnected) {

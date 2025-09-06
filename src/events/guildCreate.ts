@@ -13,7 +13,7 @@ export const execute = async (guild: Guild, client: Client) => {
     .setFooter({ text: String(guild.id) });
   if (!channel || !(channel instanceof TextChannel)) {
     logger.error(
-      { context: { channelId: client.config.logch.guildCreate } },
+      { extra_context: { channelId: client.config.logch.guildCreate } },
       "GuildCreateLog channel not found or is not a text channel."
     );
     return;

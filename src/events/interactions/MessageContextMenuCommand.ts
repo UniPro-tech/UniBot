@@ -8,7 +8,7 @@ const MessageContextMenuCommandExecute = async (
 ) => {
   const logger = loggingSystem.getLogger({ function: "MessageContextMenuCommandExecute" });
   logger.info(
-    { context: { commandName: interaction.commandName } },
+    { extra_context: { commandName: interaction.commandName } },
     "MessageContextMenuCommand execution started"
   );
 
@@ -18,7 +18,7 @@ const MessageContextMenuCommandExecute = async (
 
   if (!command) {
     logger.error(
-      { context: { commandName: interaction.commandName } },
+      { extra_context: { commandName: interaction.commandName } },
       "No command handler found for this command"
     );
     return;
@@ -32,7 +32,7 @@ const MessageContextMenuCommandExecute = async (
 
     await interaction.reply({ embeds: [embed] });
     logger.info(
-      { context: { commandName: interaction.commandName } },
+      { extra_context: { commandName: interaction.commandName } },
       "Blocked command execution in DM"
     );
     return;
@@ -41,7 +41,7 @@ const MessageContextMenuCommandExecute = async (
   try {
     await command.execute(interaction);
     logger.info(
-      { context: { commandName: interaction.commandName } },
+      { extra_context: { commandName: interaction.commandName } },
       "MessageContextMenuCommand executed successfully"
     );
 
@@ -76,7 +76,10 @@ const MessageContextMenuCommandExecute = async (
     if (logChannel) await logChannel.send({ embeds: [logEmbed] });
   } catch (error) {
     logger.error(
-      { context: { commandName: interaction.commandName }, stack_trace: (error as Error).stack },
+      {
+        extra_context: { commandName: interaction.commandName },
+        stack_trace: (error as Error).stack,
+      },
       "Command execution failed",
       error
     );

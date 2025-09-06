@@ -11,10 +11,10 @@ export const execute = async (client: Client) => {
   const logFile = await client.functions.logUtils.readConfig("status");
   await registerAllCommands(client);
 
-  logger.debug({ context: { log_file: logFile } }, "Bot is ready");
+  logger.debug({ extra_context: { log_file: logFile } }, "Bot is ready");
 
   if (!client.user) {
-    logger.error({ context: { service: "ready" } }, "Client user is not defined");
+    logger.error({ extra_context: { service: "ready" } }, "Client user is not defined");
     process.exit(1);
   }
 
@@ -55,7 +55,7 @@ export const execute = async (client: Client) => {
   const channel = client.channels.cache.get(client.config.logch.ready);
   if (!channel || !(channel instanceof TextChannel)) {
     logger.error(
-      { context: { channel: client.config.logch.ready } },
+      { extra_context: { channel: client.config.logch.ready } },
       "Log channel is not defined or not a text channel"
     );
     return;

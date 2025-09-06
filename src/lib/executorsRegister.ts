@@ -53,7 +53,7 @@ async function putToDiscordWithDiffCheck(
   if (array.length !== existing.length) {
     logger.info(
       {
-        context: {
+        extra_context: {
           guildId: guild ?? "global",
           existingCount: existing.length,
           newCount: array.length,
@@ -77,7 +77,7 @@ async function putToDiscordWithDiffCheck(
   if (!shouldUpdate) {
     logger.info(
       {
-        context: {
+        extra_context: {
           guildId: guild ?? "global",
           commandCount: array.length,
         },
@@ -90,7 +90,7 @@ async function putToDiscordWithDiffCheck(
   await rest.put(route, { body: array });
   logger.info(
     {
-      context: {
+      extra_context: {
         guildId: guild ?? "global",
         commandCount: array.length,
       },
@@ -125,12 +125,12 @@ export const registerAllCommands = async (client: Client) => {
       arr.push(data);
       commandCount++;
       logger.info(
-        { context: { file, commandName: data.name, command_type: typeLabel } },
+        { extra_context: { file, commandName: data.name, command_type: typeLabel } },
         `Loaded command`
       );
     } catch (err) {
       logger.error(
-        { context: { file, command_type: typeLabel }, stack_trace: (err as Error).stack },
+        { extra_context: { file, command_type: typeLabel }, stack_trace: (err as Error).stack },
         `Failed to load command`,
         err
       );
@@ -178,15 +178,18 @@ export const registerAllCommands = async (client: Client) => {
   // --- 実行
   try {
     logger.info(
-      { context: { command_count: commandCount } },
+      { extra_context: { command_count: commandCount } },
       `Starting command registration process...`
     );
     await putToDiscordWithDiffCheck(client, rest, adminGuildCommands, testGuild);
     await putToDiscordWithDiffCheck(client, rest, globalCommands);
-    logger.info({ context: { command_count: commandCount } }, `Command registration completed.`);
+    logger.info(
+      { extra_context: { command_count: commandCount } },
+      `Command registration completed.`
+    );
   } catch (err) {
     logger.error(
-      { context: { command_count: commandCount }, stack_trace: (err as Error).stack, err },
+      { extra_context: { command_count: commandCount }, stack_trace: (err as Error).stack, err },
       `Command registration failed.`,
       err
     );

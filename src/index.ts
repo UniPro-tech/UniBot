@@ -105,7 +105,7 @@ for (const file of eventFiles) {
     event.once ? client.once(event.name, handler) : client.on(event.name, handler);
   } catch (error) {
     logger.error(
-      { stack_trace: (error as Error).stack, context: { event, file } },
+      { stack_trace: (error as Error).stack, extra_context: { event, file } },
       "Failed to load event."
     );
   }
@@ -125,7 +125,7 @@ const sendErrorEmbed = async (title: string, description: string) => {
       channel.send({ embeds: [embed] });
     } else {
       logger.error(
-        { context: { channelId: config.logch.error, channel } },
+        { extra_context: { channelId: config.logch.error, channel } },
         "Error log channel not found or is not a text channel."
       );
     }
@@ -148,7 +148,7 @@ process.on("unhandledRejection", (reason: any, promise) => {
   } else {
     reasonText = typeof reason === "object" ? JSON.stringify(reason, null, 2) : String(reason);
   }
-  logger.error({ context: { reason, promise } }, `An unhandledRejection occurred`);
+  logger.error({ extra_context: { reason, promise } }, `An unhandledRejection occurred`);
   sendErrorEmbed("ERROR - unhandledRejection", reasonText);
 });
 

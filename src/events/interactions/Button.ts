@@ -11,18 +11,21 @@ const ButtonExecute = async (interaction: ButtonInteraction) => {
 
     if (!executionDefine) {
       logger.error(
-        { context: { customId: interaction.customId } },
+        { extra_context: { customId: interaction.customId } },
         "No execution definition found"
       );
       return;
     }
 
-    logger.info({ context: { customId: interaction.customId } }, "Button interaction executed");
+    logger.info(
+      { extra_context: { customId: interaction.customId } },
+      "Button interaction executed"
+    );
     await executionDefine.execute(interaction);
   } catch (error) {
     const errorMsg = (error as Error).toString();
     logger.error(
-      { context: { customId: interaction.customId }, stack_trace: (error as Error).stack },
+      { extra_context: { customId: interaction.customId }, stack_trace: (error as Error).stack },
       "Button interaction execution failed",
       error
     );

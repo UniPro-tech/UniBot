@@ -66,7 +66,7 @@ const handleDisconnect = async (
   ) as TextChannel;
   if (!logChannel) {
     logger.error(
-      { context: { channel: oldState.client.config.logch.command } },
+      { extra_context: { channel: oldState.client.config.logch.command } },
       "Log channel not found."
     );
     return;

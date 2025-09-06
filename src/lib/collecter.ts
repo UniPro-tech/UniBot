@@ -11,7 +11,7 @@ export const ChatInputCommandCollector = async (client: Client) => {
   client.interactionExecutorsCollections.chatInputCommands = new Collection();
   const commandFolders = fs.readdirSync(path.resolve(__dirname, `../executors/chatInputCommands`));
   for (const folder of commandFolders) {
-    logger.info({ context: { folder } }, `Started loading commands`);
+    logger.info({ extra_context: { folder } }, `Started loading commands`);
     const commandFiles = fs
       .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${folder}`))
       .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
@@ -22,11 +22,14 @@ export const ChatInputCommandCollector = async (client: Client) => {
       ));
       try {
         client.interactionExecutorsCollections.chatInputCommands.set(command.data.name, command);
-        logger.info({ context: { commandName: command.data.name } }, `Command has been loaded.`);
+        logger.info(
+          { extra_context: { commandName: command.data.name } },
+          `Command has been loaded.`
+        );
       } catch (error) {
         logger.error(
           {
-            context: { commandName: command.data.name },
+            extra_context: { commandName: command.data.name },
             error: error,
             stack_trace: (error as Error).stack,
           },
@@ -52,7 +55,7 @@ export const StringSelectMenuCollector = async (client: Client) => {
     );
     try {
       client.interactionExecutorsCollections.stringSelectMenus.set(menuDefine.name, menuDefine);
-      logger.info({ context: { command: menuDefine.name } }, `Command has been loaded.`);
+      logger.info({ extra_context: { command: menuDefine.name } }, `Command has been loaded.`);
     } catch (error) {
       logger.error(
         { stack_trace: (error as Error).stack, error: (error as Error).message },
@@ -65,7 +68,7 @@ export const StringSelectMenuCollector = async (client: Client) => {
 
 export const MessageContextMenuCommandCollector = async (client: Client) => {
   const logger = loggingSystem.getLogger({ function: "MessageContextMenuCommandCollector" });
-  logger.info("Load MessageContextMenuCommand Executing Data");
+  logger.info("Load Messageextra_contextMenuCommand Executing Data");
   client.interactionExecutorsCollections.messageContextMenuCommands = new Collection();
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/messageContextMenuCommands`))
@@ -79,10 +82,10 @@ export const MessageContextMenuCommandCollector = async (client: Client) => {
         menuDefine.name,
         menuDefine
       );
-      logger.info({ context: { command: menuDefine.name } }, `Command has been loaded.`);
+      logger.info({ extra_context: { command: menuDefine.name } }, `Command has been loaded.`);
     } catch (error) {
       logger.error(
-        { stack_trace: (error as Error).stack, error, context: { command: menuDefine.name } },
+        { stack_trace: (error as Error).stack, error, extra_context: { command: menuDefine.name } },
         (error as Error).message
       );
     }
@@ -101,11 +104,11 @@ export const ButtonCollector = async (client: Client) => {
     const menuDefine = await import(path.resolve(__dirname, `../executors/buttons/${file}`));
     try {
       client.interactionExecutorsCollections.buttons.set(menuDefine.name, menuDefine);
-      logger.info({ context: { command: menuDefine.name } }, `Command has been loaded.`);
+      logger.info({ extra_context: { command: menuDefine.name } }, `Command has been loaded.`);
     } catch (error) {
       logger.error(
         {
-          context: { command: menuDefine.name },
+          extra_context: { command: menuDefine.name },
           stack_trace: (error as Error).stack,
           error: error as Error,
         },
@@ -127,13 +130,13 @@ export const ModalSubmitCollector = async (client: Client) => {
     const menuDefine = await import(path.resolve(__dirname, `../executors/modals/${file}`));
     try {
       client.interactionExecutorsCollections.modalSubmitCommands.set(menuDefine.name, menuDefine);
-      logger.info({ context: { command: menuDefine.name } }, `Command has been loaded.`);
+      logger.info({ extra_context: { command: menuDefine.name } }, `Command has been loaded.`);
     } catch (error) {
       logger.error(
         {
           stack_trace: (error as Error).stack,
           error: error as Error,
-          context: { command: menuDefine.name },
+          extra_context: { command: menuDefine.name },
         },
         (error as Error).message
       );

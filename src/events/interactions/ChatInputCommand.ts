@@ -7,7 +7,7 @@ import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction) => {
   const logger = loggingSystem.getLogger({ function: "ChatInputCommandExecute" });
   logger.info(
-    { context: { commandName: interaction.commandName } },
+    { extra_context: { commandName: interaction.commandName } },
     "ChatInputCommand execution started"
   );
 
@@ -16,7 +16,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
   );
   if (!command) {
     logger.error(
-      { context: { commandName: interaction.commandName } },
+      { extra_context: { commandName: interaction.commandName } },
       "No command handler found for this command"
     );
     return;
@@ -30,7 +30,7 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
 
     await interaction.reply({ embeds: [embed] });
     logger.info(
-      { context: { commandName: interaction.commandName } },
+      { extra_context: { commandName: interaction.commandName } },
       "Blocked command execution in DM"
     );
     return;
@@ -41,7 +41,10 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
     await writeChatInputCommandInteractionLog(interaction);
   } catch (error) {
     logger.error(
-      { context: { commandName: interaction.commandName }, stack_trace: (error as Error).stack },
+      {
+        extra_context: { commandName: interaction.commandName },
+        stack_trace: (error as Error).stack,
+      },
       "Command execution failed",
       error
     );
