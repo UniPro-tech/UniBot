@@ -191,7 +191,7 @@ export const registerAllCommands = async (client: Client) => {
     );
   } catch (err) {
     logger.error(
-      { extra_context: { command_count: commandCount }, stack_trace: (err as Error).stack, err },
+      { extra_context: { command_count: commandCount }, stack_trace: (err as Error).stack },
       `Command registration failed.`,
       err
     );
