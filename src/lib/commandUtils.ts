@@ -82,7 +82,7 @@ export const subCommandHandling = (
       );
     }
   }
-  logger.info({ service: "CommandUtils", name }, `${name} loaded`);
+  logger.info({ extra_context: { command_name: name } }, `Command loaded`);
   return collection;
 };
 
