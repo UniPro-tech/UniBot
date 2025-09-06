@@ -9,7 +9,7 @@ import {
 import { addSubCommand, addSubCommandGroup, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const handlingCommands = subCommandHandling(
   "general/tts/group",
@@ -43,7 +43,8 @@ const replyWithError = async (
 };
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "general/tts" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "general/tts" });
   if (!interaction.inGuild()) {
     await replyWithError(
       interaction,

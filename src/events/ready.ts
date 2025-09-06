@@ -2,12 +2,13 @@ import { Client, EmbedBuilder, ActivityType, ActivityOptions, TextChannel } from
 import { registerAllCommands } from "@/lib/executorsRegister";
 import path from "path";
 import { redefineJobs } from "@/lib/jobManager";
-import { loggingSystem } from "..";
+import { ALStorage, loggingSystem } from "..";
 
 export const name = "ready";
 
 export const execute = async (client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "ready" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ready" });
   const logFile = await client.functions.logUtils.readConfig("status");
   await registerAllCommands(client);
 

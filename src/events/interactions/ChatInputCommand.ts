@@ -1,11 +1,16 @@
 import config from "@/config";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 import { writeChatInputCommandInteractionLog } from "@/lib/logger";
 import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 
 const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "ChatInputCommandExecute" });
+  const ctx = {
+    ...ALStorage.getStore(),
+    user_id: interaction.user.id,
+    context: { discord: { guild: interaction.guild?.id, channel: interaction.channel?.id } },
+  };
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ChatInputCommandExecute" });
   logger.info(
     { extra_context: { commandName: interaction.commandName } },
     "ChatInputCommand execution started"
@@ -37,8 +42,10 @@ const ChatInputCommandExecute = async (interaction: ChatInputCommandInteraction)
   }
 
   try {
-    await command.execute(interaction);
-    await writeChatInputCommandInteractionLog(interaction);
+    ALStorage.run(ctx, async () => {
+      await command.execute(interaction);
+      await writeChatInputCommandInteractionLog(interaction);
+    });
   } catch (error) {
     logger.error(
       {

@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import { ChatInputCommand } from "@/executors/types/ChatInputCommand";
 import { ContextMenuCommand } from "@/executors/types/ContextMenuCommand";
-import { loggingSystem } from "..";
+import { ALStorage, loggingSystem } from "..";
 
 /**
  * 差分比較用にフィールドを絞って整形
@@ -38,7 +38,8 @@ async function putToDiscordWithDiffCheck(
   array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
   guild?: string
 ) {
-  const logger = loggingSystem.getLogger({ function: "putToDiscordWithDiffCheck" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "putToDiscordWithDiffCheck" });
   const route = guild
     ? Routes.applicationGuildCommands(client.application?.id as string, guild)
     : Routes.applicationCommands(client.application?.id as string);
@@ -103,7 +104,8 @@ async function putToDiscordWithDiffCheck(
  * コマンド登録関数（チャット入力＋右クリック含む）
  */
 export const registerAllCommands = async (client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "registerAllCommands" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "registerAllCommands" });
   const config = client.config;
   const token = config.token;
   const testGuild = config.dev.testGuild;

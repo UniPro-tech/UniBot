@@ -4,7 +4,7 @@ import { removeTtsDictionary } from "@/lib/dataUtils";
 export const name = "dict";
 
 export const execute = async (interaction: StringSelectMenuInteraction) => {
-  const [, , action] = interaction.customId.split("_");
+  const action = interaction.customId.split("_")[2];
   const selectedValue = interaction.values[0];
 
   if (selectedValue === "cancel") {

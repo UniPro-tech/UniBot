@@ -8,7 +8,7 @@ import {
 import { EmbedBuilder, TextChannel, VoiceBasedChannel, VoiceState } from "discord.js";
 import { Readable } from "stream";
 import { RPC, Query, Generate } from "voicevox.js";
-import { loggingSystem } from "..";
+import { ALStorage, loggingSystem } from "..";
 
 export const name = "voiceStateUpdate";
 
@@ -43,7 +43,12 @@ const handleDisconnect = async (
   oldState: VoiceState,
   currentChannel: VoiceBasedChannel | null | undefined
 ) => {
-  const logger = loggingSystem.getLogger({ function: "handleDisconnect" });
+  const ctx = {
+    ...ALStorage.getStore(),
+    user_id: oldState.member?.user.id,
+    context: { discord: { guild: oldState.guild.id, channel: oldState.channel?.id } },
+  };
+  const logger = loggingSystem.getLogger({ ...ctx, function: "handleDisconnect" });
   if (!currentChannel || oldState.channel?.id !== currentChannel.id) return;
   const connectionData = await readTtsConnection(oldState.guild.id, undefined, currentChannel.id);
   if (!connectionData) return;

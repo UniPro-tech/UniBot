@@ -1,12 +1,17 @@
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 import { EmbedBuilder, MessageContextMenuCommandInteraction } from "discord.js";
 import config from "@/config";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 const MessageContextMenuCommandExecute = async (
   interaction: MessageContextMenuCommandInteraction
 ) => {
-  const logger = loggingSystem.getLogger({ function: "MessageContextMenuCommandExecute" });
+  const ctx = {
+    ...ALStorage.getStore(),
+    user_id: interaction.user.id,
+    context: { discord: { guild: interaction.guild?.id, channel: interaction.channel?.id } },
+  };
+  const logger = loggingSystem.getLogger({ ...ctx, function: "MessageContextMenuCommandExecute" });
   logger.info(
     { extra_context: { commandName: interaction.commandName } },
     "MessageContextMenuCommand execution started"
@@ -39,7 +44,9 @@ const MessageContextMenuCommandExecute = async (
   }
 
   try {
-    await command.execute(interaction);
+    ALStorage.run(ctx, async () => {
+      await command.execute(interaction);
+    });
     logger.info(
       { extra_context: { commandName: interaction.commandName } },
       "MessageContextMenuCommand executed successfully"

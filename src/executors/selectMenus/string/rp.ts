@@ -1,15 +1,14 @@
 import { EmbedBuilder, MessageFlags, StringSelectMenuInteraction } from "discord.js";
 import config from "@/config";
-import { logger } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const name = "rp";
 
 export const execute = async (interaction: StringSelectMenuInteraction) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "selectMenus/string/rp" });
   const selected = interaction.values;
-  logger.info(
-    { service: "RolePicker", userId: interaction.user.id, selected },
-    "RolePicker execution started"
-  );
+  logger.info({ extra_context: { selected } }, "RolePicker execution started");
   await interaction.deferUpdate();
 
   const member = interaction.guild?.members.cache.get(interaction.user.id);
@@ -40,14 +39,15 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
       } else {
         await member.roles.add(value);
         completedRoles.push({ roleId: value, action: "added" });
-        logger.info(
-          { service: "RolePicker", userId: interaction.user.id, roleId: value },
-          `Role Added for ${member.displayName}`
-        );
+        logger.info({ extra_context: { roleId: value } }, `Role Added`);
       }
     }
   } catch (error) {
-    logger.error({ service: "RolePicker" }, "Error in RolePicker interaction:", error);
+    logger.error(
+      { error, stack_trace: (error as Error).stack },
+      "Error in RolePicker interaction:",
+      error
+    );
     const messageEmbed = new EmbedBuilder()
       .setTitle("すみません。エラーが発生しました。")
       .setDescription("```\n" + error + "\n```")

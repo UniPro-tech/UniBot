@@ -10,7 +10,7 @@ import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
 import { readConfig } from "@/lib/dataUtils";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const handlingCommands = subCommandHandling("general/schedule");
 export const data = addSubCommand(
@@ -20,7 +20,8 @@ export const data = addSubCommand(
 export const guildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "general/schedule" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "general/schedule" });
   const whitelist = await readConfig("whitelist:schedule");
   const allowedRoles = Array.isArray(whitelist?.roles) ? whitelist.roles : [];
   const allowedUsers = Array.isArray(whitelist?.users) ? whitelist.users : [];

@@ -1,8 +1,9 @@
 import { Client, TextChannel } from "discord.js";
-import { loggingSystem } from "..";
+import { ALStorage, loggingSystem } from "..";
 
 export const GetLogChannel = async (client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "GetLogChannel" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "GetLogChannel" });
   const channel = await client.channels.fetch(client.config.logch.command).catch((error) => null);
   if (!channel) {
     logger.error(
@@ -22,7 +23,8 @@ export const GetLogChannel = async (client: Client) => {
 };
 
 export const GetErrorChannel = async (client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "GetErrorChannel" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "GetErrorChannel" });
   const channel = await client.channels.fetch(client.config.logch.error).catch((error) => null);
   if (!channel) {
     logger.error(

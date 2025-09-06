@@ -1,5 +1,5 @@
 import { Client, DMChannel, TextChannel, ThreadChannel, VoiceChannel } from "discord.js";
-import { agenda, loggingSystem } from "..";
+import { agenda } from "..";
 import { Job } from "@hokify/agenda";
 
 export interface DiscordMessageJobData {

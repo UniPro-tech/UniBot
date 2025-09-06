@@ -1,10 +1,14 @@
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 import { EmbedBuilder, StringSelectMenuInteraction } from "discord.js";
 import config from "@/config";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "StringSelectMenu" });
+  const ctx = {
+    user_id: interaction.user.id,
+    context: { discord: { guild: interaction.guild?.id, channel: interaction.channel?.id } },
+  };
+  const logger = loggingSystem.getLogger({ ...ctx, function: "StringSelectMenu" });
 
   try {
     const [prefix] = interaction.customId.split("_");
@@ -23,7 +27,9 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
       { extra_context: { customId: interaction.customId } },
       "StringSelectMenu execution started"
     );
-    await executor.execute(interaction);
+    ALStorage.run(ctx, async () => {
+      await executor.execute(interaction);
+    });
   } catch (error) {
     const errorMsg = (error as Error).toString();
     logger.error(

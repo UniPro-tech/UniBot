@@ -13,7 +13,7 @@ import { GetErrorChannel } from "@/lib/channelUtils";
 import { uuid58Encode } from "@nakanoaas/uuid58";
 import { RPC, AudioLibrary } from "voicevox.js";
 import { listTtsDictionary } from "@/lib/dataUtils";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const name = "tts";
 
@@ -69,7 +69,8 @@ const getDictSelectMenu = (words: any[], action: string) =>
     .setMaxValues(1);
 
 export const execute = async (interaction: ButtonInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "TTSButtonInteraction" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "TTSButtonInteraction" });
   try {
     const id = interaction.customId.split("_");
     const components: any[] = [];

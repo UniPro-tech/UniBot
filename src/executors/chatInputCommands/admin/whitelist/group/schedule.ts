@@ -6,7 +6,7 @@ import {
 } from "discord.js";
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const data = addSubCommand(
   "admin/whitelist/group/schedule",
@@ -18,7 +18,8 @@ export const data = addSubCommand(
 export const handlingCommand = subCommandHandling("admin/whitelist/group/schedule");
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "admin/whitelist/group/schedule" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "admin/whitelist/group/schedule" });
   const options = interaction.options as CommandInteractionOptionResolver;
   const subcommand = options.getSubcommand();
   const command = handlingCommand.get(subcommand);

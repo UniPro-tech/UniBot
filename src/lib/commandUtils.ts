@@ -8,7 +8,7 @@ import {
 } from "discord.js";
 import fs from "fs";
 import path from "path";
-import { loggingSystem } from "..";
+import { ALStorage, loggingSystem } from "..";
 
 /**
  * Adds subcommands to the provided data object.
@@ -21,7 +21,8 @@ export const addSubCommand = (
   name: string,
   data: SlashCommandBuilder | SlashCommandSubcommandGroupBuilder
 ) => {
-  const logger = loggingSystem.getLogger({ function: "addSubCommand" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "addSubCommand" });
   logger.info({ extra_context: { command: name } }, `Adding SubCommands`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
@@ -53,7 +54,8 @@ export const subCommandHandling = (
   name: string,
   collection?: Collection<string, ChatInputCommand>
 ) => {
-  const logger = loggingSystem.getLogger({ function: "subCommandHandling" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "subCommandHandling" });
   if (!collection) {
     collection = new Collection<string, ChatInputCommand>();
   }
@@ -85,7 +87,8 @@ export const subCommandHandling = (
 };
 
 export const addSubCommandGroup = (name: string, data: SlashCommandBuilder) => {
-  const logger = loggingSystem.getLogger({ function: "addSubCommandGroup" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "addSubCommandGroup" });
   logger.info({ extra_context: { command: name } }, `Adding SubCommandGroups`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
@@ -113,10 +116,11 @@ export const subSelectMenusHandling = (
   name: string,
   collection?: Collection<string, StringSelectMenu>
 ) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "subSelectMenusHandling" });
   if (!collection) {
     collection = new Collection<string, StringSelectMenu>();
   }
-  const logger = loggingSystem.getLogger({ function: "subSelectMenusHandling" });
   logger.info({ extra_context: { command: name } }, `Load SelectMenu Executing Data`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/selectMenus/${name}`))

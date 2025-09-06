@@ -1,12 +1,13 @@
 import { Client, Collection } from "discord.js";
 import path from "path";
 import fs from "fs";
-import { loggingSystem } from "..";
+import { ALStorage, loggingSystem } from "..";
 
 // TODO: Collectionの型を指定する
 
 export const ChatInputCommandCollector = async (client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "ChatInputCommandCollector" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ChatInputCommandCollector" });
   logger.info("Load ChatInputCommand Executing Data");
   client.interactionExecutorsCollections.chatInputCommands = new Collection();
   const commandFolders = fs.readdirSync(path.resolve(__dirname, `../executors/chatInputCommands`));
@@ -43,7 +44,8 @@ export const ChatInputCommandCollector = async (client: Client) => {
 };
 
 export const StringSelectMenuCollector = async (client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "StringSelectMenuCollector" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "StringSelectMenuCollector" });
   logger.info("Load StringSelectMenu Executing Data");
   client.interactionExecutorsCollections.stringSelectMenus = new Collection();
   const commandFiles = fs
@@ -67,8 +69,12 @@ export const StringSelectMenuCollector = async (client: Client) => {
 };
 
 export const MessageContextMenuCommandCollector = async (client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "MessageContextMenuCommandCollector" });
-  logger.info("Load Messageextra_contextMenuCommand Executing Data");
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({
+    ...ctx,
+    function: "MessageContextMenuCommandCollector",
+  });
+  logger.info("Load MessageContextMenuCommand Executing Data");
   client.interactionExecutorsCollections.messageContextMenuCommands = new Collection();
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/messageContextMenuCommands`))
@@ -94,7 +100,8 @@ export const MessageContextMenuCommandCollector = async (client: Client) => {
 };
 
 export const ButtonCollector = async (client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "ButtonCollector" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ButtonCollector" });
   logger.info("Load Button Executing Data");
   client.interactionExecutorsCollections.buttons = new Collection();
   const commandFiles = fs
@@ -120,7 +127,8 @@ export const ButtonCollector = async (client: Client) => {
 };
 
 export const ModalSubmitCollector = async (client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "ModalSubmitCollector" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ModalSubmitCollector" });
   logger.info("Load Modals Executing Data");
   client.interactionExecutorsCollections.modalSubmitCommands = new Collection();
   const commandFiles = fs

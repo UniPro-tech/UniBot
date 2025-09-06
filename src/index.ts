@@ -21,13 +21,16 @@ import {
 import { ChatInputCommand } from "./executors/types/ChatInputCommand";
 import { StringSelectMenu } from "./executors/types/StringSelectMenu";
 import { Button } from "./executors/types/Button";
-import { Logger, Transporter } from "@unipro-tech/node-logger";
+import { LogContext, Logger, Transporter } from "@unipro-tech/node-logger";
+import { AsyncLocalStorage } from "async_hooks";
 
 export const loggingSystem = new Logger("unibot", [
   ...(process.env.NODE_ENV === "development"
     ? [Transporter.PinoPrettyTransporter()]
     : [Transporter.ConsoleTransporter()]),
 ]);
+
+export const ALStorage = new AsyncLocalStorage<LogContext & Record<string, any>>();
 
 const client = new Client({
   intents: [
@@ -47,7 +50,7 @@ if (!process.env.DATABASE_URL) {
 export const agenda = new Agenda({ db: { address: process.env.DATABASE_URL } });
 
 import jobManager from "./lib/jobManager";
-import { s } from "@breejs/later";
+import { nanoid } from "nanoid";
 
 // Attach utilities and config to client
 client.agenda = agenda;
@@ -102,7 +105,25 @@ for (const file of eventFiles) {
   const event = require(path.join(eventDir, file));
   const handler = (...args: any[]) => event.execute(...args, client);
   try {
-    event.once ? client.once(event.name, handler) : client.on(event.name, handler);
+    event.once
+      ? client.once(event.name, async (...args: any[]) => {
+          const ctx: LogContext = {
+            trace_id: nanoid(),
+            request_id: nanoid(),
+          };
+          ALStorage.run(ctx, () => {
+            handler(...args);
+          });
+        })
+      : client.on(event.name, (...args: any[]) => {
+          const ctx: LogContext = {
+            trace_id: nanoid(),
+            request_id: nanoid(),
+          };
+          ALStorage.run(ctx, () => {
+            handler(...args);
+          });
+        });
   } catch (error) {
     logger.error(
       { stack_trace: (error as Error).stack, extra_context: { event, file } },

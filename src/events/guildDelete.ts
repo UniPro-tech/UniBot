@@ -1,9 +1,10 @@
 import { Client, EmbedBuilder, Guild, TextChannel } from "discord.js";
-import { loggingSystem } from "..";
+import { ALStorage, loggingSystem } from "..";
 
 export const name = "guildDelete";
 export const execute = async (guild: Guild, client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "guildDelete" });
+  const ctx = { ...ALStorage.getStore(), context: { discord: { guild: guild.id } } };
+  const logger = loggingSystem.getLogger({ ...ctx, function: "guildDelete" });
   const channel = client.channels.cache.get(client.config.logch.guildCreate);
   const log = new EmbedBuilder()
     .setTitle("GuildDeleteLog")

@@ -6,7 +6,7 @@ import {
 } from "discord.js";
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const data = addSubCommand(
   "general/tts/group/set",
@@ -16,7 +16,8 @@ export const data = addSubCommand(
 export const handlingCommand = subCommandHandling("general/tts/group/set");
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "general/tts/set" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "general/tts/set" });
   const options = interaction.options as CommandInteractionOptionResolver;
   const subcommand = options.getSubcommand();
   const command = handlingCommand.get(subcommand);

@@ -17,7 +17,7 @@ import {
 import { writeTtsConnection } from "@/lib/dataUtils";
 import { Readable } from "stream";
 import { RPC, Query, Generate } from "voicevox.js";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("join")
@@ -46,7 +46,8 @@ const connectVoiceVox = async () => {
 };
 
 export const execute = async (interaction: CommandInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "general/tts/join" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "general/tts/join" });
   await interaction.deferReply();
 
   const member = interaction.member as GuildMember;

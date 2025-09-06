@@ -1,8 +1,9 @@
 import { Client, EmbedBuilder, Guild, TextChannel } from "discord.js";
-import { loggingSystem } from "..";
+import { ALStorage, loggingSystem } from "..";
 export const name = "guildCreate";
 export const execute = async (guild: Guild, client: Client) => {
-  const logger = loggingSystem.getLogger({ function: "guildCreate" });
+  const ctx = { ...ALStorage.getStore(), context: { discord: { guild: guild.id } } };
+  const logger = loggingSystem.getLogger({ ...ctx, function: "guildCreate" });
   const channel = client.channels.cache.get(client.config.logch.guildCreate);
   const log = new EmbedBuilder()
     .setTitle("GuildCreateLog")

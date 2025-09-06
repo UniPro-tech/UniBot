@@ -1,10 +1,12 @@
 import { MessageFlags, ModalSubmitInteraction } from "discord.js";
 import later from "@breejs/later";
-import { logger } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const name = "schedule_create_repeat";
 
 export const execute = async (interaction: ModalSubmitInteraction) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "modals/schedule_create_repeat" });
   const message = interaction.fields.getTextInputValue("message");
   const time = interaction.fields.getTextInputValue("time");
   const cronText = convertToCron(time);

@@ -10,7 +10,7 @@ import {
 import { addSubCommandGroup, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const handlingCommands = subCommandHandling("admin/whitelist/group");
 export const data = addSubCommandGroup(
@@ -21,7 +21,8 @@ export const guildOnly = true;
 export const adminGuildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "admin/whitelist" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "admin/whitelist" });
   if (!interaction.inGuild()) {
     await replyWithError(
       interaction,

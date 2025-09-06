@@ -1,8 +1,13 @@
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 import { EmbedBuilder, ModalSubmitInteraction } from "discord.js";
 
 const ModalSubmitExecute = async (interaction: ModalSubmitInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "ModalSubmitExecute" });
+  const ctx = {
+    ...ALStorage.getStore(),
+    user_id: interaction.user.id,
+    context: { discord: { guild: interaction.guild?.id, channel: interaction.channel?.id } },
+  };
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ModalSubmitExecute" });
   try {
     logger.info(
       { extra_context: { customId: interaction.customId } },
@@ -19,7 +24,9 @@ const ModalSubmitExecute = async (interaction: ModalSubmitInteraction) => {
       );
       return;
     }
-    modal.execute(interaction);
+    ALStorage.run(ctx, async () => {
+      await modal.execute(interaction);
+    });
   } catch (error) {
     logger.error(
       { extra_context: { customId: interaction.customId }, stack_trace: (error as Error).stack },

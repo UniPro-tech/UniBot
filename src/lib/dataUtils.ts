@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { loggingSystem } from "..";
+import { ALStorage, loggingSystem } from "..";
 
 export const prismaClient = new PrismaClient();
 
@@ -9,7 +9,8 @@ export const prismaClient = new PrismaClient();
  * @returns {Promise<Object>} - The parsed log data.
  */
 export const writeConfig = async (postData: Object, key: string) => {
-  const logger = loggingSystem.getLogger({ function: "writeConfig" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "writeConfig" });
   try {
     await prismaClient.config.upsert({
       where: { key },
@@ -30,7 +31,8 @@ export const writeConfig = async (postData: Object, key: string) => {
  * @returns {Promise<Object>} - The parsed log data.
  */
 export const readConfig = async (key: string) => {
-  const logger = loggingSystem.getLogger({ function: "readConfig" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readConfig" });
   try {
     const config = await prismaClient.config.findUnique({
       where: { key },
@@ -63,7 +65,8 @@ export type SelectedData = {
  * @returns {Promise<Object>} - The parsed log data.
  */
 export const writeSelected = async (data: SelectedData): Promise<void> => {
-  const logger = loggingSystem.getLogger({ function: "writeSelected" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "writeSelected" });
   try {
     await prismaClient.selectedData.create({
       data: {
@@ -90,7 +93,8 @@ export const readSelected = async (
   type?: SelectedDataType,
   data?: string
 ): Promise<SelectedData | null> => {
-  const logger = loggingSystem.getLogger({ function: "readSelected" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readSelected" });
   try {
     const selectedData = await prismaClient.selectedData.findFirst({
       where: { user, type, data },
@@ -111,7 +115,8 @@ export const writeTtsConnection = async (
   textChannel: string[],
   voiceChannel: string
 ): Promise<void> => {
-  const logger = loggingSystem.getLogger({ function: "writeTtsConnection" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "writeTtsConnection" });
   try {
     await prismaClient.ttsConnection.upsert({
       where: { guild },
@@ -138,7 +143,8 @@ export const readTtsConnection = async (
   textChannel: string[];
   voiceChannel: string;
 } | null> => {
-  const logger = loggingSystem.getLogger({ function: "readTtsConnection" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readTtsConnection" });
   try {
     const connection = await prismaClient.ttsConnection.findFirst({
       where: {
@@ -158,7 +164,8 @@ export const readTtsConnection = async (
 };
 
 export const writeTtsPreference = async (user: string, key: string, value: object) => {
-  const logger = loggingSystem.getLogger({ function: "writeTtsPreference" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "writeTtsPreference" });
   try {
     await prismaClient.ttsPreference.upsert({
       where: { user_key: { user, key } },
@@ -174,7 +181,8 @@ export const writeTtsPreference = async (user: string, key: string, value: objec
 };
 
 export const readTtsPreference = async (user: string, key: string): Promise<any | null> => {
-  const logger = loggingSystem.getLogger({ function: "readTtsPreference" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readTtsPreference" });
   try {
     const preference = await prismaClient.ttsPreference.findFirst({
       where: { user, key },
@@ -222,7 +230,8 @@ export const readTtsDictionary = async (
   word: string;
   definition: string;
 } | null> => {
-  const logger = loggingSystem.getLogger({ function: "readTtsDictionary" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readTtsDictionary" });
   try {
     const entry = await prismaClient.ttsDictionary.findFirst({
       where: { user, guild, word },
@@ -267,7 +276,8 @@ export const listTtsDictionary = async (
     updatedAt: Date;
   }>
 > => {
-  const logger = loggingSystem.getLogger({ function: "listTtsDictionary" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "listTtsDictionary" });
   try {
     const entries = await prismaClient.ttsDictionary.findMany({
       where: { user, guild },
@@ -309,7 +319,8 @@ export const removeTtsDictionary = async (
   user?: string,
   id?: string
 ): Promise<void> => {
-  const logger = loggingSystem.getLogger({ function: "removeTtsDictionary" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "removeTtsDictionary" });
   try {
     await prismaClient.ttsDictionary.deleteMany({
       where: { user, guild, word, id },

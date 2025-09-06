@@ -7,7 +7,7 @@ import {
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
-import { loggingSystem } from "@/index";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const handlingCommands = subCommandHandling("general/rp");
 export const data = addSubCommand(
@@ -17,7 +17,8 @@ export const data = addSubCommand(
 export const guildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  const logger = loggingSystem.getLogger({ function: "general/rp" });
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "general/rp" });
   const subcommand = (interaction.options as CommandInteractionOptionResolver).getSubcommand();
   const command = handlingCommands.get(subcommand);
 
