@@ -1,12 +1,15 @@
 import { MessageFlags, ModalSubmitInteraction } from "discord.js";
+import later from "@breejs/later";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const name = "schedule_create_repeat";
 
 export const execute = async (interaction: ModalSubmitInteraction) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "modals/schedule_create_repeat" });
   const message = interaction.fields.getTextInputValue("message");
   const time = interaction.fields.getTextInputValue("time");
   const cronText = convertToCron(time);
-  console.log(`Converted time "${time}" to cron "${cronText}"`);
   if (!cronText) {
     await interaction.reply({
       content: "時間の形式が不正です。もう一度やり直してください。",
@@ -25,13 +28,16 @@ export const execute = async (interaction: ModalSubmitInteraction) => {
   };
   await interaction.client.functions.jobManager.cronRemindJob(interaction.id, data, cronText);
 
+  logger.info(
+    { service: "ScheduleCreateRepeat", jobId: interaction.id, cron: cronText, message },
+    "Scheduled repeating message"
+  );
+
   await interaction.reply({
     content: `メッセージを${time}に送信するようにスケジュールしました。(ジョブID: ${interaction.id})`,
     flags: [MessageFlags.Ephemeral],
   });
 };
-
-import later from "@breejs/later";
 
 function convertToCron(laterText: string): string | null {
   // "every day"だけが含まれてて他に何もなければ9:00 amに変換する
@@ -55,23 +61,19 @@ function convertToCron(laterText: string): string | null {
   });
   const sched = later.parse.text(laterText);
   if (!sched) {
-    console.error(`[debug] sched is null for input: "${laterText}"`);
     return null;
   }
   if (sched.error > -1) {
-    console.error(`[debug] parse error at position ${sched.error} for input: "${laterText}"`);
     return null;
   }
 
   const nextTwo = later.schedule(sched).next(2) as Date[];
   if (nextTwo.length < 2) {
-    console.error(`[debug] Failed to get next two times for later text: ${laterText}`);
     return null;
   }
 
   const first = nextTwo[0];
   const second = nextTwo[1];
-  console.log(`[debug] Next two times: ${first}, ${second}`);
   const diffMs = second.getTime() - first.getTime();
   const diffMinutes = Math.round(diffMs / 60000);
 

@@ -1,25 +1,40 @@
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 import { ButtonInteraction, EmbedBuilder } from "discord.js";
 import config from "@/config";
+import { ALStorage, loggingSystem } from "@/index";
 
 const ButtonExecute = async (interaction: ButtonInteraction) => {
-  const time = () => interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
-
+  const ctx = {
+    ...ALStorage.getStore(),
+    user_id: interaction.user.id,
+    context: { discord: { guild: interaction.guild?.id, channel: interaction.channel?.id } },
+  };
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ButtonExecute" });
   try {
     const [prefix] = interaction.customId.split("_");
     const executionDefine = interaction.client.interactionExecutorsCollections.buttons.get(prefix);
 
     if (!executionDefine) {
-      console.log(`[${time()} info] Not Found: ${interaction.customId}`);
+      logger.error(
+        { extra_context: { customId: interaction.customId } },
+        "No execution definition found"
+      );
       return;
     }
 
-    console.log(`[${time()} info] Button -> ${interaction.customId}`);
-    await executionDefine.execute(interaction);
+    logger.info(
+      { extra_context: { customId: interaction.customId } },
+      "Button interaction executed"
+    );
+    ALStorage.run(ctx, async () => {
+      await executionDefine.execute(interaction);
+    });
   } catch (error) {
     const errorMsg = (error as Error).toString();
-    console.error(
-      `[${time()} error] An Error Occured in ${interaction.customId}\nDetails:\n${errorMsg}`
+    logger.error(
+      { extra_context: { customId: interaction.customId }, stack_trace: (error as Error).stack },
+      "Button interaction execution failed",
+      error
     );
 
     const logEmbed = new EmbedBuilder()

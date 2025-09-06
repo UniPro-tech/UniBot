@@ -7,6 +7,7 @@ import {
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const handlingCommands = subCommandHandling("admin/maintenance");
 export const data = addSubCommand(
@@ -17,24 +18,30 @@ export const guildOnly = true;
 export const adminGuildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "admin/maintenance" });
   const command = handlingCommands.get(
     (interaction.options as CommandInteractionOptionResolver).getSubcommand()
   );
   if (!command) {
-    console.info(
-      `[Not Found] Command: ${(
-        interaction.options as CommandInteractionOptionResolver
-      ).getSubcommand()}`
+    logger.error(
+      { extra_context: { command: interaction.commandName } },
+      "No command handler found"
     );
     return;
   }
   try {
     await command.execute(interaction);
-    console.info(
-      `[Run] ${(interaction.options as CommandInteractionOptionResolver).getSubcommand()}`
+    logger.info(
+      { extra_context: { command: interaction.commandName } },
+      "Command executed successfully"
     );
   } catch (error) {
-    console.error(error);
+    logger.error(
+      { extra_context: { command: interaction.commandName }, stack_trace: (error as Error).stack },
+      "Command execution failed",
+      error
+    );
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")
       .setDescription("```\n" + (error as any).toString() + "\n```")

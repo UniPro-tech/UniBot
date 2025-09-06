@@ -1,38 +1,52 @@
 import { Client, Collection } from "discord.js";
 import path from "path";
 import fs from "fs";
+import { ALStorage, loggingSystem } from "..";
 
 // TODO: Collectionの型を指定する
 
 export const ChatInputCommandCollector = async (client: Client) => {
-  console.info(`\u001b[32m===Load ChatInputCommand Executing Data===\u001b[0m`);
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ChatInputCommandCollector" });
+  logger.info("Load ChatInputCommand Executing Data");
   client.interactionExecutorsCollections.chatInputCommands = new Collection();
   const commandFolders = fs.readdirSync(path.resolve(__dirname, `../executors/chatInputCommands`));
   for (const folder of commandFolders) {
-    console.info(`\u001b[32m[Init]Loading ${folder} commands\u001b[0m`);
+    logger.info({ extra_context: { folder } }, `Started loading commands`);
     const commandFiles = fs
       .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${folder}`))
       .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
     for (const file of commandFiles) {
-      console.debug(`dir:${folder},file:${file}`);
       const command = require(path.resolve(
         __dirname,
         `../executors/chatInputCommands/${folder}/${file}`
       ));
       try {
         client.interactionExecutorsCollections.chatInputCommands.set(command.data.name, command);
-        console.info(`[Init]${command.data.name} has been loaded.`);
+        logger.info(
+          { extra_context: { commandName: command.data.name } },
+          `Command has been loaded.`
+        );
       } catch (error) {
-        console.error(`[error]An Error Occurred in ${command.data.name}\nDetails:\n ${error}`);
+        logger.error(
+          {
+            extra_context: { commandName: command.data.name },
+            error: error,
+            stack_trace: (error as Error).stack,
+          },
+          (error as Error).message
+        );
       }
     }
-    console.info(`\u001b[32m${folder} has been loaded\u001b[0m`);
+    logger.info({ service: "Init" }, `Loaded ${folder} commands`);
   }
-  console.info(`\u001b[32m===ChatInputCommand Executing Data Loaded===\u001b[0m`);
+  logger.info({ service: "Init" }, "ChatInputCommand Executing Data Loaded");
 };
 
 export const StringSelectMenuCollector = async (client: Client) => {
-  console.info(`\u001b[32m===Load StringSelectMenu Executing Data===\u001b[0m`);
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "StringSelectMenuCollector" });
+  logger.info("Load StringSelectMenu Executing Data");
   client.interactionExecutorsCollections.stringSelectMenus = new Collection();
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/selectMenus/string`))
@@ -43,16 +57,24 @@ export const StringSelectMenuCollector = async (client: Client) => {
     );
     try {
       client.interactionExecutorsCollections.stringSelectMenus.set(menuDefine.name, menuDefine);
-      console.info(`[Init]${menuDefine.name} has been loaded.`);
+      logger.info({ extra_context: { command: menuDefine.name } }, `Command has been loaded.`);
     } catch (error) {
-      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
+      logger.error(
+        { stack_trace: (error as Error).stack, error: (error as Error).message },
+        (error as Error).message
+      );
     }
   }
-  console.info(`\u001b[32m===StringSelectMenu Executing Data Loaded===\u001b[0m`);
+  logger.info("StringSelectMenu Executing Data Loaded");
 };
 
 export const MessageContextMenuCommandCollector = async (client: Client) => {
-  console.info(`\u001b[32m===Load MessageContextMenuCommand Executing Data===\u001b[0m`);
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({
+    ...ctx,
+    function: "MessageContextMenuCommandCollector",
+  });
+  logger.info("Load MessageContextMenuCommand Executing Data");
   client.interactionExecutorsCollections.messageContextMenuCommands = new Collection();
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/messageContextMenuCommands`))
@@ -66,16 +88,21 @@ export const MessageContextMenuCommandCollector = async (client: Client) => {
         menuDefine.name,
         menuDefine
       );
-      console.info(`[Init]${menuDefine.name} has been loaded.`);
+      logger.info({ extra_context: { command: menuDefine.name } }, `Command has been loaded.`);
     } catch (error) {
-      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
+      logger.error(
+        { stack_trace: (error as Error).stack, error, extra_context: { command: menuDefine.name } },
+        (error as Error).message
+      );
     }
   }
-  console.info(`\u001b[32m===MessageContextMenuCommand Executing Data Loaded===\u001b[0m`);
+  logger.info("MessageContextMenuCommand Executing Data Loaded");
 };
 
 export const ButtonCollector = async (client: Client) => {
-  console.info(`\u001b[32m===Load Button Executing Data===\u001b[0m`);
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ButtonCollector" });
+  logger.info("Load Button Executing Data");
   client.interactionExecutorsCollections.buttons = new Collection();
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/buttons`))
@@ -84,16 +111,25 @@ export const ButtonCollector = async (client: Client) => {
     const menuDefine = await import(path.resolve(__dirname, `../executors/buttons/${file}`));
     try {
       client.interactionExecutorsCollections.buttons.set(menuDefine.name, menuDefine);
-      console.info(`[Init]${menuDefine.name} has been loaded.`);
+      logger.info({ extra_context: { command: menuDefine.name } }, `Command has been loaded.`);
     } catch (error) {
-      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
+      logger.error(
+        {
+          extra_context: { command: menuDefine.name },
+          stack_trace: (error as Error).stack,
+          error: error as Error,
+        },
+        (error as Error).message
+      );
     }
   }
-  console.info(`\u001b[32m===Button Executing Data Loaded===\u001b[0m`);
+  logger.info("Button Executing Data Loaded");
 };
 
 export const ModalSubmitCollector = async (client: Client) => {
-  console.info(`\u001b[32m===Load Modals Executing Data===\u001b[0m`);
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ModalSubmitCollector" });
+  logger.info("Load Modals Executing Data");
   client.interactionExecutorsCollections.modalSubmitCommands = new Collection();
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/modals`))
@@ -102,10 +138,17 @@ export const ModalSubmitCollector = async (client: Client) => {
     const menuDefine = await import(path.resolve(__dirname, `../executors/modals/${file}`));
     try {
       client.interactionExecutorsCollections.modalSubmitCommands.set(menuDefine.name, menuDefine);
-      console.info(`[Init]${menuDefine.name} has been loaded.`);
+      logger.info({ extra_context: { command: menuDefine.name } }, `Command has been loaded.`);
     } catch (error) {
-      console.error(`[error]An Error Occurred in ${menuDefine.name}\nDetails:\n ${error}`);
+      logger.error(
+        {
+          stack_trace: (error as Error).stack,
+          error: error as Error,
+          extra_context: { command: menuDefine.name },
+        },
+        (error as Error).message
+      );
     }
   }
-  console.info(`\u001b[32m===Modal Executing Data Loaded===\u001b[0m`);
+  logger.info("Modal Executing Data Loaded");
 };

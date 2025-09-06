@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, Client, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { GetLogChannel } from "./channelUtils";
 
 export const writeChatInputCommandInteractionLog = async (
@@ -47,9 +47,7 @@ export const writeChatInputCommandInteractionLog = async (
       },
       {
         name: "Command",
-        value: `\`\`\`\n\/${commandName} ${subcommandGroup || ""} ${
-          subcommand || ""
-        }\n\`\`\``,
+        value: `\`\`\`\n\/${commandName} ${subcommandGroup || ""} ${subcommand || ""}\n\`\`\``,
       },
       {
         name: "Channel",

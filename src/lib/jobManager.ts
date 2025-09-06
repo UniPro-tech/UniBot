@@ -38,7 +38,6 @@ export const redefineJobs = async (client: Client) => {
     jobs.forEach((job) => {
       const name = job.attrs.name;
       const id = name.split("id:")[1];
-      console.log(`Redefining job: ${name}`);
       defineRemindJob(id, client);
     });
   });

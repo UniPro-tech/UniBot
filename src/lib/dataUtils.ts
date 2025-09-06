@@ -1,6 +1,5 @@
-import timeUtils from "@/lib/timeUtils";
-
-import { PrismaClient, selectedData } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { ALStorage, loggingSystem } from "..";
 
 export const prismaClient = new PrismaClient();
 
@@ -10,14 +9,19 @@ export const prismaClient = new PrismaClient();
  * @returns {Promise<Object>} - The parsed log data.
  */
 export const writeConfig = async (postData: Object, key: string) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "writeConfig" });
   try {
     await prismaClient.config.upsert({
       where: { key },
       update: { value: JSON.stringify(postData) },
       create: { key, value: JSON.stringify(postData) },
     });
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while writing config"
+    );
   }
 };
 
@@ -27,18 +31,19 @@ export const writeConfig = async (postData: Object, key: string) => {
  * @returns {Promise<Object>} - The parsed log data.
  */
 export const readConfig = async (key: string) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readConfig" });
   try {
     const config = await prismaClient.config.findUnique({
       where: { key },
     });
     return config ? JSON.parse(config.value) : null;
   } catch (error) {
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occured.\nDatails:\n${error}\u001b[0m`
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while reading config"
     );
+    return null;
   }
 };
 
@@ -60,6 +65,8 @@ export type SelectedData = {
  * @returns {Promise<Object>} - The parsed log data.
  */
 export const writeSelected = async (data: SelectedData): Promise<void> => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "writeSelected" });
   try {
     await prismaClient.selectedData.create({
       data: {
@@ -68,8 +75,11 @@ export const writeSelected = async (data: SelectedData): Promise<void> => {
         data: JSON.stringify(data.data),
       },
     });
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while writing selected data"
+    );
   }
 };
 
@@ -83,6 +93,8 @@ export const readSelected = async (
   type?: SelectedDataType,
   data?: string
 ): Promise<SelectedData | null> => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readSelected" });
   try {
     const selectedData = await prismaClient.selectedData.findFirst({
       where: { user, type, data },
@@ -90,11 +102,9 @@ export const readSelected = async (
     return (selectedData as SelectedData) || null;
   } catch (error) {
     // TODO: ここでThrow Errorを投げて、呼び出し元でcatchするようにする
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occured.\nDatails:\n${error}\u001b[0m`
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while reading selected data"
     );
     return null;
   }
@@ -105,6 +115,8 @@ export const writeTtsConnection = async (
   textChannel: string[],
   voiceChannel: string
 ): Promise<void> => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "writeTtsConnection" });
   try {
     await prismaClient.ttsConnection.upsert({
       where: { guild },
@@ -112,11 +124,9 @@ export const writeTtsConnection = async (
       create: { guild, textChannel, voiceChannel },
     });
   } catch (error) {
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while writing TTS connection"
     );
   }
 };
@@ -133,6 +143,8 @@ export const readTtsConnection = async (
   textChannel: string[];
   voiceChannel: string;
 } | null> => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readTtsConnection" });
   try {
     const connection = await prismaClient.ttsConnection.findFirst({
       where: {
@@ -143,17 +155,17 @@ export const readTtsConnection = async (
     });
     return connection;
   } catch (error) {
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occured.\nDatails:\n${error}\u001b[0m`
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while reading TTS connection"
     );
     return null;
   }
 };
 
 export const writeTtsPreference = async (user: string, key: string, value: object) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "writeTtsPreference" });
   try {
     await prismaClient.ttsPreference.upsert({
       where: { user_key: { user, key } },
@@ -161,27 +173,25 @@ export const writeTtsPreference = async (user: string, key: string, value: objec
       create: { user, key, value: JSON.stringify(value) },
     });
   } catch (error) {
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An error occurred.\nDetails:\n${error}\u001b[0m`
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while writing TTS preference"
     );
   }
 };
 
 export const readTtsPreference = async (user: string, key: string): Promise<any | null> => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readTtsPreference" });
   try {
     const preference = await prismaClient.ttsPreference.findFirst({
       where: { user, key },
     });
     return preference ? JSON.parse(preference.value) : null;
   } catch (error) {
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while reading TTS preference"
     );
     return null;
   }
@@ -220,6 +230,8 @@ export const readTtsDictionary = async (
   word: string;
   definition: string;
 } | null> => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "readTtsDictionary" });
   try {
     const entry = await prismaClient.ttsDictionary.findFirst({
       where: { user, guild, word },
@@ -237,11 +249,12 @@ export const readTtsDictionary = async (
     });
     return entry;
   } catch (error) {
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    logger.error(
+      {
+        error,
+        stack_trace: error instanceof Error ? error.stack : undefined,
+      },
+      error instanceof Error ? error.message : "An error occurred while reading TTS dictionary"
     );
     return null;
   }
@@ -262,6 +275,8 @@ export const listTtsDictionary = async (
     updatedAt: Date;
   }>
 > => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "listTtsDictionary" });
   try {
     const entries = await prismaClient.ttsDictionary.findMany({
       where: { user, guild },
@@ -289,11 +304,9 @@ export const listTtsDictionary = async (
     }));
     return formattedEntries;
   } catch (error) {
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while listing TTS dictionary"
     );
     return [];
   }
@@ -305,16 +318,16 @@ export const removeTtsDictionary = async (
   user?: string,
   id?: string
 ): Promise<void> => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "removeTtsDictionary" });
   try {
     await prismaClient.ttsDictionary.deleteMany({
       where: { user, guild, word, id },
     });
   } catch (error) {
-    console.error(
-      `\u001b[31m[${timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occurred.\nDetails:\n${error}\u001b[0m`
+    logger.error(
+      { error, stack_trace: error instanceof Error ? error.stack : undefined },
+      error instanceof Error ? error.message : "An error occurred while removing TTS dictionary"
     );
   }
 };

@@ -2,21 +2,22 @@ import { EmbedBuilder, MessageFlags, StringSelectMenuInteraction } from "discord
 import config from "@/config";
 import { subSelectMenusHandling } from "@/lib/commandUtils";
 import { GetErrorChannel } from "@/lib/channelUtils";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const name = "tts";
 
 const handlingCommands = subSelectMenusHandling("string/tts");
 
 export const execute = async (interaction: StringSelectMenuInteraction) => {
-  const [, commandKey] = interaction.customId.split("_");
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "selectMenus/string/tts" });
+  const commandKey = interaction.customId.split("_")[1];
   const commands = handlingCommands.get(commandKey);
 
   if (!commands) {
-    console.log(
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} info] Not Found: ${interaction.customId}`
+    logger.error(
+      { service: "TTS", userId: interaction.user.id, commandKey },
+      "No command found for TTS select menu"
     );
     return;
   }
@@ -24,10 +25,7 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
   try {
     await commands.execute(interaction);
   } catch (error) {
-    const time = interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
-    console.error(
-      `[${time} error] An Error Occurred in ${interaction.customId}\nDetails:\n${error}`
-    );
+    logger.error({ error, stack_trace: (error as Error).stack }, `An Error Occurred`, error);
 
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")

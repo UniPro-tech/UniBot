@@ -6,6 +6,7 @@ import {
 } from "discord.js";
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const data = addSubCommand(
   "admin/whitelist/group/schedule",
@@ -17,20 +18,35 @@ export const data = addSubCommand(
 export const handlingCommand = subCommandHandling("admin/whitelist/group/schedule");
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "admin/whitelist/group/schedule" });
   const options = interaction.options as CommandInteractionOptionResolver;
   const subcommand = options.getSubcommand();
   const command = handlingCommand.get(subcommand);
 
   if (!command) {
-    console.info(`[Not Found] Command: ${subcommand}`);
+    logger.error(
+      { extra_context: { command: interaction.commandName, subcommand } },
+      "No command handler found"
+    );
     return;
   }
 
   try {
     await command.execute(interaction);
-    console.info(`[Run] ${subcommand}`);
+    logger.info(
+      { extra_context: { command: interaction.commandName, subcommand } },
+      "Command executed successfully"
+    );
   } catch (error) {
-    console.error(`[Error] ${subcommand}`, error);
+    logger.error(
+      {
+        extra_context: { command: interaction.commandName, subcommand },
+        stack_trace: (error as Error).stack,
+      },
+      "Command execution failed",
+      error
+    );
 
     const embed = new EmbedBuilder()
       .setTitle("Whitelist Command Error")

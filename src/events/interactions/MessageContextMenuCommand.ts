@@ -1,20 +1,31 @@
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 import { EmbedBuilder, MessageContextMenuCommandInteraction } from "discord.js";
 import config from "@/config";
+import { ALStorage, loggingSystem } from "@/index";
 
 const MessageContextMenuCommandExecute = async (
   interaction: MessageContextMenuCommandInteraction
 ) => {
-  const time = () => `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}`;
-
-  console.log(`${time()} info] MessageContextMenu ->${interaction.commandName}`);
+  const ctx = {
+    ...ALStorage.getStore(),
+    user_id: interaction.user.id,
+    context: { discord: { guild: interaction.guild?.id, channel: interaction.channel?.id } },
+  };
+  const logger = loggingSystem.getLogger({ ...ctx, function: "MessageContextMenuCommandExecute" });
+  logger.info(
+    { extra_context: { commandName: interaction.commandName } },
+    "MessageContextMenuCommand execution started"
+  );
 
   const command = interaction.client.interactionExecutorsCollections.messageContextMenuCommands.get(
     interaction.commandName
   );
 
   if (!command) {
-    console.log(`${time()} info] Not Found: ${interaction.commandName}`);
+    logger.error(
+      { extra_context: { commandName: interaction.commandName } },
+      "No command handler found for this command"
+    );
     return;
   }
 
@@ -25,13 +36,21 @@ const MessageContextMenuCommandExecute = async (
       .setColor(interaction.client.config.color.error);
 
     await interaction.reply({ embeds: [embed] });
-    console.log(`${time()} info] DM Only: ${interaction.commandName}`);
+    logger.info(
+      { extra_context: { commandName: interaction.commandName } },
+      "Blocked command execution in DM"
+    );
     return;
   }
 
   try {
-    await command.execute(interaction);
-    console.info(`${time()} run] ${interaction.commandName}`);
+    ALStorage.run(ctx, async () => {
+      await command.execute(interaction);
+    });
+    logger.info(
+      { extra_context: { commandName: interaction.commandName } },
+      "MessageContextMenuCommand executed successfully"
+    );
 
     const logEmbed = new EmbedBuilder()
       .setTitle("コマンド実行ログ")
@@ -63,8 +82,13 @@ const MessageContextMenuCommandExecute = async (
     const logChannel = await GetLogChannel(interaction.client);
     if (logChannel) await logChannel.send({ embeds: [logEmbed] });
   } catch (error) {
-    console.error(
-      `${time()} error]An Error Occurred in ${interaction.commandName}\nDetails:\n${error}`
+    logger.error(
+      {
+        extra_context: { commandName: interaction.commandName },
+        stack_trace: (error as Error).stack,
+      },
+      "Command execution failed",
+      error
     );
 
     const errorEmbed = new EmbedBuilder()

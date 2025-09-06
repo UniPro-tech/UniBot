@@ -10,6 +10,7 @@ import {
 import { addSubCommandGroup, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
+import { ALStorage, loggingSystem } from "@/index";
 
 export const handlingCommands = subCommandHandling("admin/whitelist/group");
 export const data = addSubCommandGroup(
@@ -20,6 +21,8 @@ export const guildOnly = true;
 export const adminGuildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "admin/whitelist" });
   if (!interaction.inGuild()) {
     await replyWithError(
       interaction,
@@ -43,15 +46,25 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   const command = group ? handlingCommands.get(group) : handlingCommands.get(sub);
 
   if (!command) {
-    console.info(`[Not Found] Command: ${sub}`);
+    logger.error(
+      { extra_context: { command: interaction.commandName } },
+      "No command handler found"
+    );
     return;
   }
 
   try {
     await command.execute(interaction);
-    console.info(`[Run] ${sub}`);
+    logger.info(
+      { extra_context: { command: interaction.commandName } },
+      "Command executed successfully"
+    );
   } catch (error) {
-    console.error(error);
+    logger.error(
+      { extra_context: { command: interaction.commandName }, stack_trace: (error as Error).stack },
+      "Command execution failed",
+      error
+    );
 
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")

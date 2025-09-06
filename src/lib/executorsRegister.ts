@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { ChatInputCommand } from "@/executors/types/ChatInputCommand";
 import { ContextMenuCommand } from "@/executors/types/ContextMenuCommand";
+import { ALStorage, loggingSystem } from "..";
 
 /**
  * 差分比較用にフィールドを絞って整形
@@ -37,6 +38,8 @@ async function putToDiscordWithDiffCheck(
   array: RESTPostAPIChatInputApplicationCommandsJSONBody[],
   guild?: string
 ) {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "putToDiscordWithDiffCheck" });
   const route = guild
     ? Routes.applicationGuildCommands(client.application?.id as string, guild)
     : Routes.applicationCommands(client.application?.id as string);
@@ -49,7 +52,16 @@ async function putToDiscordWithDiffCheck(
 
   // 長さが違うだけで更新対象にする
   if (array.length !== existing.length) {
-    console.info(`[Update] Command count changed: ${existing.length} -> ${array.length}`);
+    logger.info(
+      {
+        extra_context: {
+          guildId: guild ?? "global",
+          existingCount: existing.length,
+          newCount: array.length,
+        },
+      },
+      `Command count changed. Existing: ${existing.length}, New: ${array.length}`
+    );
   }
 
   const shouldUpdate =
@@ -64,21 +76,36 @@ async function putToDiscordWithDiffCheck(
     });
 
   if (!shouldUpdate) {
-    console.info(
-      `[Skip] No changes detected. Skipping registration for ${guild ?? "global"} commands.`
+    logger.info(
+      {
+        extra_context: {
+          guildId: guild ?? "global",
+          commandCount: array.length,
+        },
+      },
+      `No changes detected for commands. Skipping update.`
     );
     return;
   }
 
   await rest.put(route, { body: array });
-  console.info(`[Update] Commands updated for ${guild ?? "global"} scope.`);
+  logger.info(
+    {
+      extra_context: {
+        guildId: guild ?? "global",
+        commandCount: array.length,
+      },
+    },
+    `Commands updated successfully.`
+  );
 }
 
 /**
  * コマンド登録関数（チャット入力＋右クリック含む）
  */
 export const registerAllCommands = async (client: Client) => {
-  console.info(`\u001b[32m===Pushing All ApplicationCommand Data===\u001b[0m`);
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "registerAllCommands" });
   const config = client.config;
   const token = config.token;
   const testGuild = config.dev.testGuild;
@@ -99,9 +126,16 @@ export const registerAllCommands = async (client: Client) => {
       const data = (command.data as SlashCommandBuilder).toJSON();
       arr.push(data);
       commandCount++;
-      console.info(`[${typeLabel}] ${file} has been added.`);
+      logger.info(
+        { extra_context: { file, commandName: data.name, command_type: typeLabel } },
+        `Loaded command`
+      );
     } catch (err) {
-      console.error(`[${typeLabel}] Error in ${file}:\n`, err);
+      logger.error(
+        { extra_context: { file, command_type: typeLabel }, stack_trace: (err as Error).stack },
+        `Failed to load command`,
+        err
+      );
     }
   };
 
@@ -145,11 +179,21 @@ export const registerAllCommands = async (client: Client) => {
 
   // --- 実行
   try {
-    console.info(`[Init] Registering ${commandCount} total commands...`);
+    logger.info(
+      { extra_context: { command_count: commandCount } },
+      `Starting command registration process...`
+    );
     await putToDiscordWithDiffCheck(client, rest, adminGuildCommands, testGuild);
     await putToDiscordWithDiffCheck(client, rest, globalCommands);
-    console.info(`[Done] All commands registered successfully.`);
+    logger.info(
+      { extra_context: { command_count: commandCount } },
+      `Command registration completed.`
+    );
   } catch (err) {
-    console.error("[Register Error]", err);
+    logger.error(
+      { extra_context: { command_count: commandCount }, stack_trace: (err as Error).stack },
+      `Command registration failed.`,
+      err
+    );
   }
 };

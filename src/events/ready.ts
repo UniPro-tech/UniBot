@@ -2,22 +2,20 @@ import { Client, EmbedBuilder, ActivityType, ActivityOptions, TextChannel } from
 import { registerAllCommands } from "@/lib/executorsRegister";
 import path from "path";
 import { redefineJobs } from "@/lib/jobManager";
+import { ALStorage, loggingSystem } from "..";
 
 export const name = "ready";
 
 export const execute = async (client: Client) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "ready" });
   const logFile = await client.functions.logUtils.readConfig("status");
   await registerAllCommands(client);
 
-  console.debug(`[debug] on:${logFile?.onoff},play:${logFile?.playing},status:${logFile?.status}`);
+  logger.debug({ extra_context: { log_file: logFile } }, "Bot is ready");
 
   if (!client.user) {
-    console.error(
-      `[error] [${client.functions.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error] Client.user is undefined`
-    );
+    logger.error({ extra_context: { service: "ready" } }, "Client user is not defined");
     process.exit(1);
   }
 
@@ -57,11 +55,9 @@ export const execute = async (client: Client) => {
 
   const channel = client.channels.cache.get(client.config.logch.ready);
   if (!channel || !(channel instanceof TextChannel)) {
-    console.error(
-      `[error] [${client.functions.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error] Log Channel is invalid`
+    logger.error(
+      { extra_context: { channel: client.config.logch.ready } },
+      "Log channel is not defined or not a text channel"
     );
     return;
   }
@@ -102,7 +98,6 @@ export const execute = async (client: Client) => {
     embed.addFields({ name: "Contributors", value: contributors.join("\n") });
   }
 
-  console.debug(`[debug] Bot is ready and logged in as ${client.user.tag}`);
   await channel.send({ embeds: [embed] });
 
   await client.agenda.start();
@@ -110,11 +105,7 @@ export const execute = async (client: Client) => {
   client.agenda.every("0 0 * * *", "purge agenda");
   await redefineJobs(client);
 
-  console.log(
-    `[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)} info] Logged in as ${
-      client.user.tag
-    }!`
-  );
+  logger.info("Ready event processing completed");
 };
 
 export default {

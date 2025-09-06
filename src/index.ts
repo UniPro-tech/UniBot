@@ -21,6 +21,16 @@ import {
 import { ChatInputCommand } from "./executors/types/ChatInputCommand";
 import { StringSelectMenu } from "./executors/types/StringSelectMenu";
 import { Button } from "./executors/types/Button";
+import { LogContext, Logger, Transporter } from "@unipro-tech/node-logger";
+import { AsyncLocalStorage } from "async_hooks";
+
+export const loggingSystem = new Logger("unibot", [
+  ...(process.env.NODE_ENV === "development"
+    ? [Transporter.PinoPrettyTransporter()]
+    : [Transporter.ConsoleTransporter()]),
+]);
+
+export const ALStorage = new AsyncLocalStorage<LogContext & Record<string, any>>();
 
 const client = new Client({
   intents: [
@@ -40,6 +50,7 @@ if (!process.env.DATABASE_URL) {
 export const agenda = new Agenda({ db: { address: process.env.DATABASE_URL } });
 
 import jobManager from "./lib/jobManager";
+import { nanoid } from "nanoid";
 
 // Attach utilities and config to client
 client.agenda = agenda;
@@ -56,29 +67,21 @@ client.interactionExecutorsCollections = {
   modalSubmitCommands: new Collection<string, ModalSubmitCommand>(),
 };
 
-agenda.on("ready", () => {
-  console.log(
-    `\u001b[32m[${client.functions.timeUtils.timeToJSTstamp(
-      Date.now(),
-      true
-    )}] Agenda started successfully.\u001b[0m`
-  );
+agenda.on("ready", async () => {
+  const logger = loggingSystem.getLogger({ function: "agenda" });
+  logger.info("Agenda started successfully.");
 });
 
 agenda.on("error", (error) => {
-  console.error(
-    `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(
-      Date.now(),
-      true
-    )}] Agenda connection error: ${error}\u001b[0m`
-  );
+  const logger = loggingSystem.getLogger({ function: "agenda" });
+  logger.error({ stack_trace: error.stack, error: error.message }, "Agenda an error occurred.");
 });
 
 agenda.define("purge agenda", async (job, done) => {
+  const logger = loggingSystem.getLogger({ function: "agenda" });
   const jobs = await agenda.jobs();
   jobs.forEach((job) => {
-    console.log(`List job: ${job.attrs.name} - Next Run At: ${job.attrs.nextRunAt}`);
-    if (job.attrs.nextRunAt == null) console.log(`This job is finished and can be removed.`);
+    if (job.attrs.nextRunAt == null) logger.info("This job is finished and can be removed.");
     if (job.attrs.nextRunAt == null) job.remove();
   });
   done();
@@ -98,20 +101,40 @@ const eventFiles = fs
   .filter((file) => (file.endsWith(".ts") && !file.endsWith(".d.ts")) || file.endsWith(".js"));
 
 for (const file of eventFiles) {
+  const logger = loggingSystem.getLogger({ function: "eventLoader" });
   const event = require(path.join(eventDir, file));
   const handler = (...args: any[]) => event.execute(...args, client);
   try {
-    event.once ? client.once(event.name, handler) : client.on(event.name, handler);
+    event.once
+      ? client.once(event.name, async (...args: any[]) => {
+          const ctx: LogContext = {
+            trace_id: nanoid(),
+            request_id: nanoid(),
+          };
+          ALStorage.run(ctx, () => {
+            handler(...args);
+          });
+        })
+      : client.on(event.name, (...args: any[]) => {
+          const ctx: LogContext = {
+            trace_id: nanoid(),
+            request_id: nanoid(),
+          };
+          ALStorage.run(ctx, () => {
+            handler(...args);
+          });
+        });
   } catch (error) {
-    console.error(
-      `\u001b[31m[${client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}]\u001b[0m\n`,
-      error
+    logger.error(
+      { stack_trace: (error as Error).stack, extra_context: { event, file } },
+      "Failed to load event."
     );
   }
 }
 
 // Error handling
 const sendErrorEmbed = async (title: string, description: string) => {
+  const logger = loggingSystem.getLogger({ function: "errorHandler" });
   const embed = new EmbedBuilder()
     .setTitle(title)
     .setDescription("```\n" + description + "\n```")
@@ -122,28 +145,31 @@ const sendErrorEmbed = async (title: string, description: string) => {
     if (channel && channel instanceof TextChannel) {
       channel.send({ embeds: [embed] });
     } else {
-      console.error("Error: Log Channel is invalid.");
+      logger.error(
+        { extra_context: { channelId: config.logch.error, channel } },
+        "Error log channel not found or is not a text channel."
+      );
     }
-  } catch (err) {
-    console.error("Failed to send error embed:", err);
+  } catch (error) {
+    logger.error({ stack_trace: (error as Error).stack, error }, (error as Error).message);
   }
 };
 
 process.on("uncaughtException", (error) => {
-  const timestamp = client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
-  console.error(`[${timestamp}] ${error.stack}`);
+  const logger = loggingSystem.getLogger({ function: "errorHandler" });
+  logger.error({ stack_trace: (error as Error).stack, error }, (error as Error).message);
   sendErrorEmbed("ERROR - uncaughtException", error.stack || String(error));
 });
 
 process.on("unhandledRejection", (reason: any, promise) => {
-  const timestamp = client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
+  const logger = loggingSystem.getLogger({ function: "errorHandler" });
   let reasonText = "";
   if (reason instanceof Error) {
     reasonText = reason.stack || reason.message;
   } else {
     reasonText = typeof reason === "object" ? JSON.stringify(reason, null, 2) : String(reason);
   }
-  console.error(`\u001b[31m[${timestamp}] ${reasonText}\u001b[0m`, promise);
+  logger.error({ extra_context: { reason, promise } }, `An unhandledRejection occurred`);
   sendErrorEmbed("ERROR - unhandledRejection", reasonText);
 });
 
