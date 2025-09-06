@@ -1,15 +1,14 @@
 import { EmbedBuilder, MessageFlags, StringSelectMenuInteraction } from "discord.js";
 import config from "@/config";
+import { logger } from "@/index";
 
 export const name = "rp";
 
 export const execute = async (interaction: StringSelectMenuInteraction) => {
   const selected = interaction.values;
-  console.log(
-    `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-      Date.now(),
-      true
-    )} info] -> Menu Selected: ${selected}`
+  logger.info(
+    { service: "RolePicker", userId: interaction.user.id, selected },
+    "RolePicker execution started"
   );
   await interaction.deferUpdate();
 
@@ -34,30 +33,21 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
       if (hasRole) {
         await member.roles.remove(value);
         completedRoles.push({ roleId: value, action: "removed" });
-        console.log(
-          `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-            Date.now(),
-            true
-          )} info] -> Role Removed: for ${member.displayName}`
+        logger.info(
+          { service: "RolePicker", userId: interaction.user.id, roleId: value },
+          `Role Removed for ${member.displayName}`
         );
       } else {
         await member.roles.add(value);
         completedRoles.push({ roleId: value, action: "added" });
-        console.log(
-          `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-            Date.now(),
-            true
-          )} info] -> Role Added: for ${member.displayName}`
+        logger.info(
+          { service: "RolePicker", userId: interaction.user.id, roleId: value },
+          `Role Added for ${member.displayName}`
         );
       }
     }
   } catch (error) {
-    console.error(
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occured in ${interaction.customId}\nDetails:\n${error}`
-    );
+    logger.error({ service: "RolePicker" }, "Error in RolePicker interaction:", error);
     const messageEmbed = new EmbedBuilder()
       .setTitle("すみません。エラーが発生しました。")
       .setDescription("```\n" + error + "\n```")

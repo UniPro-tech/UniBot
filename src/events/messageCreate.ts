@@ -9,6 +9,7 @@ import {
 import { Client, GuildChannel, Message } from "discord.js";
 import { RPC, Generate, Query } from "voicevox.js";
 import { Readable } from "stream";
+import { loggingSystem } from "..";
 
 export const name = "messageCreate";
 
@@ -140,9 +141,10 @@ async function applyDictionary(text: string, dict: any[]): Promise<string> {
 }
 
 export const execute = async (message: Message, client: Client) => {
+  const logger = loggingSystem.getLogger({ function: "messageCreate" });
   if (message.author.bot || !message.guild || !message.channel.isTextBased()) return;
   if (!process.env.VOICEVOX_API_URL) {
-    console.error("[ERROR] VOICEVOX_API_URL is not set.");
+    logger.warn("VOICEVOX_API_URL is not set.");
     return;
   }
 

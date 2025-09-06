@@ -7,6 +7,7 @@ import {
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
+import { loggingSystem } from "@/index";
 
 export const handlingCommands = subCommandHandling("general/rp");
 export const data = addSubCommand(
@@ -16,19 +17,24 @@ export const data = addSubCommand(
 export const guildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
+  const logger = loggingSystem.getLogger({ function: "general/rp" });
   const subcommand = (interaction.options as CommandInteractionOptionResolver).getSubcommand();
   const command = handlingCommands.get(subcommand);
 
   if (!command) {
-    console.info(`[Not Found] Command: ${subcommand}`);
+    logger.error({ context: { command: interaction.commandName } }, "No command handler found");
     return;
   }
 
   try {
     await command.execute(interaction);
-    console.info(`[Run] ${subcommand}`);
+    logger.info({ context: { command: interaction.commandName } }, "Command executed successfully");
   } catch (error) {
-    console.error(error);
+    logger.error(
+      { context: { command: interaction.commandName }, stack_trace: (error as Error).stack },
+      "Command execution failed",
+      error
+    );
 
     const errorMsg = (error as Error).toString();
     const logEmbed = new EmbedBuilder()

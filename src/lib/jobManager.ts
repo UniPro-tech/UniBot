@@ -1,5 +1,5 @@
 import { Client, DMChannel, TextChannel, ThreadChannel, VoiceChannel } from "discord.js";
-import { agenda } from "..";
+import { agenda, loggingSystem } from "..";
 import { Job } from "@hokify/agenda";
 
 export interface DiscordMessageJobData {
@@ -38,7 +38,6 @@ export const redefineJobs = async (client: Client) => {
     jobs.forEach((job) => {
       const name = job.attrs.name;
       const id = name.split("id:")[1];
-      console.log(`Redefining job: ${name}`);
       defineRemindJob(id, client);
     });
   });

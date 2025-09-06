@@ -2,6 +2,7 @@ import { EmbedBuilder, MessageFlags, StringSelectMenuInteraction } from "discord
 import config from "@/config";
 import { subSelectMenusHandling } from "@/lib/commandUtils";
 import { GetErrorChannel } from "@/lib/channelUtils";
+import { logger } from "@/index";
 
 export const name = "tts";
 
@@ -12,11 +13,9 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
   const commands = handlingCommands.get(commandKey);
 
   if (!commands) {
-    console.log(
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} info] Not Found: ${interaction.customId}`
+    logger.error(
+      { service: "TTS", userId: interaction.user.id, commandKey },
+      "No command found for TTS select menu"
     );
     return;
   }
@@ -25,8 +24,9 @@ export const execute = async (interaction: StringSelectMenuInteraction) => {
     await commands.execute(interaction);
   } catch (error) {
     const time = interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
-    console.error(
-      `[${time} error] An Error Occurred in ${interaction.customId}\nDetails:\n${error}`
+    logger.error(
+      { service: "TTS", userId: interaction.user.id, commandKey, time, error },
+      `An Error Occurred in ${interaction.customId}`
     );
 
     const logEmbed = new EmbedBuilder()

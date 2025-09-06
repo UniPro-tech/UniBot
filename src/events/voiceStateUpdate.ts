@@ -8,6 +8,7 @@ import {
 import { EmbedBuilder, TextChannel, VoiceBasedChannel, VoiceState } from "discord.js";
 import { Readable } from "stream";
 import { RPC, Query, Generate } from "voicevox.js";
+import { loggingSystem } from "..";
 
 export const name = "voiceStateUpdate";
 
@@ -42,6 +43,7 @@ const handleDisconnect = async (
   oldState: VoiceState,
   currentChannel: VoiceBasedChannel | null | undefined
 ) => {
+  const logger = loggingSystem.getLogger({ function: "handleDisconnect" });
   if (!currentChannel || oldState.channel?.id !== currentChannel.id) return;
   const connectionData = await readTtsConnection(oldState.guild.id, undefined, currentChannel.id);
   if (!connectionData) return;
@@ -63,7 +65,10 @@ const handleDisconnect = async (
     oldState.client.config.logch.command
   ) as TextChannel;
   if (!logChannel) {
-    console.error("[Error] LogChannel invalid");
+    logger.error(
+      { context: { channel: oldState.client.config.logch.command } },
+      "Log channel not found."
+    );
     return;
   }
   await sendEmbed(

@@ -1,25 +1,30 @@
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 import { ButtonInteraction, EmbedBuilder } from "discord.js";
 import config from "@/config";
+import { loggingSystem } from "@/index";
 
 const ButtonExecute = async (interaction: ButtonInteraction) => {
-  const time = () => interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true);
-
+  const logger = loggingSystem.getLogger({ function: "ButtonExecute" });
   try {
     const [prefix] = interaction.customId.split("_");
     const executionDefine = interaction.client.interactionExecutorsCollections.buttons.get(prefix);
 
     if (!executionDefine) {
-      console.log(`[${time()} info] Not Found: ${interaction.customId}`);
+      logger.error(
+        { context: { customId: interaction.customId } },
+        "No execution definition found"
+      );
       return;
     }
 
-    console.log(`[${time()} info] Button -> ${interaction.customId}`);
+    logger.info({ context: { customId: interaction.customId } }, "Button interaction executed");
     await executionDefine.execute(interaction);
   } catch (error) {
     const errorMsg = (error as Error).toString();
-    console.error(
-      `[${time()} error] An Error Occured in ${interaction.customId}\nDetails:\n${errorMsg}`
+    logger.error(
+      { context: { customId: interaction.customId }, stack_trace: (error as Error).stack },
+      "Button interaction execution failed",
+      error
     );
 
     const logEmbed = new EmbedBuilder()

@@ -1,10 +1,10 @@
 import { GetErrorChannel, GetLogChannel } from "@/lib/channelUtils";
 import { EmbedBuilder, StringSelectMenuInteraction } from "discord.js";
 import config from "@/config";
+import { loggingSystem } from "@/index";
 
 const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
-  const now = Date.now();
-  const time = interaction.client.functions.timeUtils.timeToJSTstamp(now, true);
+  const logger = loggingSystem.getLogger({ function: "StringSelectMenu" });
 
   try {
     const [prefix] = interaction.customId.split("_");
@@ -12,16 +12,24 @@ const StringSelectMenu = async (interaction: StringSelectMenuInteraction) => {
       interaction.client.interactionExecutorsCollections.stringSelectMenus.get(prefix);
 
     if (!executor) {
-      console.log(`[${time} info] Not Found: ${interaction.customId}`);
+      logger.error(
+        { context: { customId: interaction.customId } },
+        "No executor found for this StringSelectMenu"
+      );
       return;
     }
 
-    console.log(`[${time} info] StringSelectMenu -> ${interaction.customId}`);
+    logger.info(
+      { context: { customId: interaction.customId } },
+      "StringSelectMenu execution started"
+    );
     await executor.execute(interaction);
   } catch (error) {
     const errorMsg = (error as Error).toString();
-    console.error(
-      `[${time} error] An Error Occured in ${interaction.customId}\nDetails:\n${errorMsg}`
+    logger.error(
+      { context: { customId: interaction.customId }, stack_trace: (error as Error).stack },
+      "Error executing StringSelectMenu",
+      error
     );
 
     const logEmbed = new EmbedBuilder()

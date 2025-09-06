@@ -17,6 +17,7 @@ import {
 import { writeTtsConnection } from "@/lib/dataUtils";
 import { Readable } from "stream";
 import { RPC, Query, Generate } from "voicevox.js";
+import { loggingSystem } from "@/index";
 
 export const data = new SlashCommandSubcommandBuilder()
   .setName("join")
@@ -45,6 +46,7 @@ const connectVoiceVox = async () => {
 };
 
 export const execute = async (interaction: CommandInteraction) => {
+  const logger = loggingSystem.getLogger({ function: "general/tts/join" });
   await interaction.deferReply();
 
   const member = interaction.member as GuildMember;
@@ -111,7 +113,10 @@ export const execute = async (interaction: CommandInteraction) => {
   });
 
   connection.on("stateChange", (oldState, newState) => {
-    console.log(`Voice connection state changed: ${oldState.status} -> ${newState.status}`);
+    logger.info(
+      { context: { guild: interaction.guild!.id, oldState, newState } },
+      "Voice connection state changed"
+    );
     if (newState.status === VoiceConnectionStatus.Disconnected) {
       const embed = createErrorEmbed(
         "Error - TTSボイスチャンネル切断",

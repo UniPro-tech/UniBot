@@ -9,6 +9,7 @@ import {
 import { addSubCommand, addSubCommandGroup, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
 import config from "@/config";
+import { loggingSystem } from "@/index";
 
 export const handlingCommands = subCommandHandling(
   "general/tts/group",
@@ -42,6 +43,7 @@ const replyWithError = async (
 };
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
+  const logger = loggingSystem.getLogger({ function: "general/tts" });
   if (!interaction.inGuild()) {
     await replyWithError(
       interaction,
@@ -66,15 +68,19 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
   const command = group ? handlingCommands.get(group) : handlingCommands.get(sub);
 
   if (!command) {
-    console.info(`[Not Found] Command: ${sub}`);
+    logger.error({ context: { command: interaction.commandName } }, "No command handler found");
     return;
   }
 
   try {
     await command.execute(interaction);
-    console.info(`[Run] ${sub}`);
+    logger.info({ context: { command: interaction.commandName } }, "Command executed successfully");
   } catch (error) {
-    console.error(error);
+    logger.error(
+      { context: { command: interaction.commandName }, stack_trace: (error as Error).stack },
+      "Command execution failed",
+      error
+    );
 
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")

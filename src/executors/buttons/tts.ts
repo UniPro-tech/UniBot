@@ -13,6 +13,7 @@ import { GetErrorChannel } from "@/lib/channelUtils";
 import { uuid58Encode } from "@nakanoaas/uuid58";
 import { RPC, AudioLibrary } from "voicevox.js";
 import { listTtsDictionary } from "@/lib/dataUtils";
+import { loggingSystem } from "@/index";
 
 export const name = "tts";
 
@@ -68,6 +69,7 @@ const getDictSelectMenu = (words: any[], action: string) =>
     .setMaxValues(1);
 
 export const execute = async (interaction: ButtonInteraction) => {
+  const logger = loggingSystem.getLogger({ function: "TTSButtonInteraction" });
   try {
     const id = interaction.customId.split("_");
     const components: any[] = [];
@@ -149,11 +151,10 @@ export const execute = async (interaction: ButtonInteraction) => {
 
     await interaction.update({ components });
   } catch (error) {
-    console.error(
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(
-        Date.now(),
-        true
-      )} error]An Error Occurred in ${interaction.customId}\nDetails:\n${error}`
+    logger.error(
+      { stack_trace: (error as Error).stack },
+      "Error in TTS button interaction:",
+      error
     );
     const logEmbed = new EmbedBuilder()
       .setTitle("ERROR - cmd")

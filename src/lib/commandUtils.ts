@@ -8,6 +8,7 @@ import {
 } from "discord.js";
 import fs from "fs";
 import path from "path";
+import { loggingSystem } from "..";
 
 /**
  * Adds subcommands to the provided data object.
@@ -20,7 +21,8 @@ export const addSubCommand = (
   name: string,
   data: SlashCommandBuilder | SlashCommandSubcommandGroupBuilder
 ) => {
-  console.log(`\u001b[32m[Init]Adding ${name}'s SubCommands\u001b[0m`);
+  const logger = loggingSystem.getLogger({ function: "addSubCommand" });
+  logger.info({ context: { command: name } }, `Adding SubCommands`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
@@ -34,9 +36,9 @@ export const addSubCommand = (
     } else */
     data.addSubcommand(command.data as SlashCommandSubcommandBuilder);
 
-    console.log(`[Subcommand]${file} has been added.`);
+    logger.info({ context: { command: command.data.name } }, "Subcommand has been added.");
   }
-  console.log(`\u001b[32m[Init]Added ${name}'s SubCommands\u001b[0m`);
+  logger.info({ context: { command: name } }, `Added SubCommands`);
   return data;
 };
 
@@ -51,10 +53,11 @@ export const subCommandHandling = (
   name: string,
   collection?: Collection<string, ChatInputCommand>
 ) => {
+  const logger = loggingSystem.getLogger({ function: "subCommandHandling" });
   if (!collection) {
     collection = new Collection<string, ChatInputCommand>();
   }
-  console.info(`\u001b[32m===Load ${name}'s SubCommand Executing Data===\u001b[0m`);
+  logger.info({ context: { command: name } }, `Load SubCommand Executing Data`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
@@ -65,19 +68,25 @@ export const subCommandHandling = (
     )) as ChatInputCommand;
     try {
       collection.set(command.data.name, command);
-      console.info(`[Subcommand]${command.data.name} has been loaded.`);
+      logger.info({ context: { command: command.data.name } }, "Subcommand has been loaded.");
     } catch (error) {
-      console.error(
-        `\u001b[31m[error]An Error Occurred in ${command.data.name}\nDetails:\n ${error}\u001b[0m`
+      logger.error(
+        {
+          context: { command: command.data.name },
+          error,
+          stack_trace: error instanceof Error ? error.stack : undefined,
+        },
+        error instanceof Error ? error.message : `An Error Occurred in ${command.data.name}`
       );
     }
   }
-  console.info(`\u001b[32m===${name} loaded===\u001b[0m`);
+  logger.info({ service: "CommandUtils", name }, `${name} loaded`);
   return collection;
 };
 
 export const addSubCommandGroup = (name: string, data: SlashCommandBuilder) => {
-  console.log(`\u001b[32m[Init]Adding ${name}'s SubCommandGroups\u001b[0m`);
+  const logger = loggingSystem.getLogger({ function: "addSubCommandGroup" });
+  logger.info({ context: { command: name } }, `Adding SubCommandGroups`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/chatInputCommands/${name}`))
     .filter((file) => (file.endsWith(".js") || file.endsWith(".ts")) && !file.endsWith(".d.ts"));
@@ -91,9 +100,9 @@ export const addSubCommandGroup = (name: string, data: SlashCommandBuilder) => {
     } else */
     data.addSubcommandGroup(command.data as SlashCommandSubcommandGroupBuilder);
 
-    console.log(`[Subcommand]${file} has been added.`);
+    logger.info({ context: { command: command.data.name } }, "SubCommandGroup has been added.");
   }
-  console.log(`\u001b[32m[Init]Added ${name}'s SubCommandGroups\u001b[0m`);
+  logger.info({ context: { command: name } }, `Added ${name}'s SubCommandGroups`);
   return data;
 };
 
@@ -104,7 +113,8 @@ export const subSelectMenusHandling = (
   if (!collection) {
     collection = new Collection<string, StringSelectMenu>();
   }
-  console.info(`\u001b[32m===Load ${name}'s SubSelectMenu Executing Data===\u001b[0m`);
+  const logger = loggingSystem.getLogger({ function: "subSelectMenusHandling" });
+  logger.info({ context: { command: name } }, `Load SelectMenu Executing Data`);
   const commandFiles = fs
     .readdirSync(path.resolve(__dirname, `../executors/selectMenus/${name}`))
     .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
@@ -115,14 +125,19 @@ export const subSelectMenusHandling = (
     )) as StringSelectMenu;
     try {
       collection.set(command.name, command);
-      console.info(`[Subcommand]${command.name} has been loaded.`);
+      logger.info({ context: { command: command.name } }, "SelectMenu has been loaded.");
     } catch (error) {
-      console.error(
-        `\u001b[31m[error]An Error Occurred in ${command.name}\nDetails:\n ${error}\u001b[0m`
+      logger.error(
+        {
+          context: { command: command.name },
+          error,
+          stack_trace: error instanceof Error ? error.stack : undefined,
+        },
+        error instanceof Error ? error.message : `An Error Occurred in ${command.name}`
       );
     }
   }
-  console.info(`\u001b[32m===${name} loaded===\u001b[0m`);
+  logger.info({ context: { command: name } }, `Command loaded`);
   return collection;
 };
 

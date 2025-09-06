@@ -1,24 +1,28 @@
+import { loggingSystem } from "@/index";
 import { EmbedBuilder, ModalSubmitInteraction } from "discord.js";
 
 const ModalSubmitExecute = async (interaction: ModalSubmitInteraction) => {
+  const logger = loggingSystem.getLogger({ function: "ModalSubmitExecute" });
   try {
-    const time = () =>
-      `[${interaction.client.functions.timeUtils.timeToJSTstamp(Date.now(), true)}`;
-
-    console.log(`${time()} info] ModalSubmit ->${interaction.customId}`);
+    logger.info({ context: { customId: interaction.customId } }, "ModalSubmit execution started");
 
     const modal = interaction.client.interactionExecutorsCollections.modalSubmitCommands.get(
       interaction.customId
     );
     if (!modal) {
-      console.log(
-        `${time()} error] ModalSubmit -> No modal found for customId: ${interaction.customId}`
+      logger.error(
+        { service: "ModalSubmitExecutor", customId: interaction.customId },
+        "Modal not found"
       );
       return;
     }
     modal.execute(interaction);
   } catch (error) {
-    console.error("Error handling modal submit interaction:", error);
+    logger.error(
+      { context: { customId: interaction.customId }, stack_trace: (error as Error).stack },
+      "Error executing ModalSubmit",
+      error
+    );
     const embed = new EmbedBuilder()
       .setTitle("エラー")
       .setDescription("モーダルの送信処理中にエラーが発生しました。")
