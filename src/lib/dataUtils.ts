@@ -251,7 +251,6 @@ export const readTtsDictionary = async (
   } catch (error) {
     logger.error(
       {
-        service: "DataUtils",
         error,
         stack_trace: error instanceof Error ? error.stack : undefined,
       },
