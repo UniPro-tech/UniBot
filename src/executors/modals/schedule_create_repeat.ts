@@ -68,6 +68,12 @@ function convertToCron(laterText: string): string | null {
   }
 
   const nextTwo = later.schedule(sched).next(2) as Date[];
+
+  // JST (UTC+9)に変換する
+  for (let i = 0; i < nextTwo.length; i++) {
+    nextTwo[i] = new Date(nextTwo[i].getTime() - 9 * 60 * 60 * 1000);
+  }
+
   if (nextTwo.length < 2) {
     return null;
   }

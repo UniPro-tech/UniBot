@@ -21,7 +21,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       .setTitle("予約投稿の作成");
     const timeInput = new TextInputBuilder()
       .setCustomId("time")
-      .setLabel("投稿時間")
+      .setLabel("投稿時間 (JST)")
       .setStyle(TextInputStyle.Short)
       .setPlaceholder(
         '例: "every day at 12:00"、 "every Monday at 09:00"\n詳しくはhelpコマンドを参照'
@@ -53,7 +53,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       .setTitle("予約投稿の作成");
     const timeInput = new TextInputBuilder()
       .setCustomId("time")
-      .setLabel("投稿時間 (YYYY-MM-DD HH:mm)")
+      .setLabel("投稿時間 (YYYY-MM-DD HH:mm / JST)")
       .setStyle(TextInputStyle.Short)
       .setPlaceholder("例: 2024-12-31 23:59")
       .setRequired(true);
