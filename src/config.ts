@@ -2,8 +2,9 @@
 const config = {
   adminRoleId: process.env.ROLE_ADMIN,
   color: {
-    success: 0x4CAF50,
-    error: 0xF00000,
+    success: 0x4caf50,
+    warning: 0xffc107,
+    error: 0xf00000,
   },
   token: process.env.TOKEN,
   dev: {
