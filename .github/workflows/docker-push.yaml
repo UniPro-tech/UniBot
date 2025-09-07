@@ -5,6 +5,9 @@ on:
       - main
       - dev/*
 
+concurrency:
+  group: docker-build-push
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,9 +25,22 @@ jobs:
           username: robot$github-publisher
           password: ${{ secrets.HARBOR_TOKEN }}
 
-      - name: Build Docker image
-        run: docker build -t registry.uniproject.jp/unibot/unibot:latest .
-        id: build
+      - name: Add metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: registry.uniproject.jp/unibot/unibot
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=,suffix=,format=short
 
       - name: Push Docker image
-        run: docker push registry.uniproject.jp/unibot/unibot:latest
+        uses: docker/build-push-action@v5
+        with:
+          file: ./Dockerfile
+          push: true
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=registry.uniproject.jp/unibot/unibot:buildcache
+          cache-to: type=registry,ref=registry.uniproject.jp/unibot/unibot:buildcache,mode=max
