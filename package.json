@@ -44,7 +44,7 @@
     "@prisma/client": "^6.15.0",
     "@types/breejs__later": "^4.1.5",
     "@types/node": "^24.3.1",
-    "@unipro-tech/node-logger": "^1.0.0-rc.14",
+    "@unipro-tech/node-logger": "^1.0.0",
     "axios": "^1.11.0",
     "child_process": "^1.0.2",
     "cronstrue": "^3.2.0",
