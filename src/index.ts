@@ -34,9 +34,21 @@ export const ALStorage = new AsyncLocalStorage<LogContext & Record<string, any>>
 
 process.on("uncaughtException", (error) => {
   const trace_id =
-    ALStorage.getStore() !== undefined ? ALStorage.getStore()!.ctx.trace_id : nanoid();
+    ALStorage.getStore() !== undefined
+      ? ALStorage.getStore()!.ctx !== undefined
+        ? ALStorage.getStore()!.ctx.trace_id !== undefined
+          ? ALStorage.getStore()!.ctx.trace_id
+          : nanoid()
+        : nanoid()
+      : nanoid();
   const request_id =
-    ALStorage.getStore() !== undefined ? ALStorage.getStore()!.ctx.request_id : nanoid();
+    ALStorage.getStore() !== undefined
+      ? ALStorage.getStore()!.ctx !== undefined
+        ? ALStorage.getStore()!.ctx.request_id !== undefined
+          ? ALStorage.getStore()!.ctx.request_id
+          : nanoid()
+        : nanoid()
+      : nanoid();
   const logger = loggingSystem.getLogger({
     trace_id,
     request_id,
@@ -48,9 +60,21 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (reason: any, promise) => {
   const trace_id =
-    ALStorage.getStore() !== undefined ? ALStorage.getStore()!.ctx.trace_id : nanoid();
+    ALStorage.getStore() !== undefined
+      ? ALStorage.getStore()!.ctx !== undefined
+        ? ALStorage.getStore()!.ctx.trace_id !== undefined
+          ? ALStorage.getStore()!.ctx.trace_id
+          : nanoid()
+        : nanoid()
+      : nanoid();
   const request_id =
-    ALStorage.getStore() !== undefined ? ALStorage.getStore()!.ctx.request_id : nanoid();
+    ALStorage.getStore() !== undefined
+      ? ALStorage.getStore()!.ctx !== undefined
+        ? ALStorage.getStore()!.ctx.request_id !== undefined
+          ? ALStorage.getStore()!.ctx.request_id
+          : nanoid()
+        : nanoid()
+      : nanoid();
 
   const logger = loggingSystem.getLogger({
     trace_id,
@@ -69,9 +93,21 @@ process.on("unhandledRejection", (reason: any, promise) => {
 
 process.on("warning", (warning) => {
   const trace_id =
-    ALStorage.getStore() !== undefined ? ALStorage.getStore()!.ctx.trace_id : nanoid();
+    ALStorage.getStore() !== undefined
+      ? ALStorage.getStore()!.ctx !== undefined
+        ? ALStorage.getStore()!.ctx.trace_id !== undefined
+          ? ALStorage.getStore()!.ctx.trace_id
+          : nanoid()
+        : nanoid()
+      : nanoid();
   const request_id =
-    ALStorage.getStore() !== undefined ? ALStorage.getStore()!.ctx.request_id : nanoid();
+    ALStorage.getStore() !== undefined
+      ? ALStorage.getStore()!.ctx !== undefined
+        ? ALStorage.getStore()!.ctx.request_id !== undefined
+          ? ALStorage.getStore()!.ctx.request_id
+          : nanoid()
+        : nanoid()
+      : nanoid();
 
   const logger = loggingSystem.getLogger({
     trace_id,
