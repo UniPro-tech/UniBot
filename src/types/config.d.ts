@@ -2,6 +2,7 @@ declare module "@/config" {
   export const adminRoleId: string;
   export const color: {
     success: number;
+    warning: number;
     error: number;
   };
   export const token: string;

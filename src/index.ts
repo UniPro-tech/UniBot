@@ -32,6 +32,53 @@ export const loggingSystem = new Logger("unibot", [
 
 export const ALStorage = new AsyncLocalStorage<LogContext & Record<string, any>>();
 
+process.on("uncaughtException", (error) => {
+  const trace_id = ALStorage.getStore()?.ctx.trace_id || nanoid();
+  const request_id = ALStorage.getStore()?.ctx.request_id || nanoid();
+  const logger = loggingSystem.getLogger({
+    trace_id,
+    request_id,
+    function: "errorHandler",
+  });
+  logger.error({ stack_trace: (error as Error).stack, error }, (error as Error).message);
+  sendErrorEmbed("error", trace_id, request_id);
+});
+
+process.on("unhandledRejection", (reason: any, promise) => {
+  const trace_id = ALStorage.getStore()?.ctx.trace_id || nanoid();
+  const request_id = ALStorage.getStore()?.ctx.request_id || nanoid();
+
+  const logger = loggingSystem.getLogger({
+    trace_id,
+    request_id,
+    function: "errorHandler",
+  });
+  let reasonText = "";
+  if (reason instanceof Error) {
+    reasonText = reason.stack || reason.message;
+  } else {
+    reasonText = typeof reason === "object" ? JSON.stringify(reason, null, 2) : String(reason);
+  }
+  logger.error({ extra_context: { reason, promise } }, `An unhandledRejection occurred`);
+  sendErrorEmbed("error", trace_id, request_id);
+});
+
+process.on("warning", (warning) => {
+  const trace_id = ALStorage.getStore()?.ctx.trace_id || nanoid();
+  const request_id = ALStorage.getStore()?.ctx.request_id || nanoid();
+
+  const logger = loggingSystem.getLogger({
+    trace_id,
+    request_id,
+    function: "errorHandler",
+  });
+  logger.warn(
+    { stack_trace: warning.stack, error: warning, extra_context: { name: warning.name } },
+    warning.message
+  );
+  sendErrorEmbed("warning", trace_id, request_id);
+});
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -133,12 +180,25 @@ for (const file of eventFiles) {
 }
 
 // Error handling
-const sendErrorEmbed = async (title: string, description: string) => {
+const sendErrorEmbed = async (
+  level: "warning" | "error" | "fatal",
+  traceId: string,
+  requestId: string
+) => {
   const logger = loggingSystem.getLogger({ function: "errorHandler" });
   const embed = new EmbedBuilder()
-    .setTitle(title)
-    .setDescription("```\n" + description + "\n```")
-    .setColor(config.color.error)
+    .setTitle(
+      level === "warning"
+        ? "Warning - Node.js Uncaught Warning"
+        : "Error - Node.js Uncaught Exception"
+    )
+    .setDescription("An error occurred. Please check the logs for details.")
+    .addFields(
+      { name: "Level", value: level, inline: true },
+      { name: "Trace ID", value: traceId, inline: true },
+      { name: "Request ID", value: requestId, inline: true }
+    )
+    .setColor(level === "warning" ? config.color.warning : config.color.error)
     .setTimestamp();
   try {
     const channel = await client.channels.fetch(config.logch.error);
@@ -154,23 +214,5 @@ const sendErrorEmbed = async (title: string, description: string) => {
     logger.error({ stack_trace: (error as Error).stack, error }, (error as Error).message);
   }
 };
-
-process.on("uncaughtException", (error) => {
-  const logger = loggingSystem.getLogger({ function: "errorHandler" });
-  logger.error({ stack_trace: (error as Error).stack, error }, (error as Error).message);
-  sendErrorEmbed("ERROR - uncaughtException", error.stack || String(error));
-});
-
-process.on("unhandledRejection", (reason: any, promise) => {
-  const logger = loggingSystem.getLogger({ function: "errorHandler" });
-  let reasonText = "";
-  if (reason instanceof Error) {
-    reasonText = reason.stack || reason.message;
-  } else {
-    reasonText = typeof reason === "object" ? JSON.stringify(reason, null, 2) : String(reason);
-  }
-  logger.error({ extra_context: { reason, promise } }, `An unhandledRejection occurred`);
-  sendErrorEmbed("ERROR - unhandledRejection", reasonText);
-});
 
 client.login(config.token);
