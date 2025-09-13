@@ -6,6 +6,7 @@ on:
 
 concurrency:
   group: docker-build-push
+  cancel-in-progress: true
 
 jobs:
   build:
