@@ -1,4 +1,9 @@
-import { listTtsDictionary, readTtsConnection, readTtsPreference } from "@/lib/dataUtils";
+import {
+  listTtsDictionary,
+  readTtsConnection,
+  readTtsPreference,
+  ServerDataManager,
+} from "@/lib/dataUtils";
 import {
   AudioPlayer,
   createAudioPlayer,
@@ -6,10 +11,11 @@ import {
   getVoiceConnection,
   VoiceConnectionReadyState,
 } from "@discordjs/voice";
-import { Client, GuildChannel, Message } from "discord.js";
+import { Client, EmbedBuilder, GuildChannel, Message, PartialGroupDMChannel } from "discord.js";
 import { RPC, Generate, Query } from "voicevox.js";
 import { Readable } from "stream";
 import { ALStorage, loggingSystem } from "..";
+import config from "@/config";
 
 export const name = "messageCreate";
 
@@ -140,9 +146,12 @@ async function applyDictionary(text: string, dict: any[]): Promise<string> {
   return text;
 }
 
-export const execute = async (message: Message, client: Client) => {
+async function voicevoxSynthesis(
+  message: Message,
+  client: Client
+): Promise<Readable | null | undefined> {
   const ctx = ALStorage.getStore();
-  const logger = loggingSystem.getLogger({ ...ctx, function: "messageCreate" });
+  const logger = loggingSystem.getLogger({ ...ctx, function: "voicevoxSynthesis" });
   if (message.author.bot || !message.guild || !message.channel.isTextBased()) return;
   if (!process.env.VOICEVOX_API_URL) {
     logger.warn("VOICEVOX_API_URL is not set.");
@@ -207,6 +216,53 @@ export const execute = async (message: Message, client: Client) => {
   }
 
   player.play(resource);
+}
+
+const resendPinnedMessage = async (message: Message, client: Client) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "resendPinnedMessage" });
+  if (
+    !message.guild ||
+    !message.channel.isTextBased() ||
+    message.channel instanceof PartialGroupDMChannel ||
+    (message.author.id === client.user?.id &&
+      (message.embeds.length === 0 || message.embeds[0].footer?.text.includes("Pinned Message")))
+  )
+    return;
+
+  const channelId = message.channel.id;
+  const dataManager = new ServerDataManager(message.guild.id);
+  const pinnedMessageConfig = await dataManager.getConfig("pinnedMessage", channelId);
+  if (!pinnedMessageConfig || !pinnedMessageConfig.message) return;
+  try {
+    const oldMessage = await message.channel.messages.fetch(pinnedMessageConfig.latestMessageId);
+    if (oldMessage) await oldMessage.delete();
+    const embed = new EmbedBuilder()
+      .setDescription(pinnedMessageConfig.message)
+      .setColor(config.color.success)
+      .setFooter({ text: "Pinned Message" });
+    const newSendedMessage = await message.channel.send({ embeds: [embed] });
+    dataManager.setConfig(
+      "pinnedMessage",
+      { message: pinnedMessageConfig.message, latestMessageId: newSendedMessage.id },
+      channelId
+    );
+  } catch (error) {
+    logger.error("Failed to resend pinned message:", error as any);
+  }
+};
+
+export const execute = async (message: Message, client: Client) => {
+  voicevoxSynthesis(message, client).catch((error) => {
+    const ctx = ALStorage.getStore();
+    const logger = loggingSystem.getLogger({ ...ctx, function: "voicevoxSynthesis" });
+    logger.error("Error in voicevoxSynthesis:", error);
+  });
+  resendPinnedMessage(message, client).catch((error) => {
+    const ctx = ALStorage.getStore();
+    const logger = loggingSystem.getLogger({ ...ctx, function: "resendPinnedMessage" });
+    logger.error("Error in resendPinnedMessage:", error);
+  });
 };
 
 export default {
