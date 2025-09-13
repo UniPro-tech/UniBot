@@ -332,6 +332,91 @@ export const removeTtsDictionary = async (
   }
 };
 
+type ServerConfigChannelValueType = {
+  channel: string;
+  value: any;
+};
+
+type ServerConfigType<T extends "channel" | "global"> = {
+  scope: T;
+  data: T extends "channel" ? ServerConfigChannelValueType[] : any;
+};
+export class ServerDataManager {
+  private serverId: string;
+
+  constructor(serverId: string) {
+    this.serverId = serverId;
+  }
+
+  async getConfig(key: string, channel?: string): Promise<any | null> {
+    const ctx = ALStorage.getStore();
+    const logger = loggingSystem.getLogger({ ...ctx, function: "ServerDataManager.getConfig" });
+    try {
+      const config = await prismaClient.serverConfig.findFirst({
+        where: { guild: this.serverId, key },
+      });
+      if (config) {
+        const parsedConfig: ServerConfigType<"channel" | "global"> = JSON.parse(config.value);
+        if (parsedConfig.scope === "channel" && channel) {
+          const channelData = parsedConfig.data.find(
+            (item: ServerConfigChannelValueType) => item.channel === channel
+          );
+          return channelData ? channelData.value : null;
+        } else if (parsedConfig.scope === "global") {
+          return parsedConfig.data;
+        } else {
+          return null;
+        }
+      }
+      return null;
+    } catch (error) {
+      logger.error(
+        { error, stack_trace: error instanceof Error ? error.stack : undefined },
+        error instanceof Error ? error.message : "An error occurred while reading server config"
+      );
+      return null;
+    }
+  }
+
+  async setConfig(key: string, value: any, channel?: string): Promise<void> {
+    const ctx = ALStorage.getStore();
+    const logger = loggingSystem.getLogger({ ...ctx, function: "ServerDataManager.setConfig" });
+    let data: ServerConfigType<"channel" | "global">;
+    const existingConfig = await this.getConfig(key);
+    if (existingConfig) {
+      data = existingConfig;
+      if (data.scope === "channel" && channel) {
+        const channelDataIndex = data.data.findIndex(
+          (item: ServerConfigChannelValueType) => item.channel === channel
+        );
+        if (channelDataIndex !== -1) {
+          data.data[channelDataIndex].value = value;
+        } else {
+          data.data.push({ channel, value });
+        }
+      }
+    } else {
+      if (channel) {
+        data = { scope: "channel", data: [{ channel, value }] };
+      } else {
+        data = { scope: "global", data: value };
+      }
+    }
+    try {
+      await prismaClient.serverConfig.upsert({
+        where: { guild_key: { guild: this.serverId, key } },
+        update: { value: JSON.stringify(data) },
+        create: { guild: this.serverId, key, value: JSON.stringify(data) },
+      });
+    } catch (error) {
+      logger.error(
+        { error, stack_trace: error instanceof Error ? error.stack : undefined },
+        error instanceof Error ? error.message : "An error occurred while writing server config"
+      );
+    }
+  }
+}
+
 export default {
   writeConfig,
   readConfig,

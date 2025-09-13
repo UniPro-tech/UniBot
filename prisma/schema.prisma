@@ -13,6 +13,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model serverConfig {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  guild      String   @map("_guild")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  key        String   @map("_key")
+  value      String   @map("_value")
+  @@unique([guild, key])
+}
+
 model config {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   key        String   @unique @map("_key")
