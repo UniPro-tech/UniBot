@@ -1,5 +1,5 @@
 bases:
   - ../../base
 
-patches:
-  - path: env.yaml
+resources:
+  - env.yaml
