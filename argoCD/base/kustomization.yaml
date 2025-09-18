@@ -3,8 +3,6 @@ kind: Kustomization
 resources:
   - deployment.yaml
   - registry.yaml
-  - env.yaml
-  - pv-pvc.yaml
 labels:
   - includeSelectors: true
     pairs:
