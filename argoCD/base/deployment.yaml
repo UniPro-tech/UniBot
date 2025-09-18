@@ -18,15 +18,8 @@ spec:
           envFrom:
             - secretRef:
                 name: unibot-env
-          volumeMounts:
-            - name: log
-              mountPath: /app/log
           env:
             - name: TZ
               value: Asia/Tokyo
-      volumes:
-        - name: log
-          persistentVolumeClaim:
-            claimName: logs
       imagePullSecrets:
         - name: internal-harbor
