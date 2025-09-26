@@ -28,3 +28,5 @@ log/
 docker-compose.dev.yaml
 dev/*
 src/generated
+
+/argocd/overlays/sub/raw
