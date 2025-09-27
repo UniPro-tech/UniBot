@@ -60,7 +60,7 @@
     "cronstrue": "^3.3.0",
     "discord-api-types": "^0.38.26",
     "discord.js": "^14.22.1",
-    "dotenv": "^16.6.1",
+    "dotenv": "^17.2.2",
     "fs": "^0.0.1-security",
     "install": "^0.13.0",
     "nanoid": "^5.1.6",
