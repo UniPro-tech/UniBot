@@ -124,7 +124,7 @@ export const registerAllCommands = async (client: Client) => {
   ) => {
     try {
       const data = (command.data as SlashCommandBuilder).toJSON();
-      arr.push(data);
+      arr.push(data as RESTPostAPIChatInputApplicationCommandsJSONBody);
       commandCount++;
       logger.info(
         { extra_context: { file, commandName: data.name, command_type: typeLabel } },

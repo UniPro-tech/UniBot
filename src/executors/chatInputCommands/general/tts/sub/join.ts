@@ -7,16 +7,9 @@ import {
   SlashCommandSubcommandBuilder,
   TextChannel,
 } from "discord.js";
-import {
-  createAudioPlayer,
-  createAudioResource,
-  getVoiceConnection,
-  joinVoiceChannel,
-  VoiceConnectionStatus,
-} from "@discordjs/voice";
+import { getVoiceConnection, joinVoiceChannel, VoiceConnectionStatus } from "@discordjs/voice";
 import { writeTtsConnection } from "@/lib/dataUtils";
-import { Readable } from "stream";
-import { RPC, Query, Generate } from "voicevox.js";
+import { TTSQueue } from "@/lib/ttsQueue";
 import { ALStorage, loggingSystem } from "@/index";
 
 export const data = new SlashCommandSubcommandBuilder()
@@ -35,15 +28,6 @@ const createSuccessEmbed = (voiceChannelId: string, textChannelId: string, color
       { name: "テキストチャンネル名", value: `<#${textChannelId}>` },
     ])
     .setColor(color);
-
-const connectVoiceVox = async () => {
-  if (!RPC.rpc) {
-    const headers = {
-      Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
-    };
-    await RPC.connect(process.env.VOICEVOX_API_URL as string, headers);
-  }
-};
 
 export const execute = async (interaction: CommandInteraction) => {
   const ctx = ALStorage.getStore();
@@ -85,16 +69,10 @@ export const execute = async (interaction: CommandInteraction) => {
     const embed = createSuccessEmbed(voiceChannel.id, textChannelId, config.color.success);
     await interaction.editReply({ embeds: [embed] });
 
-    const player = createAudioPlayer();
-    connection.subscribe(player);
-
-    const text = `${voiceChannel.name}に接続しました。`;
-    await connectVoiceVox();
-    const query = await Query.getTalkQuery(text, 0);
-    const audio = await Generate.generate(0, query);
-    const audioStream = Readable.from(audio);
-    const resource = createAudioResource(audioStream);
-    player.play(resource);
+    // TTS Queueに接続メッセージを追加（VoiceVox初期化待機付き）
+    TTSQueue.enqueueConnectionMessage(voiceChannel.guild.id, voiceChannel.name).catch((error) => {
+      logger.warn("Failed to enqueue connection message:", error as any);
+    });
 
     let textChannel: string[] = [textChannelId];
     if (interaction.channel?.type !== ChannelType.GuildVoice) {

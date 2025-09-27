@@ -1,13 +1,7 @@
 import { readTtsConnection } from "@/lib/dataUtils";
-import {
-  AudioPlayer,
-  createAudioPlayer,
-  createAudioResource,
-  getVoiceConnection,
-} from "@discordjs/voice";
+import { TTSQueue } from "@/lib/ttsQueue";
+import { getVoiceConnection } from "@discordjs/voice";
 import { EmbedBuilder, TextChannel, VoiceBasedChannel, VoiceState } from "discord.js";
-import { Readable } from "stream";
-import { RPC, Query, Generate } from "voicevox.js";
 import { ALStorage, loggingSystem } from "..";
 
 export const name = "voiceStateUpdate";
@@ -56,6 +50,9 @@ const handleDisconnect = async (
   if (!connection || connection.state.status === "destroyed") return;
   connection.destroy();
 
+  // TTSQueueインスタンスを削除
+  TTSQueue.removeInstance(oldState.guild.id);
+
   const textChannel = oldState.guild.channels.cache.get(
     connectionData.textChannel[0] as string
   ) as TextChannel;
@@ -103,30 +100,10 @@ const getVoiceEventText = (type: string, oldState: VoiceState, newState: VoiceSt
   }
 };
 
-const speak = async (connection: any, text: string) => {
-  const headers = {
-    Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}`,
-  };
-  if (!RPC.rpc) await RPC.connect(process.env.VOICEVOX_API_URL as string, headers);
-  const query = await Query.getTalkQuery(text, 0);
-  const audio = await Generate.generate(0, query);
-  const audioStream = Readable.from(audio);
-  const resource = createAudioResource(audioStream);
-
-  let player = connection.state.subscription?.player;
-  if (player) {
-    if (player.state.status === "playing") {
-      await new Promise((resolve) => {
-        (player as AudioPlayer).once("stateChange", (_, newState) => {
-          if (newState.status === "idle") resolve(null);
-        });
-      });
-    }
-  } else {
-    player = createAudioPlayer();
-    connection.subscribe(player);
-  }
-  player.play(resource);
+const speak = async (guildId: string, text: string) => {
+  const ttsQueue = TTSQueue.getInstance(guildId);
+  // ボイスチャンネル通知は高優先度でキューに追加
+  ttsQueue.enqueue(text, 0, 0); // styleId: 0, priority: 0 (高優先度)
 };
 
 export const execute = async (oldState: VoiceState, newState: VoiceState) => {
@@ -153,7 +130,7 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
 
   const connection = getVoiceConnection(oldState.guild.id || newState.guild.id);
   if (connection && connection.state.status !== "destroyed") {
-    await speak(connection, text);
+    await speak(oldState.guild.id || newState.guild.id, text);
   }
 };
 

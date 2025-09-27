@@ -4,16 +4,9 @@ import {
   readTtsPreference,
   ServerDataManager,
 } from "@/lib/dataUtils";
-import {
-  AudioPlayer,
-  createAudioPlayer,
-  createAudioResource,
-  getVoiceConnection,
-  VoiceConnectionReadyState,
-} from "@discordjs/voice";
+import { TTSQueue } from "@/lib/ttsQueue";
+import { getVoiceConnection } from "@discordjs/voice";
 import { Client, EmbedBuilder, GuildChannel, Message, PartialGroupDMChannel } from "discord.js";
-import { RPC, Generate, Query } from "voicevox.js";
-import { Readable } from "stream";
 import { ALStorage, loggingSystem } from "..";
 import config from "@/config";
 
@@ -146,10 +139,7 @@ async function applyDictionary(text: string, dict: any[]): Promise<string> {
   return text;
 }
 
-async function voicevoxSynthesis(
-  message: Message,
-  client: Client
-): Promise<Readable | null | undefined> {
+async function voicevoxSynthesis(message: Message, client: Client): Promise<void> {
   const ctx = ALStorage.getStore();
   const logger = loggingSystem.getLogger({ ...ctx, function: "voicevoxSynthesis" });
   if (message.author.bot || !message.guild || !message.channel.isTextBased()) return;
@@ -166,10 +156,13 @@ async function voicevoxSynthesis(
 
   if (message.flags.toArray().includes("SuppressNotifications")) return;
 
+  // skipコマンドの処理
   if (["skip", "s"].includes(message.content)) {
-    const player = (connection.state as VoiceConnectionReadyState).subscription
-      ?.player as AudioPlayer;
-    if (player) player.stop(true);
+    const ttsQueue = TTSQueue.getInstance(message.guild.id);
+    const skipped = ttsQueue.skip();
+    if (skipped) {
+      logger.debug(`TTS skipped by user ${message.author.id} in guild ${message.guild.id}`);
+    }
     return;
   }
 
@@ -189,33 +182,12 @@ async function voicevoxSynthesis(
 
   const styleId = ((await readTtsPreference(message.author.id, "speaker"))?.styleId as number) || 0;
 
-  if (!RPC.rpc) {
-    const headers = { Authorization: `ApiKey ${process.env.VOICEVOX_API_KEY}` };
-    await RPC.connect(process.env.VOICEVOX_API_URL, headers);
-  }
-
-  const query = await Query.getTalkQuery(text, styleId);
-  const audio = await Generate.generate(styleId, query);
-  const audioStream = Readable.from(audio);
-  const resource = createAudioResource(audioStream);
-
-  let player: AudioPlayer | undefined = (connection.state as VoiceConnectionReadyState).subscription
-    ?.player as AudioPlayer;
-
-  if (player) {
-    if (player.state.status === "playing") {
-      await new Promise((resolve) => {
-        player?.once("stateChange", (_, newState) => {
-          if (newState.status === "idle") resolve(null);
-        });
-      });
-    }
-  } else {
-    player = createAudioPlayer();
-    connection.subscribe(player);
-  }
-
-  player.play(resource);
+  // TTSQueueに追加
+  const ttsQueue = TTSQueue.getInstance(message.guild.id);
+  ttsQueue.enqueue(text, styleId, 1);
+  logger.debug(
+    `Enqueued TTS for user ${message.author.id} in guild ${message.guild.id}: ${text} (styleId: ${styleId})`
+  );
 }
 
 const resendPinnedMessage = async (message: Message, client: Client) => {
@@ -256,7 +228,7 @@ export const execute = async (message: Message, client: Client) => {
   voicevoxSynthesis(message, client).catch((error) => {
     const ctx = ALStorage.getStore();
     const logger = loggingSystem.getLogger({ ...ctx, function: "voicevoxSynthesis" });
-    logger.error("Error in voicevoxSynthesis:", error);
+    logger.error(error);
   });
   resendPinnedMessage(message, client).catch((error) => {
     const ctx = ALStorage.getStore();
