@@ -16,7 +16,14 @@ interface TTSQueueItem {
   text: string;
   styleId: number;
   priority?: number; // 0: 高優先度（ボイスチャンネル通知など）, 1: 通常（デフォルト）
-  query?: any; // 事前取得したVoiceVoxクエリ
+  // 事前取得したVoiceVoxクエリ
+  query?: any;
+  // 事前取得中/完了のクエリPromise
+  queryPromise?: Promise<any>;
+  // 事前生成した音声データ（Buffer | Uint8Array 想定）
+  audio?: any;
+  // 事前生成中/完了の音声Promise
+  audioPromise?: Promise<any>;
 }
 
 export class TTSQueue {
@@ -93,9 +100,9 @@ export class TTSQueue {
       `TTS item enqueued for guild ${this.guildId}. Queue length: ${this.queue.length}`
     );
 
-    // クエリを事前取得（非同期）
-    this.preloadQuery(item).catch((error) => {
-      logger.warn(`Failed to preload query for guild ${this.guildId}:`, error as any);
+    // クエリ→音声までを事前取得（非同期で先に走らせる）
+    this.preloadItem(item).catch((error) => {
+      logger.warn(`Failed to preload item for guild ${this.guildId}:`, error as any);
     });
 
     // 処理が停止していれば開始
@@ -105,22 +112,63 @@ export class TTSQueue {
   }
 
   /**
-   * クエリを事前取得（非同期処理）
+   * クエリ→音声の事前取得（非同期処理）
+   * 再生順は変えず、重い処理だけ先に走らせてキャッシュする
    */
-  private async preloadQuery(item: TTSQueueItem): Promise<void> {
+  private async preloadItem(item: TTSQueueItem): Promise<void> {
+    const ctx = ALStorage.getStore();
+    const logger = loggingSystem.getLogger({ ...ctx, function: "TTSQueue.preloadItem" });
     try {
       // VoiceVox接続確認
       await this.ensureVoiceVoxConnection();
 
-      // クエリ取得
-      const query = await Query.getTalkQuery(item.text, item.styleId);
-      item.query = query;
+      // クエリの事前取得（既に走っていれば使う）
+      if (!item.queryPromise) {
+        item.queryPromise = Query.getTalkQuery(item.text, item.styleId)
+          .then((q) => {
+            item.query = q;
+            logger.debug(`Query preloaded for guild ${this.guildId}, styleId: ${item.styleId}`);
+            return q;
+          })
+          .catch((err) => {
+            // ここでの失敗は致命的ではない（再生直前に再取得する）
+            logger.warn(
+              { extra_context: { styleId: item.styleId } },
+              "Query preload failed",
+              err as any
+            );
+            // エラーは表に伝播しない（再生側でフォールバック）
+            return undefined as any;
+          });
+      }
 
-      const ctx = ALStorage.getStore();
-      const logger = loggingSystem.getLogger({ ...ctx, function: "TTSQueue.preloadQuery" });
-      logger.debug(`Query preloaded for guild ${this.guildId}, styleId: ${item.styleId}`);
+      // 音声の事前生成（クエリが解決してから）
+      if (!item.audioPromise) {
+        item.audioPromise = (async () => {
+          const q = item.query ?? (await item.queryPromise);
+          if (!q) {
+            // クエリがない場合はここでは諦める（再生側で取得）
+            return undefined as any;
+          }
+          const audio = await Generate.generate(item.styleId, q);
+          item.audio = audio;
+          logger.debug(
+            `Audio pre-generated for guild ${this.guildId}, text length: ${item.text.length}`
+          );
+          return audio;
+        })().catch((err) => {
+          // ここでの失敗も致命的ではない（再生直前に再生成）
+          logger.warn(
+            { extra_context: { styleId: item.styleId } },
+            "Audio preload failed",
+            err as any
+          );
+          return undefined as any;
+        });
+      }
     } catch (error) {
-      // エラーは無視（メイン処理で再取得する）
+      // 事前取得フェーズの例外は握りつぶしてOK（再生時にフォールバック）
+      logger.warn("Preload pipeline failed (will fallback at play time)", error as any);
     }
   }
 
@@ -214,19 +262,52 @@ export class TTSQueue {
       // VoiceVox接続の再確認（必要に応じて再接続）
       await this.ensureVoiceVoxConnection();
 
-      // 音声合成（事前取得したクエリを使用、なければ現場で取得）
-      let query = item.query;
-      if (!query) {
-        logger.debug(`Query not preloaded, generating on-demand for guild ${this.guildId}`);
-        query = await Query.getTalkQuery(item.text, item.styleId);
-      } else {
-        logger.debug(
-          `Using preloaded query for guild ${this.guildId} with styleId ${item.styleId}`
-        );
+      // できるだけ事前生成済みの音声を使う（なければPromiseを待機、さらにダメならその場生成）
+      let audio = item.audio;
+      let path: "preloaded-audio" | "awaited-audioPromise" | "generated-on-demand" =
+        "preloaded-audio";
+
+      if (!audio && item.audioPromise) {
+        path = "awaited-audioPromise";
+        try {
+          audio = await item.audioPromise;
+        } catch {
+          audio = undefined as any;
+        }
       }
 
-      const audio = await Generate.generate(item.styleId, query);
-      logger.debug(`Generated audio for guild ${this.guildId}, text length: ${item.text.length}`);
+      if (!audio) {
+        // 音声がまだなければクエリ（preload済みまたはその場生成）を使って生成
+        path = "generated-on-demand";
+        let query = item.query;
+        if (!query && item.queryPromise) {
+          try {
+            query = await item.queryPromise;
+          } catch {
+            query = undefined as any;
+          }
+        }
+        if (!query) {
+          logger.debug(`Query not preloaded, generating on-demand for guild ${this.guildId}`);
+          query = await Query.getTalkQuery(item.text, item.styleId);
+          item.query = query;
+        }
+        audio = await Generate.generate(item.styleId, query);
+        // 再利用できるようにキャッシュ
+        item.audio = audio;
+      }
+
+      const startRequestTs = Date.now();
+      logger.debug(
+        {
+          extra_context: {
+            path,
+            textLength: item.text.length,
+            guildId: this.guildId,
+          },
+        },
+        `Using audio via '${path}' for guild ${this.guildId}, text length: ${item.text.length}`
+      );
 
       const audioStream = Readable.from(audio);
       const resource = createAudioResource(audioStream, {
@@ -249,8 +330,26 @@ export class TTSQueue {
         connection.subscribe(this.player);
       }
 
-      // 再生完了まで待機
-      await this.playAudio(this.player, resource);
+      // 再生開始／完了の詳細ログを取る
+      const playStartTs = Date.now();
+      await this.playAudio(this.player, resource, {
+        meta: { path, textLength: item.text.length, textSnippet: item.text.slice(0, 120) },
+      });
+      const playEndTs = Date.now();
+      logger.info(
+        {
+          extra_context: {
+            guildId: this.guildId,
+            path,
+            textLength: item.text.length,
+            timeToStartMs: playStartTs - startRequestTs,
+            playDurationMs: playEndTs - playStartTs,
+          },
+        },
+        `Playback finished for guild ${this.guildId} (path=${path})`
+      );
+      // 再生後は音声キャッシュを解放してメモリ節約（クエリは残してOK）
+      item.audio = undefined;
     } catch (error) {
       logger.error(
         {
@@ -305,22 +404,44 @@ export class TTSQueue {
   /**
    * 音声リソースを再生し、完了まで待機
    */
-  private async playAudio(player: AudioPlayer, resource: any): Promise<void> {
+  private async playAudio(
+    player: AudioPlayer,
+    resource: any,
+    options?: { meta?: { path?: string; textLength?: number; textSnippet?: string } }
+  ): Promise<void> {
+    const meta = options?.meta;
+    const loggerCtx = ALStorage.getStore();
+    const logger = loggingSystem.getLogger({ ...loggerCtx, function: "TTSQueue.playAudio" });
+
     return new Promise<void>((resolve, reject) => {
-      // タイムアウト設定（10秒）
-      const timeout = setTimeout(() => {
-        cleanup();
-        reject(new Error("Audio playback timeout"));
-      }, 10000);
+      // 再生開始待ちタイムアウト（startTimeout）と、再生開始後は完了まで待つ挙動に分離
+      // startTimeout: 再生が開始されるまでに何らかの問題で待ち続けないようにする（15秒）
+      const START_TIMEOUT_MS = 15000;
+
+      let startTimeout: NodeJS.Timeout | undefined;
+      let started = false; // 再生が開始されたかどうか
 
       const cleanup = () => {
-        clearTimeout(timeout);
+        if (startTimeout) clearTimeout(startTimeout);
         player.removeListener("stateChange", onStateChange);
         player.removeListener("error", onError);
       };
 
       const onStateChange = (oldState: any, newState: any) => {
-        if (newState.status === "idle") {
+        // 再生が開始（playing または buffer 挙動）した瞬間
+        if (!started && newState.status === "playing") {
+          started = true;
+          // startTimeout を解除してから、完了（idle）を待つ。
+          if (startTimeout) {
+            clearTimeout(startTimeout);
+            startTimeout = undefined;
+          }
+          // ここでは resolve しない（完了まで待つ）
+          return;
+        }
+
+        // 再生完了
+        if (started && newState.status === "idle") {
           cleanup();
           resolve();
         }
@@ -337,6 +458,17 @@ export class TTSQueue {
 
         // 再生開始
         player.play(resource);
+
+        // 再生が 'playing' になるまでの待ち時間を制限（15秒）
+        startTimeout = setTimeout(() => {
+          // 再生が始まらなかった -> 強制クリーンアップしてエラーにする
+          cleanup();
+          logger.error(
+            { extra_context: { meta } },
+            "Audio playback did not start within 15 seconds"
+          );
+          reject(new Error("Audio playback did not start within 15 seconds"));
+        }, START_TIMEOUT_MS);
       } catch (error) {
         const ctx = ALStorage.getStore();
         const logger = loggingSystem.getLogger({ ...ctx, function: "TTSQueue.playAudio" });
