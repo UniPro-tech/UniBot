@@ -23,6 +23,7 @@ import { StringSelectMenu } from "./executors/types/StringSelectMenu";
 import { Button } from "./executors/types/Button";
 import { LogContext, Logger, Transporter } from "@unipro-tech/node-logger";
 import { AsyncLocalStorage } from "async_hooks";
+import { TTSQueue } from "@/lib/ttsQueue";
 
 export const loggingSystem = new Logger("unibot", [
   ...(process.env.NODE_ENV === "development"
@@ -257,4 +258,21 @@ const sendErrorEmbed = async (
   }
 };
 
-client.login(config.token);
+// VoiceVoxの事前初期化（ログイン前に完了させる）
+(async () => {
+  const logger = loggingSystem.getLogger({ function: "TTSQueueInit" });
+  logger.info("TTS system initialization started.");
+  try {
+    logger.info("Initializing TTS system...");
+    await TTSQueue.initializeGlobal();
+    logger.info("TTS system initialized successfully.");
+  } catch (error) {
+    logger.error(
+      { stack_trace: (error as Error).stack, error },
+      "TTS system initialization failed."
+    );
+  }
+
+  // TTS初期化完了後にログイン
+  client.login(config.token);
+})();
