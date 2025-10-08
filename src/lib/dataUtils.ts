@@ -382,7 +382,7 @@ export class ServerDataManager {
     const ctx = ALStorage.getStore();
     const logger = loggingSystem.getLogger({ ...ctx, function: "ServerDataManager.setConfig" });
     let data: ServerConfigType<"channel" | "global">;
-    const existingConfig = await this.getConfig(key);
+    const existingConfig = await this.getConfig(key, channel);
     if (existingConfig) {
       data = existingConfig;
       if (data.scope === "channel" && channel) {
