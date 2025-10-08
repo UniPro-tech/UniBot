@@ -382,20 +382,64 @@ export class ServerDataManager {
     const ctx = ALStorage.getStore();
     const logger = loggingSystem.getLogger({ ...ctx, function: "ServerDataManager.setConfig" });
     let data: ServerConfigType<"channel" | "global">;
-    const existingConfig = await this.getConfig(key, channel);
-    if (existingConfig) {
-      data = existingConfig;
-      if (data.scope === "channel" && channel) {
-        const channelDataIndex = data.data.findIndex(
-          (item: ServerConfigChannelValueType) => item.channel === channel
-        );
-        if (channelDataIndex !== -1) {
-          data.data[channelDataIndex].value = value;
+    // NOTE: `getConfig` returns the value for a given key/channel (not the full stored object)
+    // so we must read the raw database record and parse the stored JSON to get the full shape
+    try {
+      const existingRecord = await prismaClient.serverConfig.findFirst({
+        where: { guild: this.serverId, key },
+      });
+
+      if (existingRecord && existingRecord.value) {
+        // parse stored structure { scope, data }
+        try {
+          data = JSON.parse(existingRecord.value) as ServerConfigType<"channel" | "global">;
+        } catch (err) {
+          // If parsing fails, fallback to creating a new structure based on presence of channel
+          logger.warn(
+            { err },
+            "Failed to parse existing serverConfig.value, overwriting with new structure"
+          );
+          if (channel) {
+            data = { scope: "channel", data: [{ channel, value }] };
+          } else {
+            data = { scope: "global", data: value };
+          }
+        }
+        // If we have a channel-scoped config, update or append entry
+        if (data && data.scope === "channel" && channel) {
+          const channelDataIndex = (data.data as ServerConfigChannelValueType[]).findIndex(
+            (item: ServerConfigChannelValueType) => item.channel === channel
+          );
+          if (channelDataIndex !== -1) {
+            (data.data as ServerConfigChannelValueType[])[channelDataIndex].value = value;
+          } else {
+            (data.data as ServerConfigChannelValueType[]).push({ channel, value });
+          }
+        } else if (data && data.scope === "global" && !channel) {
+          // replace global value
+          data.data = value;
+        } else if (channel) {
+          // existing record exists but scope mismatch or not channel-scoped: create channel-scoped structure
+          data = { scope: "channel", data: [{ channel, value }] };
         } else {
-          data.data.push({ channel, value });
+          data = { scope: "global", data: value };
+        }
+      } else {
+        // no existing record: create new structure
+        if (channel) {
+          data = { scope: "channel", data: [{ channel, value }] };
+        } else {
+          data = { scope: "global", data: value };
         }
       }
-    } else {
+    } catch (err) {
+      // If DB read fails, log and fallback to constructing new structure
+      logger.error(
+        { err, stack_trace: err instanceof Error ? err.stack : undefined },
+        err instanceof Error
+          ? err.message
+          : "An error occurred while reading existing server config"
+      );
       if (channel) {
         data = { scope: "channel", data: [{ channel, value }] };
       } else {
