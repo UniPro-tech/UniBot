@@ -1,4 +1,11 @@
-import { Client, EmbedBuilder, ActivityType, ActivityOptions, TextChannel } from "discord.js";
+import {
+  Client,
+  EmbedBuilder,
+  ActivityType,
+  ActivityOptions,
+  TextChannel,
+  PresenceStatusData,
+} from "discord.js";
 import { registerAllCommands } from "@/lib/executorsRegister";
 import path from "path";
 import { redefineJobs } from "@/lib/jobManager";
@@ -12,7 +19,7 @@ export const execute = async (client: Client) => {
   const logFile = await client.functions.logUtils.readConfig("status");
   await registerAllCommands(client);
 
-  logger.debug({ extra_context: { log_file: logFile } }, "Bot is ready");
+  logger.info({ extra_context: { log_file: logFile } }, "Bot is ready");
 
   if (!client.user) {
     logger.error({ extra_context: { service: "ready" } }, "Client user is not defined");
@@ -47,16 +54,25 @@ export const execute = async (client: Client) => {
         activityOpt.type = ActivityType.Playing;
     }
 
-    client.user.setActivity(logFile.playing, activityOpt);
+    // Use setPresence for clearer semantics and to avoid ambiguity with overloaded setActivity
+    client.user.setPresence({
+      activities: [
+        { name: String(activityOpt.name), type: activityOpt.type, url: activityOpt.url },
+      ],
+      status: (logFile.status as PresenceStatusData) || "online",
+    });
   } else {
-    client.user.setActivity(`Servers: ${client.guilds.cache.size}`);
-    client.user.setStatus("online");
+    client.user.setPresence({
+      activities: [{ name: `Servers: ${client.guilds.cache.size}`, type: ActivityType.Playing }],
+      status: "online",
+    });
   }
 
-  const channel = client.channels.cache.get(client.config.logch.ready);
+  // Fetch the channel to avoid relying on cache (channel may not be cached yet)
+  const channel = await client.channels.fetch(client.config.logch.ready).catch(() => null);
   if (!channel || !(channel instanceof TextChannel)) {
     logger.error(
-      { extra_context: { channel: client.config.logch.ready } },
+      { extra_context: { channel: client.config.logch.ready, fetched: !!channel } },
       "Log channel is not defined or not a text channel"
     );
     return;
