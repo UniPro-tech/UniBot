@@ -27,6 +27,7 @@ export const execute = async (client: Client) => {
   }
 
   if (logFile?.onoff === "on") {
+    logger.info("Setting presence from configuration file");
     const activityOpt: ActivityOptions = {
       name: logFile.playing,
       type: ActivityType.Playing,
@@ -53,6 +54,8 @@ export const execute = async (client: Client) => {
       default:
         activityOpt.type = ActivityType.Playing;
     }
+
+    logger.info({ extra_context: { activity: activityOpt } }, "Prepared activity");
 
     // Use setPresence for clearer semantics and to avoid ambiguity with overloaded setActivity
     client.user.setPresence({
