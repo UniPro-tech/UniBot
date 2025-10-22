@@ -4,6 +4,8 @@ on:
     branches:
       - main
       - dev/*
+    tags-ignore:
+      - "*"
 
 concurrency:
   group: docker-build-push
