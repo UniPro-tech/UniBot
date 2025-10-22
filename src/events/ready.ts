@@ -59,9 +59,7 @@ export const execute = async (client: Client) => {
 
     // Use setPresence for clearer semantics and to avoid ambiguity with overloaded setActivity
     client.user.setPresence({
-      activities: [
-        { name: String(activityOpt.name), type: activityOpt.type, url: activityOpt.url },
-      ],
+      activities: [activityOpt],
       status: (logFile.status as PresenceStatusData) || "online",
     });
   } else {
