@@ -58,10 +58,12 @@ export const execute = async (client: Client) => {
     logger.info({ extra_context: { activity: activityOpt } }, "Prepared activity");
 
     // Use setPresence for clearer semantics and to avoid ambiguity with overloaded setActivity
-    client.user.setPresence({
-      activities: [activityOpt],
-      status: (logFile.status as PresenceStatusData) || "online",
-    });
+    logger.info(
+      client.user.setPresence({
+        activities: [activityOpt],
+        status: (logFile.status as PresenceStatusData) || "online",
+      })
+    );
   } else {
     client.user.setPresence({
       activities: [{ name: `Servers: ${client.guilds.cache.size}`, type: ActivityType.Playing }],
