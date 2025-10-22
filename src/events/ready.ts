@@ -31,7 +31,7 @@ export const execute = async (client: Client) => {
     const activityOpt: ActivityOptions = {
       name: logFile.playing,
       type: ActivityType.Playing,
-      url: "",
+      url: logFile.url || undefined,
     };
 
     switch (logFile.type) {
