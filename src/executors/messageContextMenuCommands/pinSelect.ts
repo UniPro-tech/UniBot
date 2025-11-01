@@ -7,6 +7,7 @@ import {
   ChannelType,
   PartialGroupDMChannel,
   PermissionFlagsBits,
+  InteractionContextType,
 } from "discord.js";
 import { ServerDataManager } from "@/lib/dataUtils.js";
 import config from "@/config.js";
@@ -15,7 +16,8 @@ export const name = "Pinするメッセージを選択";
 
 export const data = new ContextMenuCommandBuilder()
   .setName(name)
-  .setType(ApplicationCommandType.Message);
+  .setType(ApplicationCommandType.Message)
+  .setContexts(InteractionContextType.Guild);
 
 export const execute = async (interaction: MessageContextMenuCommandInteraction) => {
   const isAdmin =
