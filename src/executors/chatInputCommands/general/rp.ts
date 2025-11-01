@@ -3,6 +3,7 @@ import {
   EmbedBuilder,
   CommandInteractionOptionResolver,
   ChatInputCommandInteraction,
+  PermissionFlagsBits,
 } from "discord.js";
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
@@ -12,7 +13,10 @@ import { ALStorage, loggingSystem } from "@/index";
 export const handlingCommands = subCommandHandling("general/rp");
 export const data = addSubCommand(
   "general/rp",
-  new SlashCommandBuilder().setName("rp").setDescription("ロールパネルを管理します。")
+  new SlashCommandBuilder()
+    .setName("rp")
+    .setDescription("ロールパネルを管理します。")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 );
 export const guildOnly = true;
 

@@ -5,6 +5,7 @@ import {
   ChatInputCommandInteraction,
   PermissionsBitField,
   MessageFlags,
+  PermissionFlagsBits,
 } from "discord.js";
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
@@ -15,7 +16,10 @@ import { ALStorage, loggingSystem } from "@/index";
 export const handlingCommands = subCommandHandling("general/schedule");
 export const data = addSubCommand(
   "general/schedule",
-  new SlashCommandBuilder().setName("schedule").setDescription("予約投稿を管理します。")
+  new SlashCommandBuilder()
+    .setName("schedule")
+    .setDescription("予約投稿を管理します。")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 );
 export const guildOnly = true;
 

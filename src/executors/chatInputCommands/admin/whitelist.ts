@@ -6,6 +6,7 @@ import {
   TextChannel,
   PermissionsBitField,
   MessageFlags,
+  PermissionFlagsBits,
 } from "discord.js";
 import { addSubCommandGroup, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
@@ -15,7 +16,10 @@ import { ALStorage, loggingSystem } from "@/index";
 export const handlingCommands = subCommandHandling("admin/whitelist/group");
 export const data = addSubCommandGroup(
   "admin/whitelist/group",
-  new SlashCommandBuilder().setName("whitelist").setDescription("ホワイトリスト管理")
+  new SlashCommandBuilder()
+    .setName("whitelist")
+    .setDescription("ホワイトリスト管理")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 );
 export const guildOnly = true;
 export const adminGuildOnly = true;
@@ -31,7 +35,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     );
     return;
   }
-  if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
     await replyWithError(
       interaction,
       "Error - 管理者専用コマンド",

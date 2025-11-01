@@ -3,6 +3,7 @@ import {
   ActionRowBuilder,
   ChatInputCommandInteraction,
   ModalBuilder,
+  PermissionFlagsBits,
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
@@ -11,7 +12,8 @@ export const guildOnly = false;
 
 export const data = new SlashCommandBuilder()
   .setName("pin")
-  .setDescription("メッセージをピン留めします。");
+  .setDescription("メッセージをピン留めします。")
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   if (!interaction.guild) {
