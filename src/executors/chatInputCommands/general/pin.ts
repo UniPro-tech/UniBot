@@ -35,7 +35,9 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     .setCustomId("message")
     .setLabel("投稿内容")
     .setStyle(TextInputStyle.Paragraph)
-    .setPlaceholder("投稿内容を入力してください")
+    .setPlaceholder(
+      "投稿内容を入力してください。すでにPinされたメッセージがある場合は上書きされます。"
+    )
     .setRequired(true);
 
   const contentInputRow = new ActionRowBuilder<TextInputBuilder>().addComponents(contentInput);

@@ -64,12 +64,28 @@ export const execute = async (interaction: MessageContextMenuCommandInteraction)
     return;
   }
 
+  const dataManager = new ServerDataManager(interaction.guildId as string);
+  const existingPinned = await dataManager.getConfig("pinnedMessage", interaction.channelId);
+  if (existingPinned) {
+    const errorEmbed = new EmbedBuilder()
+      .setTitle("エラー")
+      .setDescription(
+        "このチャンネルには既にピン留めされたメッセージがあります。\n最初にそれを`/unpin`で解除してください。"
+      )
+      .setColor(config.color.error)
+      .setTimestamp();
+    await interaction.reply({
+      embeds: [errorEmbed],
+      flags: [MessageFlags.Ephemeral],
+    });
+    return;
+  }
+
   const embed = new EmbedBuilder()
     .setDescription(interaction.targetMessage.content)
     .setColor(config.color.success)
     .setFooter({ text: "Pinned Message" });
   const sendedMessage = await interaction.channel.send({ embeds: [embed] });
-  const dataManager = new ServerDataManager(interaction.guildId as string);
   dataManager.setConfig(
     "pinnedMessage",
     { message: interaction.targetMessage.content, latestMessageId: sendedMessage.id },
