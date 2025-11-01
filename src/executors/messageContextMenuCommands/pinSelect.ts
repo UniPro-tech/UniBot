@@ -18,7 +18,7 @@ export const data = new ContextMenuCommandBuilder()
 
 export const execute = async (interaction: MessageContextMenuCommandInteraction) => {
   const isAdmin =
-    interaction.memberPermissions?.has("Administrator") ||
+    interaction.memberPermissions?.has("ManageMessages") ||
     interaction.channel?.type === ChannelType.DM;
   const targetMsg = interaction.targetMessage;
 
