@@ -1,5 +1,11 @@
+import config from "@/config";
 import { ServerDataManager } from "@/lib/dataUtils";
-import { MessageFlags, ModalSubmitInteraction, PartialGroupDMChannel } from "discord.js";
+import {
+  EmbedBuilder,
+  MessageFlags,
+  ModalSubmitInteraction,
+  PartialGroupDMChannel,
+} from "discord.js";
 
 export const name = "pin_message";
 
@@ -9,7 +15,11 @@ export const execute = async (interaction: ModalSubmitInteraction) => {
 
   const channel = interaction.channel;
   if (channel && channel.isTextBased() && channel instanceof PartialGroupDMChannel === false) {
-    const sendedMessage = await channel.send(`${message}`);
+    const embed = new EmbedBuilder()
+      .setDescription(message)
+      .setColor(config.color.success)
+      .setFooter({ text: "Pinned Message" });
+    const sendedMessage = await channel.send({ embeds: [embed] });
     const dataManager = new ServerDataManager(interaction.guildId as string);
     dataManager.setConfig(
       "pinnedMessage",
