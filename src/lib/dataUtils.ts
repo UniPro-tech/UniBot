@@ -459,6 +459,41 @@ export class ServerDataManager {
       );
     }
   }
+
+  async deleteConfig(key: string, channel?: string): Promise<void> {
+    const ctx = ALStorage.getStore();
+    const logger = loggingSystem.getLogger({ ...ctx, function: "ServerDataManager.deleteConfig" });
+    try {
+      if (channel) {
+        const existingRecord = await prismaClient.serverConfig.findFirst({
+          where: { guild: this.serverId, key },
+        });
+        if (existingRecord) {
+          const parsedConfig: ServerConfigType<"channel" | "global"> = JSON.parse(
+            existingRecord.value
+          );
+          if (parsedConfig.scope === "channel") {
+            parsedConfig.data = parsedConfig.data.filter(
+              (item: ServerConfigChannelValueType) => item.channel !== channel
+            );
+            await prismaClient.serverConfig.update({
+              where: { guild_key: { guild: this.serverId, key } },
+              data: { value: JSON.stringify(parsedConfig) },
+            });
+          }
+        }
+      } else {
+        await prismaClient.serverConfig.deleteMany({
+          where: { guild: this.serverId, key },
+        });
+      }
+    } catch (error) {
+      logger.error(
+        { error, stack_trace: error instanceof Error ? error.stack : undefined },
+        error instanceof Error ? error.message : "An error occurred while deleting server config"
+      );
+    }
+  }
 }
 
 export default {
