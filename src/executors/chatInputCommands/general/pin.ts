@@ -18,13 +18,6 @@ export const data = new SlashCommandBuilder()
   .setContexts(InteractionContextType.Guild);
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
-  if (!interaction.guild) {
-    await interaction.reply({
-      content: "このコマンドはサーバー内でのみ使用できます。",
-      ephemeral: true,
-    });
-    return "No data";
-  }
   const modal = new ModalBuilder().setCustomId("pin_message").setTitle("メッセージのピン留め");
   const contentInput = new TextInputBuilder()
     .setCustomId("message")
