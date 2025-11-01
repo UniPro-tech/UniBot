@@ -28,7 +28,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       return "No data";
     }
 
-    // ここでピン留めを解除する処理を追加します。
+    
     await dataManager.deleteConfig("pinnedMessage", channelId);
 
     const successEmbed = new EmbedBuilder()
