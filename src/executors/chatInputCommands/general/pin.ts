@@ -13,7 +13,7 @@ export const guildOnly = false;
 export const data = new SlashCommandBuilder()
   .setName("pin")
   .setDescription("メッセージをピン留めします。")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   if (!interaction.guild) {
