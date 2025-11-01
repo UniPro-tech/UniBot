@@ -13,19 +13,12 @@ export const guildOnly = false;
 export const data = new SlashCommandBuilder()
   .setName("pin")
   .setDescription("メッセージをピン留めします。")
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
+  .setDefaultMemberPermissions(PermissionFlagsBits.PinMessages);
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   if (!interaction.guild) {
     await interaction.reply({
       content: "このコマンドはサーバー内でのみ使用できます。",
-      ephemeral: true,
-    });
-    return "No data";
-  }
-  if (!interaction.memberPermissions?.has("ManageMessages")) {
-    await interaction.reply({
-      content: "このコマンドを使用する権限がありません。",
       ephemeral: true,
     });
     return "No data";
