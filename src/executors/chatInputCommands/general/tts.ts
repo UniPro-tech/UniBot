@@ -25,7 +25,7 @@ export const data = addSubCommandGroup(
   ) as SlashCommandBuilder
 ).setContexts(InteractionContextType.Guild);
 
-export const adminGuildOnly = true;
+export const adminGuildOnly = process.env.VOICEVOX_RESTRICT_ADMIN === "true";
 
 const replyWithError = async (
   interaction: ChatInputCommandInteraction,
