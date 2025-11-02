@@ -511,10 +511,16 @@ export class ServerDataManager {
             parsedConfig.data = parsedConfig.data.filter(
               (item: ServerConfigChannelValueType) => item.channel !== channel
             );
-            await prismaClient.serverConfig.update({
-              where: { guild_key: { guild: this.serverId, key } },
-              data: { value: JSON.stringify(parsedConfig) },
-            });
+            if (parsedConfig.data.length === 0) {
+              await prismaClient.serverConfig.deleteMany({
+                where: { guild: this.serverId, key },
+              });
+            } else {
+              await prismaClient.serverConfig.update({
+                where: { guild_key: { guild: this.serverId, key } },
+                data: { value: JSON.stringify(parsedConfig) },
+              });
+            }
           }
         }
       } else {
