@@ -25,10 +25,9 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
         content: "このチャンネルにはピン留めされたメッセージがありません。",
         ephemeral: true,
       });
-      return "No data";
+      return;
     }
 
-    
     await dataManager.deleteConfig("pinnedMessage", channelId);
 
     const successEmbed = new EmbedBuilder()
@@ -45,7 +44,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
       .setTimestamp();
     await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
   }
-  return "No data";
+  return;
 };
 
 export default {
