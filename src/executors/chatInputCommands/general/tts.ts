@@ -5,6 +5,7 @@ import {
   ChatInputCommandInteraction,
   TextChannel,
   MessageFlags,
+  InteractionContextType,
 } from "discord.js";
 import { addSubCommand, addSubCommandGroup, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
@@ -22,9 +23,9 @@ export const data = addSubCommandGroup(
     "general/tts/sub",
     new SlashCommandBuilder().setName("tts").setDescription("テキスト読み上げを管理します。")
   ) as SlashCommandBuilder
-);
+).setContexts(InteractionContextType.Guild);
 
-export const guildOnly = true;
+export const adminGuildOnly = process.env.VOICEVOX_RESTRICT_ADMIN === "true";
 
 const replyWithError = async (
   interaction: ChatInputCommandInteraction,

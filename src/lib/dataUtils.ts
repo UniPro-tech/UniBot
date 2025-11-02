@@ -459,6 +459,82 @@ export class ServerDataManager {
       );
     }
   }
+
+  /**
+   * 指定したキーに紐づくサーバー設定を削除または更新します。
+   *
+   * - channel が指定されている場合:
+   *   - データベースから当該キーのレコードを取得し、保存されている JSON を ServerConfigType<"channel" | "global"> としてパースします。
+   *   - パース結果の scope が "channel" の場合、ServerConfigChannelValueType の配列から
+   *     指定された channel と一致するエントリを除外して値を更新します（該当エントリがなければ変更は行われません）。
+   * - channel が指定されていない場合:
+   *   - 当該サーバー（this.serverId）かつキーに該当する全レコードを削除します。
+   *
+   * 失敗時は内部でエラーをキャッチしてロギングを行います（例外は再送出されません）。
+   *
+   * @param key - 削除または更新対象の設定キー
+   * @param channel - オプション。チャンネル単位の設定からそのチャンネルのエントリのみを削除する場合に指定するチャンネル ID
+   * @returns Promise<void> - 操作完了を示す Promise。エラーは内部でログ出力されるが、呼び出し元にはスローされません。
+   *
+   * @example
+   * // キーに紐づく全レコードを削除
+   * await this.deleteConfig("welcome_message");
+   *
+   * // チャンネル単位の設定から特定チャンネルのエントリのみを削除
+   * await this.deleteConfig("welcome_channels", "123456789012345678");
+   */
+  async deleteConfig(key: string, channel?: string): Promise<void> {
+    const ctx = ALStorage.getStore();
+    const logger = loggingSystem.getLogger({ ...ctx, function: "ServerDataManager.deleteConfig" });
+    try {
+      if (channel) {
+        const existingRecord = await prismaClient.serverConfig.findFirst({
+          where: { guild: this.serverId, key },
+        });
+        if (existingRecord) {
+          let parsedConfig: ServerConfigType<"channel" | "global">;
+          try {
+            parsedConfig = JSON.parse(existingRecord.value);
+          } catch (parseError) {
+            logger.error(
+              {
+                error: parseError,
+                stack_trace: parseError instanceof Error ? parseError.stack : undefined,
+              },
+              parseError instanceof Error
+                ? parseError.message
+                : "Failed to parse server config JSON in deleteConfig"
+            );
+            return;
+          }
+          if (parsedConfig.scope === "channel") {
+            parsedConfig.data = parsedConfig.data.filter(
+              (item: ServerConfigChannelValueType) => item.channel !== channel
+            );
+            if (parsedConfig.data.length === 0) {
+              await prismaClient.serverConfig.deleteMany({
+                where: { guild: this.serverId, key },
+              });
+            } else {
+              await prismaClient.serverConfig.update({
+                where: { guild_key: { guild: this.serverId, key } },
+                data: { value: JSON.stringify(parsedConfig) },
+              });
+            }
+          }
+        }
+      } else {
+        await prismaClient.serverConfig.deleteMany({
+          where: { guild: this.serverId, key },
+        });
+      }
+    } catch (error) {
+      logger.error(
+        { error, stack_trace: error instanceof Error ? error.stack : undefined },
+        error instanceof Error ? error.message : "An error occurred while deleting server config"
+      );
+    }
+  }
 }
 
 export default {

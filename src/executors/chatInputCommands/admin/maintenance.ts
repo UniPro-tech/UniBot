@@ -3,6 +3,7 @@ import {
   EmbedBuilder,
   CommandInteractionOptionResolver,
   ChatInputCommandInteraction,
+  PermissionFlagsBits,
 } from "discord.js";
 import { addSubCommand, subCommandHandling } from "@/lib/commandUtils";
 import { GetLogChannel, GetErrorChannel } from "@/lib/channelUtils";
@@ -12,7 +13,10 @@ import { ALStorage, loggingSystem } from "@/index";
 export const handlingCommands = subCommandHandling("admin/maintenance");
 export const data = addSubCommand(
   "admin/maintenance",
-  new SlashCommandBuilder().setName("maintenance").setDescription("メンテナンスモード")
+  new SlashCommandBuilder()
+    .setName("maintenance")
+    .setDescription("メンテナンスモード")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 );
 export const guildOnly = true;
 export const adminGuildOnly = true;
