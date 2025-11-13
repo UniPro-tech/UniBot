@@ -6,7 +6,14 @@ import {
 } from "@/lib/dataUtils";
 import { TTSQueue } from "@/lib/ttsQueue";
 import { getVoiceConnection } from "@discordjs/voice";
-import { Client, EmbedBuilder, GuildChannel, Message, PartialGroupDMChannel } from "discord.js";
+import {
+  Client,
+  EmbedBuilder,
+  GuildChannel,
+  Message,
+  PartialGroupDMChannel,
+  TextChannel,
+} from "discord.js";
 import { ALStorage, loggingSystem } from "..";
 import config from "@/config";
 
@@ -224,7 +231,62 @@ const resendPinnedMessage = async (message: Message, client: Client) => {
   }
 };
 
+const everyoneSpamRegex = /@everyone|@here/gi;
+const everyoneWebhookSpamDeleter = async (message: Message) => {
+  const ctx = ALStorage.getStore();
+  const logger = loggingSystem.getLogger({ ...ctx, function: "everyoneWebhookSpamDeleter" });
+  if (
+    !message.guild ||
+    !message.channel.isTextBased() ||
+    message.channel instanceof PartialGroupDMChannel
+  )
+    return;
+
+  const dataManager = new ServerDataManager(message.guild.id);
+  const spamConfig = await dataManager.getConfig("everyoneSpamDeletion");
+  if (!spamConfig || !spamConfig.enabled) return;
+
+  if (message.content.match(everyoneSpamRegex)) {
+    try {
+      if (!message.webhookId) return;
+      await message.delete();
+      await message.client.deleteWebhook(message.webhookId);
+      logger.info(
+        `Deleted message containing @everyone or @here from user ${message.author.id} in guild ${message.guild.id}`
+      );
+      if (spamConfig.logChannelId) {
+        const embed = new EmbedBuilder()
+          .setTitle("Spam Message Deleted")
+          .setColor(config.color.warning)
+          .addFields(
+            { name: "User", value: `${message.author.tag} (${message.author.id})`, inline: true },
+            {
+              name: "Channel",
+              value: `${(message.channel as TextChannel).name} (${
+                (message.channel as TextChannel).id
+              })`,
+              inline: true,
+            },
+            { name: "Reason", value: "Used @everyone or @here in webhook message" }
+          )
+          .setTimestamp();
+        const logChannel = await message.client.channels.fetch(spamConfig.logChannelId);
+        if (logChannel && logChannel.isTextBased() && logChannel instanceof TextChannel) {
+          await logChannel.send({ embeds: [embed] });
+        }
+      }
+    } catch (error) {
+      logger.error("Failed to delete spam message:", error as any);
+    }
+  }
+};
+
 export const execute = async (message: Message, client: Client) => {
+  everyoneWebhookSpamDeleter(message).catch((error) => {
+    const ctx = ALStorage.getStore();
+    const logger = loggingSystem.getLogger({ ...ctx, function: "everyoneSpamDeleter" });
+    logger.error("Error in everyoneSpamDeleter:", error);
+  });
   voicevoxSynthesis(message, client).catch((error) => {
     const ctx = ALStorage.getStore();
     const logger = loggingSystem.getLogger({ ...ctx, function: "voicevoxSynthesis" });
