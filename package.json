@@ -48,7 +48,7 @@
     "@breejs/later": "^4.2.0",
     "@discordjs/opus": "^0.10.0",
     "@discordjs/rest": "^2.6.0",
-    "@discordjs/voice": "^0.18.0",
+    "@discordjs/voice": "^0.19.0",
     "@hokify/agenda": "^6.3.0",
     "@nakanoaas/uuid58": "^1.0.4",
     "@prisma/client": "^6.19.0",
