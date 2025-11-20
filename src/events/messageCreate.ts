@@ -261,7 +261,7 @@ const everyoneWebhookSpamDeleter = async (message: Message) => {
           .setTitle("Spam Message Deleted")
           .setColor(config.color.warning)
           .setDescription(
-            `<@&${process.env.ROLE_ADMIN}> A message containing @everyone or @here sent via webhook has been deleted.`
+            `<@&${process.env.ROLE_ADMIN}> A message containing \`@everyone\` or \`@here\` sent via webhook has been deleted.`
           )
           .addFields(
             { name: "User", value: `${message.author.tag} (${message.author.id})`, inline: true },
@@ -272,7 +272,7 @@ const everyoneWebhookSpamDeleter = async (message: Message) => {
               })`,
               inline: true,
             },
-            { name: "Reason", value: "Used @everyone or @here in webhook message" },
+            { name: "Reason", value: "Used `@everyone` or `@here` in webhook message" },
             { name: "Server", value: `${message.guild.name} (${message.guild.id})`, inline: true }
           )
           .setTimestamp();
