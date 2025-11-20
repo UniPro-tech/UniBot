@@ -235,6 +235,7 @@ const everyoneSpamRegex = /@everyone|@here/gi;
 const everyoneWebhookSpamDeleter = async (message: Message) => {
   const ctx = ALStorage.getStore();
   const logger = loggingSystem.getLogger({ ...ctx, function: "everyoneWebhookSpamDeleter" });
+  logger.info("everyoneWebhookSpamDeleter triggered");
   if (
     !message.guild ||
     !message.channel.isTextBased() ||
@@ -245,6 +246,9 @@ const everyoneWebhookSpamDeleter = async (message: Message) => {
   if (message.guild.id != process.env.TEST_GUILD) return; // テスト用ギルド以外では動作させない
 
   if (message.content.match(everyoneSpamRegex)) {
+    logger.info(
+      `Detected @everyone or @here in message from user ${message.author.id} in guild ${message.guild.id}`
+    );
     try {
       if (!message.webhookId) return;
       await message.delete();
@@ -256,6 +260,9 @@ const everyoneWebhookSpamDeleter = async (message: Message) => {
         const embed = new EmbedBuilder()
           .setTitle("Spam Message Deleted")
           .setColor(config.color.warning)
+          .setDescription(
+            `<@&${process.env.ROLE_ADMIN}> A message containing @everyone or @here sent via webhook has been deleted.`
+          )
           .addFields(
             { name: "User", value: `${message.author.tag} (${message.author.id})`, inline: true },
             {
@@ -265,7 +272,8 @@ const everyoneWebhookSpamDeleter = async (message: Message) => {
               })`,
               inline: true,
             },
-            { name: "Reason", value: "Used @everyone or @here in webhook message" }
+            { name: "Reason", value: "Used @everyone or @here in webhook message" },
+            { name: "Server", value: `${message.guild.name} (${message.guild.id})`, inline: true }
           )
           .setTimestamp();
         const logChannel = await message.client.channels.fetch(config.logch.ready);
