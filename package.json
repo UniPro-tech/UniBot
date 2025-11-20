@@ -1,6 +1,6 @@
 {
   "name": "unibot",
-  "version": "8.1.6-rc.0",
+  "version": "8.2.0-rc.0",
   "description": "The Discord Bot made by UniProject.",
   "main": "index.ts",
   "private": true,
