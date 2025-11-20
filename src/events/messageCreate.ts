@@ -242,9 +242,7 @@ const everyoneWebhookSpamDeleter = async (message: Message) => {
   )
     return;
 
-  const dataManager = new ServerDataManager(message.guild.id);
-  const spamConfig = await dataManager.getConfig("everyoneSpamDeletion");
-  if (!spamConfig || !spamConfig.enabled) return;
+  if (message.guild.id != process.env.TEST_GUILD) return; // テスト用ギルド以外では動作させない
 
   if (message.content.match(everyoneSpamRegex)) {
     try {
@@ -254,7 +252,7 @@ const everyoneWebhookSpamDeleter = async (message: Message) => {
       logger.info(
         `Deleted message containing @everyone or @here from user ${message.author.id} in guild ${message.guild.id}`
       );
-      if (spamConfig.logChannelId) {
+      if (config.logch.ready) {
         const embed = new EmbedBuilder()
           .setTitle("Spam Message Deleted")
           .setColor(config.color.warning)
@@ -270,7 +268,7 @@ const everyoneWebhookSpamDeleter = async (message: Message) => {
             { name: "Reason", value: "Used @everyone or @here in webhook message" }
           )
           .setTimestamp();
-        const logChannel = await message.client.channels.fetch(spamConfig.logChannelId);
+        const logChannel = await message.client.channels.fetch(config.logch.ready);
         if (logChannel && logChannel.isTextBased() && logChannel instanceof TextChannel) {
           await logChannel.send({ embeds: [embed] });
         }
