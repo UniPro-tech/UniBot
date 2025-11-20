@@ -14,8 +14,8 @@ const config = {
     ready: process.env.LOG_SUCCESS_ID,
     command: process.env.LOG_SUCCESS_ID,
     error: process.env.LOG_ERROR_ID,
-    guildCreate: process.env.LOGCH_GUILD_ID,
-    guildDelete: process.env.LOGCH_GUILD_ID,
+    guildCreate: process.env.LOG_GUILD_ID,
+    guildDelete: process.env.LOG_GUILD_ID,
   },
 };
 
