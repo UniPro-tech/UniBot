@@ -1,0 +1,8 @@
+* @UniPro-tech/UniBot
+.github/ @UniPro-tech/github
+argoCD/ @UniPro-tech/Kubernetes
+.dockerignore @UniPro-tech/Kubernetes
+Docker @UniPro-tech/Kubernetes
+docker-compose.* @UniPro-tech/Kubernetes
+_docker-compose.* @UniPro-tech/Kubernetes
+LICENSE @UniPro-tech/BoardMember
