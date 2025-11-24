@@ -6,3 +6,6 @@ Docker @UniPro-tech/Kubernetes
 docker-compose.* @UniPro-tech/Kubernetes
 _docker-compose.* @UniPro-tech/Kubernetes
 LICENSE @UniPro-tech/BoardMember
+README.md @UniPro-tech/BoardMember
+CONTRIBUTING.md @UniPro-tech/BoardMember @UniPro-tech/UniBot
+TeamsOfUse.md @UniPro-tech/BoardMember
