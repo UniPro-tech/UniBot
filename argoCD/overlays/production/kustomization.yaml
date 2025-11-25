@@ -3,3 +3,4 @@ bases:
 
 resources:
   - env.yaml
+  - imageUpdater.yaml

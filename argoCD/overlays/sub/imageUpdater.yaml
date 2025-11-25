@@ -1,0 +1,14 @@
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: unibot-sub
+  namespace: argocd
+spec:
+  namespace: argocd
+  applicationRefs:
+    - namePattern: "unibot-sub"
+      images:
+        - alias: "unibot-sub"
+          imageName: "registry.uniproject.jp/unibot/unibot:x.x.x-x"
+          commonUpdateSettings:
+            updateStrategy: "semver"
