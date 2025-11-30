@@ -7,7 +7,7 @@ try {
     rs.initiate({
       _id: "my-replica-set",
       // ここを適切なホスト名に変更
-      members: [{ _id: 0, host: "mongo:27017" }],
+      members: [{ _id: 0, host: "localhost:27017" }],
     });
     quit(1);
   } else {
