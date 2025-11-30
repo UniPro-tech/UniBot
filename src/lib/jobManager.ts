@@ -40,11 +40,23 @@ export const cancelRemindJob = async (id: string) => {
 };
 
 export const redefineJobs = async (client: Client) => {
+  console.log("Redefining Discord message jobs");
   agenda.jobs({ name: /send-discord-message id:.*/ }).then((jobs) => {
     jobs.forEach((job) => {
       const name = job.attrs.name;
       const id = name.split("id:")[1];
       defineRemindJob(id, client);
+    });
+  });
+  agenda.jobs({ name: /rss-feed id:.*/ }).then((jobs) => {
+    jobs.forEach((job) => {
+      const name = job.attrs.name;
+      const id = name.split("id:")[1];
+      defineRssJob(id, client);
+      const cron = job.attrs.repeatInterval;
+      const data = job.attrs.data;
+      job.remove();
+      agenda.every(cron!, `rss-feed id:${id}`, data);
     });
   });
 };
@@ -53,6 +65,7 @@ import { XMLParser } from "fast-xml-parser";
 
 export const defineRssJob = (id: string, client: Client) => {
   agenda.define(`rss-feed id:${id}`, async (job: Job) => {
+    console.log(`Executing RSS feed job for id:${id}`);
     const { feedUrl, channelId, name } = job.attrs.data as RssFeedJobData;
     const lastFinishedAt = job.attrs.lastFinishedAt;
     if (!lastFinishedAt) {
@@ -97,11 +110,17 @@ export const defineRssJob = (id: string, client: Client) => {
           if (item.title) {
             title = typeof item.title === "string" ? item.title : item.title["#text"];
           }
-          if (item.link) {
+          if (item.link || item.url) {
             link =
-              typeof item.link === "string" ? item.link : item.link["@_href"] || item.link["#text"];
+              typeof item.link === "string" && item.link
+                ? item.link
+                : item.link["@_href"] || item.link["#text"] || item.url;
           }
-          await channel.send(`${name}に新しい記事があります: **${title}**\n${link}`);
+          await channel.send(
+            `${name}に新しい記事があります: **${title}**\n-# by ${
+              item.author.name
+            } at ${pubDate.toISOString()}\n${link}`
+          );
         });
       }
     }
