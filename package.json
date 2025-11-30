@@ -61,6 +61,7 @@
     "discord-api-types": "^0.38.35",
     "discord.js": "^14.25.1",
     "dotenv": "^16.6.1",
+    "fast-xml-parser": "^5.3.2",
     "fs": "^0.0.1-security",
     "install": "^0.13.0",
     "nanoid": "^5.1.6",
