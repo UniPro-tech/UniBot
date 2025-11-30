@@ -40,7 +40,6 @@ export const cancelRemindJob = async (id: string) => {
 };
 
 export const redefineJobs = async (client: Client) => {
-  console.log("Redefining Discord message jobs");
   agenda.jobs({ name: /send-discord-message id:.*/ }).then((jobs) => {
     jobs.forEach((job) => {
       const name = job.attrs.name;
@@ -65,7 +64,6 @@ import { XMLParser } from "fast-xml-parser";
 
 export const defineRssJob = (id: string, client: Client) => {
   agenda.define(`rss-feed id:${id}`, async (job: Job) => {
-    console.log(`Executing RSS feed job for id:${id}`);
     const { feedUrl, channelId, name } = job.attrs.data as RssFeedJobData;
     const lastFinishedAt = job.attrs.lastFinishedAt;
     if (!lastFinishedAt) {
