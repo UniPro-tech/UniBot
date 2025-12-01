@@ -78,7 +78,10 @@ export const defineRssJob = (id: string, client: Client) => {
     if (channel) {
       const response = await fetch(feedUrl);
       const text = await response.text();
-      const parser = new XMLParser();
+      const options = {
+        ignoreAttributes: false,
+      };
+      const parser = new XMLParser(options);
       const feed = parser.parse(text);
       let items = [];
       if (feed.rss && feed.rss.channel && feed.rss.channel.item) {
