@@ -1,5 +1,4 @@
-FROM oven/bun:slim
-WORKDIR /app
+FROM node:20-bullseye
 
 LABEL org.opencontainers.image.authors="Yuito Akatsuki <yuito@yuito-it.jp>"
 LABEL org.opencontainers.image.url="https://github.com/UniPro-tech/UniBot"
@@ -9,23 +8,23 @@ LABEL org.opencontainers.image.title="UniBot"
 LABEL org.opencontainers.image.description="A multifunctional Discord bot for community management, entertainment, and productivity."
 LABEL org.opencontainers.image.vendor="All-Japan Digital Creative Club UniProject <info@uniproject.jp>"
 
+WORKDIR /app
+
 RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    file \
-    unzip
+    curl git file unzip \
+    python3 make g++ ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /usr/share/keyrings/github-archive-keyring.gpg >/dev/null && \
-    echo "deb [signed-by=/usr/share/keyrings/github-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list && \
-    apt-get update && \
-    apt-get install -y gh
-
-RUN apt-get update && apt-get install -y python3 make g++ ffmpeg && rm -rf /var/lib/apt/lists/*
+# bun だけ入れる（Nodeは20のまま）
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
 
 COPY package*.json ./
-COPY bun.lock ./
+COPY bun.lockb ./
+
 RUN bun install --trust-all
 
 COPY . .
 
 CMD ["sh", "-c", "bunx prisma db push && bun run src/index.ts"]
+
