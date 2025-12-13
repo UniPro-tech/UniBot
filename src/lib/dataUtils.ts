@@ -537,6 +537,54 @@ export class ServerDataManager {
   }
 }
 
+export class StreamingDataManager {
+  public guildId: string;
+  public channelId: string;
+  public ttsChannelId?: string;
+
+  constructor(guildId: string, channelId: string, ttsChannelId?: string) {
+    this.guildId = guildId;
+    this.channelId = channelId;
+    this.ttsChannelId = ttsChannelId;
+  }
+
+  public isEnabled = async (): Promise<boolean> => {
+    const result = await prismaClient.streamingConfig.findFirst({
+      where: {
+        guild: this.guildId,
+        voiceChannel: this.channelId,
+      },
+    });
+    return !!result;
+  };
+
+  public save = async (): Promise<void> => {
+    await prismaClient.streamingConfig.upsert({
+      where: {
+        guild: this.guildId,
+        voiceChannel: this.channelId,
+      },
+      update: {
+        textChannel: this.ttsChannelId || null,
+      },
+      create: {
+        guild: this.guildId,
+        voiceChannel: this.channelId,
+        textChannel: this.ttsChannelId || null,
+      },
+    });
+  };
+
+  public delete = async (): Promise<void> => {
+    await prismaClient.streamingConfig.deleteMany({
+      where: {
+        guild: this.guildId,
+        voiceChannel: this.channelId,
+      },
+    });
+  };
+}
+
 export default {
   writeConfig,
   readConfig,

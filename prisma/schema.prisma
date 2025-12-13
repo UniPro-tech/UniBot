@@ -40,6 +40,15 @@ model selectedData {
   data       String   @map("_data")
 }
 
+model streamingConfig {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  guild      String   @map("_guild") @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  textChannel String?  @map("_textChannel")
+  voiceChannel String @map("_voiceChannel")
+}
+
 model ttsConnection {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   created_at   DateTime @default(now())

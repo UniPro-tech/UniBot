@@ -1,7 +1,7 @@
-import { readTtsConnection } from "@/lib/dataUtils";
+import { readTtsConnection, StreamingDataManager } from "@/lib/dataUtils";
 import { TTSQueue } from "@/lib/ttsQueue";
 import { getVoiceConnection } from "@discordjs/voice";
-import { EmbedBuilder, TextChannel, VoiceBasedChannel, VoiceState } from "discord.js";
+import { EmbedBuilder, TextChannel, User, VoiceBasedChannel, VoiceState } from "discord.js";
 import { ALStorage, loggingSystem } from "..";
 
 export const name = "voiceStateUpdate";
@@ -106,6 +106,26 @@ const speak = async (guildId: string, text: string) => {
   ttsQueue.enqueue(text, 0, 0); // styleId: 0, priority: 0 (高優先度)
 };
 
+const streamModeCheck = async (guildId: string, channel: VoiceBasedChannel) => {
+  const data = new StreamingDataManager(guildId, channel!.id);
+  return await data.isEnabled();
+};
+
+const sendStreamWarningMessage = async (user: User, channel: VoiceBasedChannel) => {
+  const embed = new EmbedBuilder()
+    .setTitle("ストリームモード警告")
+    .setDescription(
+      `<@${user.id}> ストリームモードが有効になっています。ここでの会話はYoutubeライブ配信などで視聴者に聞こえる可能性があります。`
+    )
+    .addFields({
+      name: "チャンネル",
+      value: `<#${channel.id}>`,
+    })
+    .setColor(0xffa500) // オレンジ色
+    .setTimestamp();
+  await user.send({ embeds: [embed] });
+};
+
 export const execute = async (oldState: VoiceState, newState: VoiceState) => {
   const oldChannel = oldState.channel;
   const newChannel = newState.channel;
@@ -126,6 +146,13 @@ export const execute = async (oldState: VoiceState, newState: VoiceState) => {
   if (newChannel?.id === oldChannel?.id) return;
 
   const type = getVoiceEventType(oldState, newState);
+  if (type === "join" && !newState.member?.user.bot) {
+    const isStreamMode = await streamModeCheck(newState.guild.id, newChannel!);
+    if (isStreamMode) {
+      await newState.member?.voice.setMute(true, "ストリームモードが有効なため自動ミュート");
+      await sendStreamWarningMessage(newState.member!.user, newChannel!);
+    }
+  }
   const text = getVoiceEventText(type, oldState, newState);
 
   const connection = getVoiceConnection(oldState.guild.id || newState.guild.id);
