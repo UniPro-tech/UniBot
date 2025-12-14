@@ -34,6 +34,7 @@ export const execute = async (interaction: CommandInteraction) => {
   const logger = loggingSystem.getLogger({ ...ctx, function: "general/tts/join" });
   await interaction.deferReply();
 
+  const guild = interaction.guild;
   const member = interaction.member as GuildMember;
   const voiceChannel = member.voice.channel;
   const config = interaction.client.config;
@@ -63,6 +64,10 @@ export const execute = async (interaction: CommandInteraction) => {
     guildId: voiceChannel.guild.id,
     adapterCreator: voiceChannel.guild.voiceAdapterCreator,
   });
+
+  if (voiceChannel?.type === ChannelType.GuildStageVoice) {
+    guild?.members.me?.voice.setSuppressed(false);
+  }
 
   connection.once("ready", async () => {
     const textChannelId = (interaction.channel! as TextChannel).id;
