@@ -32,7 +32,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: registry.uniproject.jp/unibot/unibot
+          images: registry.uniproject.jp/infra/unibot
           tags: |
             type=raw,value=latest
             type=semver,pattern={{version}}
@@ -45,5 +45,5 @@ jobs:
           context: .
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=registry.uniproject.jp/unibot/unibot:buildcache
-          cache-to: type=registry,ref=registry.uniproject.jp/unibot/unibot:buildcache,mode=max
+          cache-from: type=registry,ref=registry.uniproject.jp/infra/unibot:buildcache
+          cache-to: type=registry,ref=registry.uniproject.jp/infra/unibot:buildcache,mode=max
