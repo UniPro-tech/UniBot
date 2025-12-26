@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: unibot
-          image: registry.uniproject.jp/unibot/unibot:4.0.0-4
+          image: registry.uniproject.jp/infra/unibot/unibot:8.4.0
           imagePullPolicy: Always
           envFrom:
             - secretRef:
