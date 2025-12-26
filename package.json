@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",
-    "prisma": "^6.19.1",
+    "prisma": "^7.2.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
   }
