@@ -9,6 +9,6 @@ spec:
     - namePattern: "unibot"
       images:
         - alias: "unibot"
-          imageName: "registry.uniproject.jp/infra/unibot/unibot:8.4.0"
+          imageName: "registry.uniproject.jp/infra/unibot:8.4.0"
           commonUpdateSettings:
             updateStrategy: "semver"
