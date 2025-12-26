@@ -149,14 +149,25 @@ export const registerAllCommands = async (client: Client) => {
       .filter((f) => f.endsWith(".js") || (f.endsWith(".ts") && !f.endsWith(".d.ts")));
 
     for (const file of commandFiles) {
-      const command = require(path.resolve(
-        __dirname,
-        `../executors/chatInputCommands/${folder}/${file}`
-      ));
-      if (command.adminGuildOnly) {
-        pushCommand(adminGuildCommands, command, file, "Admin Slash");
-      } else {
-        pushCommand(globalCommands, command, file, "Global Slash");
+      const fullPath = path.resolve(__dirname, `../executors/chatInputCommands/${folder}/${file}`);
+      try {
+        const imported = await import(`file://${fullPath}`);
+        const command =
+          imported && (imported as any).default ? (imported as any).default : imported;
+        if ((command as any).adminGuildOnly) {
+          pushCommand(adminGuildCommands, command as any, file, "Admin Slash");
+        } else {
+          pushCommand(globalCommands, command as any, file, "Global Slash");
+        }
+      } catch (err) {
+        logger.error(
+          {
+            extra_context: { file, command_type: "Admin/Global Slash" },
+            stack_trace: (err as Error).stack,
+          },
+          `Failed to load command`,
+          err
+        );
       }
     }
   }
