@@ -17,12 +17,12 @@ export const handlingCommands = (() => {
   const col = new Collection<string, any>();
   setImmediate(() => {
     try {
-      subCommandHandling("general/steeaming", col);
+      subCommandHandling("general/streaming", col);
     } catch (e) {
       // ログはトップレベルで使えない可能性があるため console を使う
       // 実行時のALStorageログは既存のロガーが利用される
       // eslint-disable-next-line no-console
-      console.error("Failed to initialize handlingCommands for general/steeaming", e);
+      console.error("Failed to initialize handlingCommands for general/streaming", e);
     }
   });
   return col;
@@ -30,15 +30,15 @@ export const handlingCommands = (() => {
 
 export const data = (() => {
   const builder = new SlashCommandBuilder()
-    .setName("steeaming")
+    .setName("streaming")
     .setDescription("配信モードを管理します。")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
   setImmediate(() => {
     try {
-      addSubCommand("general/steeaming", builder);
+      addSubCommand("general/streaming", builder);
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.error("Failed to add subcommands for general/steeaming", e);
+      console.error("Failed to add subcommands for general/streaming", e);
     }
   });
   return builder;
@@ -47,7 +47,7 @@ export const guildOnly = true;
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
   const ctx = ALStorage.getStore();
-  const logger = loggingSystem.getLogger({ ...ctx, function: "general/steeaming" });
+  const logger = loggingSystem.getLogger({ ...ctx, function: "general/streaming" });
 
   const subcommand = (interaction.options as CommandInteractionOptionResolver).getSubcommand();
   const command = handlingCommands.get(subcommand);
