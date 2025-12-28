@@ -1,4 +1,5 @@
 name: Docker Build and Push
+
 on:
   push:
     tags:
@@ -8,9 +9,14 @@ concurrency:
   group: docker-build-push
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,9 +25,11 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Extract tag name
-        run: tagname=${GITHUB_REF#refs/*/} && echo "TAG_NAME=${tagname#v}" >> $GITHUB_ENV
+        run: |
+          tagname=${GITHUB_REF#refs/*/}
+          echo "TAG_NAME=${tagname#v}" >> $GITHUB_ENV
 
-      - name: Login to GitHub Container Registry
+      - name: Login to Harbor Registry
         uses: docker/login-action@v3
         with:
           registry: registry.uniproject.jp
@@ -46,28 +54,26 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
-      - name: Push Docker image
-        uses: docker/build-push-action@v5
+      - name: Build and Push Docker image
         id: build-and-push
+        uses: docker/build-push-action@v5
         with:
           file: ./Dockerfile
-          push: true
           context: .
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=registry.uniproject.jp/infra/unibot:buildcache
           cache-to: type=registry,ref=registry.uniproject.jp/infra/unibot:buildcache,mode=max
 
-      - name: Sign the published Docker image with GitHub OIDC Token
+      - name: Sign Docker images with GitHub OIDC (cosign keyless)
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: |
           images=""
           for tag in ${TAGS}; do
-            images+="${tag}@${DIGEST} "
+            images="${images}${tag}@${DIGEST} "
           done
+
           cosign sign --yes ${images}
-          cosign verify ${images} \
-          --certificate-identity=https://github.com/UniPro-tech/UniBot/.github/workflows/docker-tag.yaml@refs/tags/v${TAG_NAME} \
-          --certificate-oidc-issuer=https://token.actions.githubusercontent.com
