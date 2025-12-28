@@ -69,5 +69,5 @@ jobs:
           done
           cosign sign --yes ${images}
           cosign verify ${images} \
-          --certificate-identity=https://github.com/UniPro-tech/UniBot/.github/workflows/docker-tag.yaml@refs/heads/main \
+          --certificate-identity=https://github.com/UniPro-tech/UniBot/.github/workflows/docker-tag.yaml@refs/tags/v${TAG_NAME} \
           --certificate-oidc-issuer=https://token.actions.githubusercontent.com
