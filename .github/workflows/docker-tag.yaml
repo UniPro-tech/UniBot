@@ -70,6 +70,7 @@ jobs:
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
+          COSIGN_EXPERIMENTAL: "true"
         run: |
           images=""
           for tag in ${TAGS}; do
