@@ -36,9 +36,19 @@ jobs:
           tags: |
             type=raw,value=latest
             type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
             type=sha,prefix=,suffix=,format=short
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
       - name: Push Docker image
         uses: docker/build-push-action@v5
+        id: build-and-push
         with:
           file: ./Dockerfile
           push: true
@@ -47,3 +57,17 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=registry.uniproject.jp/infra/unibot:buildcache
           cache-to: type=registry,ref=registry.uniproject.jp/infra/unibot:buildcache,mode=max
+
+      - name: Sign the published Docker image with GitHub OIDC Token
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
+          cosign verify ${images} \
+          --certificate-identity=https://github.com/UniPro-tech/UniBot/.github/workflows/docker-tag.yaml@refs/heads/main \
+          --certificate-oidc-issuer=https://token.actions.githubusercontent.com
