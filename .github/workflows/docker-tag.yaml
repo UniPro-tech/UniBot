@@ -46,7 +46,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=sha,prefix=,suffix=,format=short
+            type=sha,prefix=sha-,suffix=,format=short
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
