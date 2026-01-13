@@ -1,4 +1,4 @@
-FROM node:20-bullseye
+FROM node:25-bullseye
 
 LABEL org.opencontainers.image.authors="Yuito Akatsuki <yuito@yuito-it.jp>"
 LABEL org.opencontainers.image.url="https://github.com/UniPro-tech/UniBot"
