@@ -52,7 +52,7 @@ jobs:
         uses: sigstore/cosign-installer@v3
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Build and Push Docker image
         id: build-and-push
