@@ -37,7 +37,7 @@ jobs:
         with:
           app_id: ${{ secrets.NPM_VERSIONER_APP_ID }}
           private_key: ${{ secrets.NPM_VERSIONER_PRIVATE_KEY }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ steps.generate-token.outputs.token }}
       - name: Set up Git
