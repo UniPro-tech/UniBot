@@ -1,32 +1,32 @@
-# Node.js
-node_modules/
-npm-debug.log
-yarn-error.log
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
-# Dependency directories
-/.pnp
-.pnp.js
+# Test binary, built with `go test -c`
+*.test
 
-# Optional npm cache directory
-.npm
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
 
-# Build output
-/dist
+# Dependency directories (remove the comment below to include it)
+# vendor/
 
-# Environment variables
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
 .env
-.env.*
 
-# Editor directories and files
-.idea/
-.vscode/
-*.sublime-*
-*.swp
-
-log/
-
-docker-compose.dev.yaml
-dev/*
-src/generated
-
-/argocd/overlays/sub/raw
+# Editor/IDE
+# .idea/
+# .vscode/
