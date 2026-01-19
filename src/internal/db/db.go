@@ -1,14 +1,11 @@
 package db
 
 import (
-	"context"
-
-	"github.com/jackc/pgx/v5/pgxpool"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-func NewDB() (*pgxpool.Pool, error) {
-	return pgxpool.New(
-		context.Background(),
-		"postgres://root:secret@localhost:5432/unibot",
-	)
+func NewDB() (*gorm.DB, error) {
+	dsn := "host=localhost user=root password=secret dbname=unibot port=5432 sslmode=disable"
+	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }
