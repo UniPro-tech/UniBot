@@ -1,37 +1,33 @@
 package repository
 
 import (
-	"context"
+	"errors"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"gorm.io/gorm"
+
+	"unibot/internal/model"
 )
 
 type MemberRepository struct {
-	db *pgxpool.Pool
+	db *gorm.DB
 }
 
-func NewMemberRepository(db *pgxpool.Pool) *MemberRepository {
+func NewMemberRepository(db *gorm.DB) *MemberRepository {
 	return &MemberRepository{db: db}
 }
 
-func (r *MemberRepository) Create(ctx context.Context, discordUserID string) error {
-	_, err := r.db.Exec(ctx,
-		`INSERT INTO members (discord_user_id)
-		 VALUES ($1)
-		 ON CONFLICT DO NOTHING`,
-		discordUserID,
-	)
-	return err
+func (r *MemberRepository) Create(discordUserID string) error {
+	member := model.Member{
+		DiscordUserID: discordUserID,
+	}
+	return r.db.Create(&member).Error
 }
 
-func (r *MemberRepository) Exists(ctx context.Context, discordUserID string) (bool, error) {
-	var exists bool
-	err := r.db.QueryRow(ctx,
-		`SELECT EXISTS(
-			SELECT 1 FROM members WHERE discord_user_id = $1
-		)`,
-		discordUserID,
-	).Scan(&exists)
-
-	return exists, err
+func (r *MemberRepository) Get(discordUserID string) (*model.Member, error) {
+	var member model.Member
+	err := r.db.First(&member, "discord_user_id = ?", discordUserID).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &member, err
 }
