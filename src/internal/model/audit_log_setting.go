@@ -1,6 +1,6 @@
 package model
 
-type AuditLogSettings struct {
+type AuditLogSetting struct {
 	GuildID        string `gorm:"primaryKey;size:255"`
 	AlartChannelID string `gorm:"size:255"`
 	AlartType      int    `gorm:"not null;default:0"`
