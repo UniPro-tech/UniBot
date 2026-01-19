@@ -1,0 +1,13 @@
+package model
+
+type ScheduleSetting struct {
+	ID        string `gorm:"primaryKey;size:255"`
+	ChannelID string `gorm:"not null;size:255;index:idx_channel_guild"`
+	Content   string `gorm:"type:text;not null"`
+	NextRunAt int64  `gorm:"not null"`
+	Cron      string `gorm:"not null"`
+	CreatedAt int64  `gorm:"autoCreateTime:nano"`
+	UpdatedAt int64  `gorm:"autoUpdateTime:nano"`
+	Author    Member `gorm:"foreignKey:ID;references:DiscordID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Guild     Guild  `gorm:"foreignKey:ChannelID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+}
