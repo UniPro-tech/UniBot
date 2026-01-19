@@ -9,5 +9,5 @@ type PinSetting struct {
 	ChannelID string `gorm:"not null"`
 	CreatedAt int64  `gorm:"autoCreateTime:nano"`
 	UpdatedAt int64  `gorm:"autoUpdateTime:nano"`
-	Guild     Guild  `gorm:"foreignKey:GuildID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Guild     Guild  `gorm:"foreignKey:GuildID;references:DiscordID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

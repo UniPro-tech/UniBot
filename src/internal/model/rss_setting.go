@@ -8,5 +8,5 @@ type RSSSetting struct {
 	CreatedAt int64  `gorm:"autoCreateTime:nano"`
 	UpdatedAt int64  `gorm:"autoUpdateTime:nano"`
 	GuildID   string `gorm:"not null"`
-	Guild     Guild  `gorm:"foreignKey:ChannelID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Guild     Guild  `gorm:"foreignKey:GuildID;references:DiscordID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

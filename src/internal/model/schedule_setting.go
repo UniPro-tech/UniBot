@@ -10,6 +10,6 @@ type ScheduleSetting struct {
 	UpdatedAt int64  `gorm:"autoUpdateTime:nano"`
 	GuildID   string `gorm:"not null;size:255;index:idx_channel_guild"`
 	AuthorID  string `gorm:"not null;size:255"`
-	Author    Member `gorm:"foreignKey:ID;references:DiscordID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Guild     Guild  `gorm:"foreignKey:ChannelID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Author    Member `gorm:"foreignKey:AuthorID;references:DiscordID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Guild     Guild  `gorm:"foreignKey:GuildID;references:DiscordID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

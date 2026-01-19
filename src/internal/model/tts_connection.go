@@ -5,5 +5,5 @@ type TTSConnection struct {
 	ChannelID string `gorm:"not null;size:255;uniqueIndex:idx_guild_channel"`
 	CreatedAt int64  `gorm:"autoCreateTime:nano"`
 	UpdatedAt int64  `gorm:"autoUpdateTime:nano"`
-	Guild     Guild  `gorm:"foreignKey:GuildID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Guild     Guild  `gorm:"foreignKey:GuildID;references:DiscordID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
