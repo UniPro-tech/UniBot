@@ -15,12 +15,17 @@ services:
   adminer:
     image: dpage/pgadmin4:latest
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@unibot.local
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
       - PGADMIN_DEFAULT_PASSWORD=secret
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
     ports:
       - "8080:80"
     depends_on:
       - psql
-
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - - ./dev/pgadmin/servers.json:/pgadmin4/servers.json
 volumes:
   unibot-psql-data:
+  pgadmin-data:
