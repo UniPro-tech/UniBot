@@ -1,6 +1,7 @@
 package command
 
 import (
+	"time"
 	"unibot/internal"
 
 	"github.com/bwmarrin/discordgo"
@@ -28,9 +29,10 @@ func Ping(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Name:    i.Member.DisplayName(),
 		},
 		Footer: &discordgo.MessageEmbedFooter{
-			Text:    "UniBot",
-			IconURL: s.State.User.AvatarURL(""),
+			Text:    "Requested by " + i.Member.DisplayName(),
+			IconURL: i.Member.AvatarURL(""),
 		},
+		Timestamp: time.Now().Format(time.RFC3339),
 	}
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
