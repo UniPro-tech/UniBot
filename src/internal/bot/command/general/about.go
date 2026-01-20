@@ -8,6 +8,13 @@ import (
 	"unibot/internal"
 )
 
+func LoadAboutCommandContext() *discordgo.ApplicationCommand {
+	return &discordgo.ApplicationCommand{
+		Name:        "about",
+		Description: "ボットの情報を表示します",
+	}
+}
+
 func About(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := internal.LoadConfig()
 	// コントリビューター一覧をMarkdown形式で作成

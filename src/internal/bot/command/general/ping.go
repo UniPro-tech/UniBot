@@ -7,6 +7,13 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+func LoadPingCommandContext() *discordgo.ApplicationCommand {
+	return &discordgo.ApplicationCommand{
+		Name:        "ping",
+		Description: "スピードテストを行います",
+	}
+}
+
 func Ping(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := internal.LoadConfig()
 
