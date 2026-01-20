@@ -1,6 +1,8 @@
 package maintenance
 
 import (
+	"os"
+	"syscall"
 	"time"
 	"unibot/internal"
 
@@ -28,4 +30,14 @@ func Reboot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Flags: discordgo.MessageFlagsEphemeral,
 		},
 	})
+
+	// 再起動と称してプロセスを終了する
+	go func() {
+		time.Sleep(2 * time.Second)
+		p, err := os.FindProcess(os.Getpid())
+		if err != nil {
+			return
+		}
+		p.Signal(syscall.SIGTERM)
+	}()
 }

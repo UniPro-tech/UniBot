@@ -89,9 +89,7 @@ func IsOwner(member discordgo.Member) bool {
 
 var maintenanceHandler = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 	"status": maintenance.Status,
-	"reboot": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		// 再起動ロジック
-	},
+	"reboot": maintenance.Reboot,
 }
 
 func Maintenance(s *discordgo.Session, i *discordgo.InteractionCreate) {
