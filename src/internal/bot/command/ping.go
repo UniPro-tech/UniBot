@@ -1,10 +1,14 @@
 package command
 
 import (
+	"unibot/internal"
+
 	"github.com/bwmarrin/discordgo"
 )
 
 func Ping(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := internal.LoadConfig()
+
 	// Get ws websocketLatency
 	websocketLatency := s.HeartbeatLatency()
 
@@ -12,6 +16,7 @@ func Ping(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	responseEmbed := &discordgo.MessageEmbed{
 		Title:       "Pong 🏓",
 		Description: "スピードテストの結果です",
+		Color:       config.Colors.Primary,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:  "WebSocket Latency",
