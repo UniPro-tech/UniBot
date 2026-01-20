@@ -17,6 +17,7 @@ type Colors struct {
 
 type Config struct {
 	BotName       string
+	Description   string
 	BotVersion    string
 	Contributors  []Contributors
 	URL           string
@@ -63,6 +64,7 @@ var (
 // envが設定されていない場合のデフォルト値
 var (
 	BotName       = "UniBot"
+	Description   = "UniBotはデジタル創作サークルUniProjectの内製Discord Botです。"
 	GitHubRepo    = "UniPro-tech/UniBot"
 	HomePage      = "https://unibot.uniproject.jp"
 	SupportServer = "https://discord.gg/HYWB2aztr8"
@@ -81,6 +83,10 @@ func LoadConfig() *Config {
 	BotNameEnv := os.Getenv("CONFIG_BOT_NAME")
 	if BotNameEnv == "" {
 		BotNameEnv = BotName
+	}
+	DescriptionEnv := os.Getenv("CONFIG_DESCRIPTION")
+	if DescriptionEnv == "" {
+		DescriptionEnv = Description
 	}
 	GitHubRepoEnv := os.Getenv("CONFIG_GITHUB_REPO")
 	if GitHubRepoEnv == "" {
@@ -124,6 +130,7 @@ func LoadConfig() *Config {
 
 	return &Config{
 		BotName:      BotNameEnv,
+		Description:  DescriptionEnv,
 		BotVersion:   version,
 		Contributors: contributors,
 		URL:          HomePageEnv,

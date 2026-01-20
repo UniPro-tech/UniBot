@@ -1,6 +1,8 @@
 package command
 
 import (
+	"time"
+
 	"github.com/bwmarrin/discordgo"
 
 	"unibot/internal"
@@ -25,16 +27,16 @@ func About(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	responseEmbed := &discordgo.MessageEmbed{
-		Title:       "About UniBot 🤖",
-		Description: "UniBotはデジタル創作サークルUniProjectの内製Botです。",
+		Title:       "About " + config.BotName + " 🤖",
+		Description: config.Description,
 		Color:       config.Colors.Primary,
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:  "バージョン",
+				Name:  "Version",
 				Value: config.BotVersion,
 			},
 			{
-				Name:  "コントリビューター",
+				Name:  "Contributors",
 				Value: contributorsText,
 			},
 			{
@@ -42,10 +44,15 @@ func About(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Value: config.GitHub,
 			},
 			{
-				Name:  "サポートサーバー",
+				Name:  "Support Server",
 				Value: config.SupportServer,
 			},
 		},
+		Footer: &discordgo.MessageEmbedFooter{
+			Text:    "Requested by " + i.Member.DisplayName(),
+			IconURL: i.Member.AvatarURL(""),
+		},
+		Timestamp: time.Now().Format(time.RFC3339),
 	}
 
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
