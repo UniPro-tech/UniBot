@@ -8,9 +8,20 @@ import (
 
 func About(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := internal.LoadConfig()
+	// コントリビューター一覧をMarkdown形式で作成
 	contributorsText := ""
+	// Botは最後にする
 	for _, contributor := range config.Contributors {
-		contributorsText += "- " + contributor + "\n"
+		if contributor.IsBot {
+			continue
+		}
+		contributorsText += "- [" + contributor.Username + "](" + contributor.Profile + ")\n"
+	}
+	for _, contributor := range config.Contributors {
+		if !contributor.IsBot {
+			continue
+		}
+		contributorsText += "- [" + contributor.Username + "](" + contributor.Profile + ")\n"
 	}
 
 	responseEmbed := &discordgo.MessageEmbed{
@@ -23,12 +34,16 @@ func About(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Value: config.BotVersion,
 			},
 			{
-				Name:  "開発者",
+				Name:  "コントリビューター",
 				Value: contributorsText,
 			},
 			{
 				Name:  "GitHub",
 				Value: config.GitHub,
+			},
+			{
+				Name:  "サポートサーバー",
+				Value: config.SupportServer,
 			},
 		},
 	}
