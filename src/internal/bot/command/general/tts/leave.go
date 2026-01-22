@@ -174,27 +174,6 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 	}
 
 	dbConnection := ctx.DB
-	if err != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "データベースに接続できませんでした。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
-		return
-	}
 	repo := repository.NewTTSConnectionRepository(dbConnection)
 
 	err = repo.DeleteByGuildID(i.GuildID)
