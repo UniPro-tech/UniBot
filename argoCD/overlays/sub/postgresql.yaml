@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: postgre
-          image: postgres:18-alpine
+          image: postgres:18
           imagePullPolicy: Always
           envFrom:
             - secretRef:
