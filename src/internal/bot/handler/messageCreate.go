@@ -34,11 +34,8 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 
 		if ttsConnectionData != nil {
 			userID := r.Author.ID
-			if r.Member != nil && r.Member.User != nil {
-				userID = r.Member.User.ID
-			}
 
-			if r.Member.User.Bot {
+			if r.Author.Bot {
 				return
 			}
 
