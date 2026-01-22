@@ -13,8 +13,9 @@ cmd/bot/main.go
 else
   VERSION=$(git describe --tags --abbrev=0)
 
-  go build src/cmd/bot/main.go-ldflags "\
+  go build -ldflags "\
 -X unibot/internal.Version=$VERSION \
 -X unibot/internal.GitCommit=$COMMIT \
--X unibot/internal.GitBranch=$BRANCH"
+-X unibot/internal.GitBranch=$BRANCH" \
+cmd/bot/main.go
 fi
