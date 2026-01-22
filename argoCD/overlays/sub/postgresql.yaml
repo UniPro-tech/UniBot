@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: postgre
-          image: postgres:18
+          image: postgres:18-alpine
           imagePullPolicy: Always
           envFrom:
             - secretRef:
@@ -25,7 +25,7 @@ spec:
             - containerPort: 5432
           volumeMounts:
             - name: postgre-storage
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql
       volumes:
         - name: postgre-storage
           persistentVolumeClaim:
