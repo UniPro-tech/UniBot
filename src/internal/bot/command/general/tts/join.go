@@ -3,6 +3,9 @@ package tts
 import (
 	"time"
 	"unibot/internal"
+	"unibot/internal/db"
+	"unibot/internal/model"
+	"unibot/internal/repository"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -60,6 +63,51 @@ func Join(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 		return
 	}
+
+	botVoiceStatus, err := s.State.VoiceState(i.GuildID, s.State.User.ID)
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "Botの情報を取得できませんでした。",
+						Color:       config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+						Timestamp: time.Now().Format(time.RFC3339),
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+	if botVoiceStatus != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "既にボイスチャンネルに参加しています。",
+						Color:       config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+						Timestamp: time.Now().Format(time.RFC3339),
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
 	_, err = s.ChannelVoiceJoin(i.GuildID, userVoiceState.ChannelID, false, true)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -81,6 +129,63 @@ func Join(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 		return
+	}
+
+	dbConnection, err := db.NewDB()
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "データベースに接続できませんでした。",
+						Color:       config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+						Timestamp: time.Now().Format(time.RFC3339),
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+	repo := repository.NewTTSConnectionRepository(dbConnection)
+
+	ttsConnection, err := repo.GetByGuildID(i.GuildID)
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "TTS接続情報の取得に失敗しました。",
+						Color:       config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+						Timestamp: time.Now().Format(time.RFC3339),
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+	if ttsConnection == nil {
+		ttsConnection = &model.TTSConnection{
+			GuildID:   i.GuildID,
+			ChannelID: userVoiceState.ChannelID,
+		}
+		err = repo.Create(ttsConnection)
+	} else {
+		ttsConnection.ChannelID = userVoiceState.ChannelID
+		err = repo.Update(ttsConnection)
 	}
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
