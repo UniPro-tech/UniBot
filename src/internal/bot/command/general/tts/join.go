@@ -1,8 +1,11 @@
 package tts
 
 import (
+	"fmt"
+	"log"
 	"time"
 	"unibot/internal"
+	"unibot/internal/bot/voice"
 	"unibot/internal/model"
 	"unibot/internal/repository"
 
@@ -183,4 +186,13 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 			},
 		},
 	})
+
+	channelID := userVoiceState.ChannelID
+	channel, err := s.State.Channel(channelID)
+	if err != nil {
+		log.Println("Failed to get channel:", err)
+	}
+	channelName := channel.Name
+
+	voice.SynthesizeAndPlay(ctx, s, repository.DefaultTTSPersonalSetting, i.GuildID, fmt.Sprintf("%sに、読み上げを接続しました。", channelName))
 }

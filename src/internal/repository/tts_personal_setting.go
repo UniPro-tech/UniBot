@@ -51,3 +51,9 @@ func (r *TTSPersonalSettingRepository) Update(ttsPersonalSetting *model.TTSPerso
 func (r *TTSPersonalSettingRepository) DeleteByMember(memberID string) error {
 	return r.db.Delete(&model.TTSPersonalSetting{}, "member_id = ?", memberID).Error
 }
+
+// デフォルトのTTSPersonalSetting
+var DefaultTTSPersonalSetting = model.TTSPersonalSetting{
+	SpeakerID:    "0",
+	SpeakerPitch: 0,
+}

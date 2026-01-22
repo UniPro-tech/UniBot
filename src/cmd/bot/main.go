@@ -9,6 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"unibot/internal"
+	"unibot/internal/api/voicevox"
 	"unibot/internal/bot/command"
 	"unibot/internal/bot/handler"
 	"unibot/internal/db"
@@ -31,8 +32,9 @@ func main() {
 	}
 
 	ctx := &internal.BotContext{
-		DB:     dbConnection,
-		Config: internal.LoadConfig(),
+		DB:       dbConnection,
+		Config:   internal.LoadConfig(),
+		VoiceVox: voicevox.New(internal.LoadConfig().VoiceVoxURI, internal.LoadConfig().VoiceVoxAPIKey),
 	}
 
 	err = db.SetupDB(dbConnection)
@@ -42,6 +44,7 @@ func main() {
 
 	// Register handlers
 	dg.AddHandler(handler.Ready(ctx))
+	dg.AddHandler(handler.MessageCreate(ctx))
 	dg.AddHandler(handler.InteractionCreate(ctx))
 
 	// Start the bot
