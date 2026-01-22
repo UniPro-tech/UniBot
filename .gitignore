@@ -33,3 +33,4 @@ go.work.sum
 
 # Scripts included sensitive information
 scripts/build.sh
+docker-compose.prod.yaml
