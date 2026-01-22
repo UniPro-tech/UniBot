@@ -1,6 +1,7 @@
 package db
 
 import (
+	"os"
 	"unibot/internal/model"
 
 	"gorm.io/driver/postgres"
@@ -8,7 +9,8 @@ import (
 )
 
 func NewDB() (*gorm.DB, error) {
-	dsn := "host=localhost user=root password=secret dbname=unibot port=5432 sslmode=disable"
+	// dsn := "postgres://root:secret@localhost:5432/unibot?sslmode=disable"
+	dsn := os.Getenv("PG_DSN")
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }
 
