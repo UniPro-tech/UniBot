@@ -25,7 +25,7 @@ services:
       - psql
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-      - - ./dev/pgadmin/servers.json:/pgadmin4/servers.json
+      - ./dev/pgadmin/servers.json:/pgadmin4/servers.json
 volumes:
   unibot-psql-data:
   pgadmin-data:
