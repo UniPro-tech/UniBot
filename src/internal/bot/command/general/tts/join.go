@@ -180,11 +180,11 @@ func Join(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if ttsConnection == nil {
 		ttsConnection = &model.TTSConnection{
 			GuildID:   i.GuildID,
-			ChannelID: userVoiceState.ChannelID,
+			ChannelID: i.ChannelID,
 		}
 		err = repo.Create(ttsConnection)
 	} else {
-		ttsConnection.ChannelID = userVoiceState.ChannelID
+		ttsConnection.ChannelID = i.ChannelID
 		err = repo.Update(ttsConnection)
 	}
 
