@@ -14,8 +14,8 @@ func LoadPingCommandContext() *discordgo.ApplicationCommand {
 	}
 }
 
-func Ping(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := internal.LoadConfig()
+func Ping(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := ctx.Config
 
 	// Get ws websocketLatency
 	websocketLatency := s.HeartbeatLatency()

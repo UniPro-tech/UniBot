@@ -3,7 +3,6 @@ package tts
 import (
 	"time"
 	"unibot/internal"
-	"unibot/internal/db"
 	"unibot/internal/repository"
 
 	"github.com/bwmarrin/discordgo"
@@ -17,8 +16,8 @@ func LoadLeaveCommandContext() *discordgo.ApplicationCommandOption {
 	}
 }
 
-func Leave(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := internal.LoadConfig()
+func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := ctx.Config
 	userVoiceState, err := s.State.VoiceState(i.GuildID, i.Member.User.ID)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -174,7 +173,7 @@ func Leave(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	dbConnection, err := db.NewDB()
+	dbConnection := ctx.DB
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

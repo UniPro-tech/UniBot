@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 	"unibot/internal"
-	"unibot/internal/db"
 	"unibot/internal/model"
 	"unibot/internal/repository"
 
@@ -18,8 +17,8 @@ type StatusData struct {
 	OnlineStatus string `json:"online_status"`
 }
 
-func Status(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := internal.LoadConfig()
+func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := ctx.Config
 
 	options := i.ApplicationCommandData().Options[0].Options
 	if len(options) == 0 {
@@ -115,28 +114,7 @@ func Status(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Timestamp: time.Now().Format(time.RFC3339),
 		}
 
-		database, err := db.NewDB()
-		if err != nil {
-			log.Printf("Failed to connect to database: %v", err)
-			errorEmbed := &discordgo.MessageEmbed{
-				Title:       "エラー",
-				Description: "データベースへの接続に失敗しました。",
-				Color:       config.Colors.Error,
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    "Requested by " + i.Member.DisplayName(),
-					IconURL: i.Member.AvatarURL(""),
-				},
-				Timestamp: time.Now().Format(time.RFC3339),
-			}
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{errorEmbed},
-					Flags:  discordgo.MessageFlagsEphemeral,
-				},
-			})
-			return
-		}
+		database := ctx.DB
 		repo := repository.NewBotSystemSettingRepository(database)
 		listSettings, err := repo.List()
 		if err != nil {
@@ -253,27 +231,7 @@ func Status(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		// DB Reset
-		database, err := db.NewDB()
-		if err != nil {
-			log.Printf("Failed to connect to database: %v", err)
-			embed := &discordgo.MessageEmbed{
-				Title:       "エラー",
-				Description: "データベースへの接続に失敗しました。",
-				Color:       config.Colors.Error,
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    "Requested by " + i.Member.DisplayName(),
-					IconURL: i.Member.AvatarURL(""),
-				},
-				Timestamp: time.Now().Format(time.RFC3339),
-			}
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{embed},
-				},
-			})
-			return
-		}
+		database := ctx.DB
 		repo := repository.NewBotSystemSettingRepository(database)
 		err = repo.Delete("status")
 		if err != nil {

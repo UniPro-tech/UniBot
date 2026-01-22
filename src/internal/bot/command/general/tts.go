@@ -19,22 +19,22 @@ func LoadTtsCommandContext() *discordgo.ApplicationCommand {
 	}
 }
 
-var ttsHandler = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+var ttsHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate){
 	"join":  tts.Join,
 	"leave": tts.Leave,
 }
 
-func Tts(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := internal.LoadConfig()
+func Tts(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := ctx.Config
 	subCommandGroup := i.ApplicationCommandData().Options[0]
 	if subCommandGroup.Type == discordgo.ApplicationCommandOptionSubCommandGroup {
 		if handler, exists := ttsHandler[subCommandGroup.Name]; exists {
-			handler(s, i)
+			handler(ctx, s, i)
 			return
 		}
 	} else {
 		if handler, exists := ttsHandler[subCommandGroup.Name]; exists {
-			handler(s, i)
+			handler(ctx, s, i)
 			return
 		}
 	}

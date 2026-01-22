@@ -8,6 +8,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
+	"unibot/internal"
 	"unibot/internal/bot/command"
 	"unibot/internal/bot/handler"
 	"unibot/internal/db"
@@ -29,14 +30,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ctx := &internal.BotContext{
+		DB:     dbConnection,
+		Config: internal.LoadConfig(),
+	}
+
 	err = db.SetupDB(dbConnection)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Register handlers
-	dg.AddHandler(handler.Ready)
-	dg.AddHandler(handler.InteractionCreate)
+	dg.AddHandler(handler.Ready(ctx))
+	dg.AddHandler(handler.InteractionCreate(ctx))
 
 	// Start the bot
 	err = dg.Open()

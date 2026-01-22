@@ -15,8 +15,8 @@ func LoadAboutCommandContext() *discordgo.ApplicationCommand {
 	}
 }
 
-func About(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := internal.LoadConfig()
+func About(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := ctx.Config
 	// コントリビューター一覧をMarkdown形式で作成
 	contributorsText := ""
 	// Botは最後にする

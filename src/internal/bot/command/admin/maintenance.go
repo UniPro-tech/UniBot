@@ -87,13 +87,13 @@ func IsOwner(member discordgo.Member) bool {
 	return false
 }
 
-var maintenanceHandler = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+var maintenanceHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate){
 	"status": maintenance.Status,
 	"reboot": maintenance.Reboot,
 }
 
-func Maintenance(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := internal.LoadConfig()
+func Maintenance(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := ctx.Config
 	if !IsOwner(*i.Member) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -119,12 +119,12 @@ func Maintenance(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	subCommandGroup := i.ApplicationCommandData().Options[0]
 	if subCommandGroup.Type == discordgo.ApplicationCommandOptionSubCommandGroup {
 		if handler, exists := maintenanceHandler[subCommandGroup.Name]; exists {
-			handler(s, i)
+			handler(ctx, s, i)
 			return
 		}
 	} else {
 		if handler, exists := maintenanceHandler[subCommandGroup.Name]; exists {
-			handler(s, i)
+			handler(ctx, s, i)
 			return
 		}
 	}

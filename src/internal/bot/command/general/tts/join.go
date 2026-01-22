@@ -3,7 +3,6 @@ package tts
 import (
 	"time"
 	"unibot/internal"
-	"unibot/internal/db"
 	"unibot/internal/model"
 	"unibot/internal/repository"
 
@@ -18,8 +17,8 @@ func LoadJoinCommandContext() *discordgo.ApplicationCommandOption {
 	}
 }
 
-func Join(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := internal.LoadConfig()
+func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	config := ctx.Config
 	userVoiceState, err := s.State.VoiceState(i.GuildID, i.Member.User.ID)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -131,28 +130,7 @@ func Join(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	dbConnection, err := db.NewDB()
-	if err != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "データベースに接続できませんでした。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
-		return
-	}
+	dbConnection := ctx.DB
 	repo := repository.NewTTSConnectionRepository(dbConnection)
 
 	ttsConnection, err := repo.GetByGuildID(i.GuildID)

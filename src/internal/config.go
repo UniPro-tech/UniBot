@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"gorm.io/gorm"
 )
 
 type Colors struct {
@@ -55,6 +57,11 @@ type Contributors struct {
 	Username string `json:"login"`
 	Profile  string `json:"html_url"`
 	IsBot    bool   `json:"site_admin"`
+}
+
+type BotContext struct {
+	DB     *gorm.DB
+	Config *Config
 }
 
 var (
