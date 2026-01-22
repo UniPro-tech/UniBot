@@ -10,6 +10,7 @@ import (
 
 	"unibot/internal/bot/command"
 	"unibot/internal/bot/handler"
+	"unibot/internal/db"
 )
 
 func main() {
@@ -23,11 +24,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dg.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		log.Println("Bot is ready 🚀")
-	})
+	dbConnection, err := db.NewDB()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Commands handler
+	err = db.SetupDB(dbConnection)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Register handlers
+	dg.AddHandler(handler.Ready)
 	dg.AddHandler(handler.InteractionCreate)
 
 	// Start the bot
