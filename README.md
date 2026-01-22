@@ -1,60 +1,74 @@
 # UniBot
 
-UniPro内を統治したりしているDiscord Botです。
+A Discord Bot that manages and operates within All-Japan Digital Creative Club UniProject.
 
-## ローカルで動かす
+## Environment Variables
 
-### 前提条件
+- `DISCORD_TOKEN` - Discord Token
+- `CONFIG_ADMIN_GUILD_ID` - Admin Guild ID
+- `CONFIG_ADMIN_ROLE_ID` - Admin Role ID
+- `PG_DSN` - DSN for PostgreSQL connection
+- `VOICEVOX_URI` - (Optional) VOICEVOX Engine URI. Default: localhost:53000
+- `VOICEVOX_API_KEY` - (Optional) API Key passed as Authorization: ApiKey when communicating with VOICEVOX Engine
 
-- Bun >=1.2
+## Running with Docker
 
-### 設定
+You can use Docker Image, but you need to build it locally.
 
-\_envを.envとしてコピーし、各種値を変更してください。
+### Using docker-compose
 
-### 実行
+Rename `_docker-compose.prod.yaml` to `docker-compose.yaml`, fill in the necessary information, and build it.
 
-#### 依存関係のインストール
+## Building and Developing Yourself
 
-npm packageのインストールを行います。
+### Prerequisites
 
-```shell
-bun install
+You need to install these dependencies.
+This is an excerpt from the Dockerfile, so please check the installation method for each OS and environment on your own.
+
+- Go >= 1.24
+- opus
+- opus-dev
+- opusfile
+- opusfile-dev
+- ffmpeg
+
+### Configuration
+
+> [!TIPS]
+> If you have trouble setting environment variables, try adding export to the relevant parts in the shell script.
+
+Rename `scripts/_build.sh` to `build.sh` and change the environment variable settings inside.
+
+### About Database
+
+The database uses PostgreSQL, and you can start only the database using `docker-compose.dev.yaml`.
+
+### Installing Go Dependencies
+
+```bash
+go mod tidy
 ```
 
-#### 実行
+### Running Only
 
-Bunのランタイムで実行します。
-
-```shell
-bun src/index.ts
+```bash
+cd src
+../scripts/build.sh --dev
 ```
 
-## Dockerで動かす
+### Building
 
-[docker-composeファイル](docker-compose.prod.yaml)を実行します。
-
-## 開発する
-
-ローカルで開発する場合は、以上の手順に従ってください。
-
-コンテナ内で開発したい場合は、[開発用のdocker-composeファイル](_docker-compose.dev.yaml)を用いてください。
-なお、SSH以外でやる場合は、SSHの部分をコメントアウトし、HTTPの部分のコメントアウトを解除してください。
-`/app`がワーキングディレクトリです。
-
-### トラブルシューティング
-
-#### コンテナ内でSSHのエラーが出る場合
-
-このコマンドを実行してください。
-
-```shell
-ssh-add /root/.ssh/privatekey
+```bash
+cd src
+../scripts/build.sh
 ```
 
 ## Built With
 
-- [Discord.js](https://discordjs.dev/#/) - The flame work.
+- [discordgo](https://pkg.go.dev/github.com/bwmarrin/discordgo) - The Discord SDK for Golang.
+- [ohraban/opus](https://pkg.go.dev/github.com/hraban/opus) - The Golang bindings for the xiph.org C libraries libopus and libopusfile.
+- [gorm](https://gorm.io/ja_JP/) - The fantastic ORM library for Golang.
 
 ## Contributing
 
@@ -68,7 +82,7 @@ For the versions available, see the [tags on this repository](https://github.com
 
 - @yuito-it
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/unipro-tech/unibot/contributors) who participated in this project.
 
 ## License
 
