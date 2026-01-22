@@ -65,7 +65,7 @@ func Join(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	botVoiceStatus, err := s.State.VoiceState(i.GuildID, s.State.User.ID)
-	if err != nil {
+	if err != nil && err != discordgo.ErrStateNotFound {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
