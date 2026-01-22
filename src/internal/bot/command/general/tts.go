@@ -14,12 +14,14 @@ func LoadTtsCommandContext() *discordgo.ApplicationCommand {
 		Description: "テキスト読み上げを行います",
 		Options: []*discordgo.ApplicationCommandOption{
 			tts.LoadJoinCommandContext(),
+			tts.LoadLeaveCommandContext(),
 		},
 	}
 }
 
 var ttsHandler = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	"join": tts.Join,
+	"join":  tts.Join,
+	"leave": tts.Leave,
 }
 
 func Tts(s *discordgo.Session, i *discordgo.InteractionCreate) {
