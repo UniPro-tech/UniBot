@@ -37,7 +37,7 @@ This is an excerpt from the Dockerfile, so please check the installation method 
 
 ### Configuration
 
-> [!TIPS]
+> [!TIP]
 > If you have trouble setting environment variables, try adding export to the relevant parts in the shell script.
 
 Rename `scripts/_build.sh` to `build.sh` and change the environment variable settings inside.
