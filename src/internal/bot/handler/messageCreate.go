@@ -22,18 +22,28 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 			return
 		}
 
+		// ----- TTS -----
+
 		repo := repository.NewTTSConnectionRepository(ctx.DB)
 
-		ttsConnection, err := repo.GetByGuildID(r.GuildID)
+		ttsConnectionData, err := repo.GetByGuildID(r.GuildID)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
-		if ttsConnection != nil {
+		if ttsConnectionData != nil {
 			userID := r.Author.ID
 			if r.Member != nil && r.Member.User != nil {
 				userID = r.Member.User.ID
+			}
+
+			if r.Member.User.Bot {
+				return
+			}
+
+			if r.ChannelID != ttsConnectionData.ChannelID && r.ChannelID != s.VoiceConnections[r.GuildID].ChannelID {
+				return
 			}
 
 			personalSetting, err := repository.NewTTSPersonalSettingRepository(ctx.DB).GetByMember(userID)
