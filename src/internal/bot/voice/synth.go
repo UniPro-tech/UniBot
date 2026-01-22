@@ -10,6 +10,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+// テキストを音声合成し、指定されたギルドの音声チャネルで再生する
 func SynthesizeAndPlay(
 	ctx *internal.BotContext,
 	s *discordgo.Session,

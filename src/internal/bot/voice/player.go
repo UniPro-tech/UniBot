@@ -15,6 +15,7 @@ const (
 	channels  = 2
 )
 
+// wavデータをDiscordの音声チャネルで再生する
 func PlayWavBytes(vc *discordgo.VoiceConnection, wav []byte) error {
 
 	tmp, err := os.CreateTemp("", "tts-*.wav")
