@@ -1,5 +1,7 @@
 # UniBot
 
+[![CodeQL](https://github.com/UniPro-tech/UniBot/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/UniPro-tech/UniBot/actions/workflows/github-code-scanning/codeql) [![Docker Build and Push](https://github.com/UniPro-tech/UniBot/actions/workflows/docker-tag.yaml/badge.svg)](https://github.com/UniPro-tech/UniBot/actions/workflows/docker-tag.yaml)
+
 A Discord Bot that manages and operates within All-Japan Digital Creative Club UniProject.
 
 ## Environment Variables
