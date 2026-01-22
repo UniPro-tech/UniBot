@@ -46,6 +46,7 @@ func main() {
 	dg.AddHandler(handler.Ready(ctx))
 	dg.AddHandler(handler.MessageCreate(ctx))
 	dg.AddHandler(handler.InteractionCreate(ctx))
+	dg.AddHandler(handler.VoiceStateUpdate(ctx))
 
 	// Start the bot
 	err = dg.Open()
