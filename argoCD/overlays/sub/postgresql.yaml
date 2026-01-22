@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgre
+spec:
+  selector:
+    matchLabels:
+      app: postgre
+  template:
+    metadata:
+      labels:
+        app: postgre
+    spec:
+      containers:
+        - name: postgre
+          image: postgres:18-alpine
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: psql-secret
+          env:
+            - name: TZ
+              value: Asia/Tokyo
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgre-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgre-storage
+          persistentVolumeClaim:
+            claimName: postgre-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgre
+spec:
+  selector:
+    app: postgre
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgre-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs-csi
