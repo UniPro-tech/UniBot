@@ -11,4 +11,5 @@ var Handlers = map[string]func(*discordgo.Session, *discordgo.InteractionCreate)
 	"ping":        general.Ping,
 	"about":       general.About,
 	"maintenance": admin.Maintenance,
+	"tts":         general.Tts,
 }
