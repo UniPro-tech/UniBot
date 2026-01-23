@@ -3,10 +3,10 @@ package handler
 import (
 	"log"
 	"regexp"
-	"strings"
 	"unibot/internal"
 	"unibot/internal/bot/voice"
 	"unibot/internal/repository"
+	"unibot/internal/util"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -68,7 +68,7 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 			content := SanitizeMessageContent(s, r.GuildID, r.Content)
 
 			// 辞書を適用
-			content = ApplyDictionary(ctx, r.GuildID, content)
+			content = util.ApplyDictionary(ctx.DB, r.GuildID, content)
 
 			content = TruncateForTTS(content, 250)
 
@@ -198,50 +198,4 @@ func TruncateForTTS(content string, maxLen int) string {
 	}
 
 	return string(runes[:cut]) + " 、以下省略"
-}
-
-// 辞書を適用する関数
-func ApplyDictionary(ctx *internal.BotContext, guildID, content string) string {
-	repo := repository.NewTTSDictionaryRepository(ctx.DB)
-
-	entries, err := repo.ListByGuild(guildID)
-	if err != nil {
-		log.Println("辞書の取得に失敗しました:", err)
-		return content
-	}
-
-	for _, entry := range entries {
-		if entry.CaseSensitive {
-			// 大文字小文字を区別して置換
-			content = strings.ReplaceAll(content, entry.Word, entry.Definition)
-		} else {
-			// 大文字小文字を区別せずに置換
-			content = replaceIgnoreCase(content, entry.Word, entry.Definition)
-		}
-	}
-
-	return content
-}
-
-// 大文字小文字を無視して置換する関数
-func replaceIgnoreCase(input, old, new string) string {
-	lowerInput := strings.ToLower(input)
-	lowerOld := strings.ToLower(old)
-
-	var result strings.Builder
-	i := 0
-
-	for i < len(input) {
-		idx := strings.Index(lowerInput[i:], lowerOld)
-		if idx == -1 {
-			result.WriteString(input[i:])
-			break
-		}
-
-		result.WriteString(input[i : i+idx])
-		result.WriteString(new)
-		i += idx + len(old)
-	}
-
-	return result.String()
 }
