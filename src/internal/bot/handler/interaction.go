@@ -82,6 +82,25 @@ func handleMessageComponent(ctx *internal.BotContext, s *discordgo.Session, i *d
 			return
 		}
 
+		// セキュリティチェック: エントリが現在のギルドに属しているか確認
+		if entry.GuildID != i.GuildID {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Embeds: []*discordgo.MessageEmbed{
+						{
+							Title:       "エラー",
+							Description: "この単語を削除する権限がありません。",
+							Color:       config.Colors.Error,
+							Timestamp:   time.Now().Format(time.RFC3339),
+						},
+					},
+					Flags: discordgo.MessageFlagsEphemeral,
+				},
+			})
+			return
+		}
+
 		word := entry.Word
 
 		// 削除実行

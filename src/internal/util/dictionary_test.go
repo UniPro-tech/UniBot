@@ -268,6 +268,10 @@ func TestReplaceIgnoreCase(t *testing.T) {
 		{"Hello hello HELLO", "hello", "Hi", "Hi Hi Hi"},
 		{"No match here", "xyz", "abc", "No match here"},
 		{"", "test", "result", ""},
+		// 空文字列テスト（無限ループ防止）
+		{"test", "", "x", "test"},
+		// 日本語テスト
+		{"こんにちは世界", "世界", "ワールド", "こんにちはワールド"},
 	}
 
 	for _, tc := range testCases {
