@@ -5,6 +5,7 @@ import (
 	"unibot/internal"
 	"unibot/internal/model"
 	"unibot/internal/repository"
+	"unibot/internal/util"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -134,6 +135,9 @@ func Add(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interactio
 		})
 		return
 	}
+
+	// 辞書キャッシュを無効化
+	util.GetDictionaryCache().Invalidate(i.GuildID)
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

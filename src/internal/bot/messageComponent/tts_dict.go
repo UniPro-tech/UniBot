@@ -5,6 +5,7 @@ import (
 	"time"
 	"unibot/internal"
 	"unibot/internal/repository"
+	"unibot/internal/util"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -102,6 +103,9 @@ func HandleTTSDictRemove(ctx *internal.BotContext, s *discordgo.Session, i *disc
 		})
 		return
 	}
+
+	// 辞書キャッシュを無効化
+	util.GetDictionaryCache().Invalidate(entry.GuildID)
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseUpdateMessage,
