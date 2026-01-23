@@ -32,6 +32,10 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 			return
 		}
 
+		if r.Flags&discordgo.MessageFlagsSuppressNotifications != 0 {
+			return
+		}
+
 		if ttsConnectionData != nil {
 			userID := r.Author.ID
 
@@ -40,6 +44,14 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 			}
 
 			if r.ChannelID != ttsConnectionData.ChannelID && r.ChannelID != s.VoiceConnections[r.GuildID].ChannelID {
+				return
+			}
+
+			if r.Content == "s" || r.Content == "skip" {
+				vp := voice.GetManager().Get(r.GuildID)
+				if vp != nil {
+					vp.SkipCurrent()
+				}
 				return
 			}
 

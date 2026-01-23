@@ -17,6 +17,7 @@ type VoicePlayer struct {
 
 	Queue chan [][]byte
 	Stop  chan struct{}
+	Skip  chan struct{}
 }
 
 func NewVoicePlayer(guildID string, vc *discordgo.VoiceConnection) *VoicePlayer {
@@ -25,6 +26,7 @@ func NewVoicePlayer(guildID string, vc *discordgo.VoiceConnection) *VoicePlayer 
 		VC:      vc,
 		Queue:   make(chan [][]byte, 100),
 		Stop:    make(chan struct{}),
+		Skip:    make(chan struct{}),
 	}
 
 	go p.worker()
@@ -35,12 +37,15 @@ func (p *VoicePlayer) worker() {
 	for {
 		select {
 		case frames := <-p.Queue:
+
+		FRAME_LOOP:
 			for _, frame := range frames {
 				select {
-				case <-p.Stop:
-					return
-				default:
-					p.VC.OpusSend <- frame
+				case <-p.Skip:
+					log.Println("skip current audio:", p.GuildID)
+					break FRAME_LOOP
+
+				case p.VC.OpusSend <- frame:
 				}
 			}
 
@@ -48,6 +53,13 @@ func (p *VoicePlayer) worker() {
 			log.Println("voice worker stopped:", p.GuildID)
 			return
 		}
+	}
+}
+
+func (p *VoicePlayer) SkipCurrent() {
+	select {
+	case p.Skip <- struct{}{}:
+	default:
 	}
 }
 
