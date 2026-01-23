@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"strings"
 	"unibot/internal"
 	"unibot/internal/bot/command"
 	"unibot/internal/bot/messageComponent"
@@ -14,7 +15,7 @@ func InteractionCreate(ctx *internal.BotContext) func(s *discordgo.Session, i *d
 		case discordgo.InteractionApplicationCommand:
 			handleApplicationCommand(ctx, s, i)
 		case discordgo.InteractionMessageComponent:
-			messageComponent.Handle(ctx, s, i)
+			handleMessageComponent(ctx, s, i)
 		}
 	}
 }
@@ -24,6 +25,17 @@ func handleApplicationCommand(ctx *internal.BotContext, s *discordgo.Session, i 
 
 	if h, ok := command.Handlers[name]; ok {
 		h(ctx, s, i)
+	}
+}
+
+func handleMessageComponent(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	customID := i.MessageComponentData().CustomID
+
+	for prefix, handler := range messageComponent.Handlers {
+		if strings.HasPrefix(customID, prefix) {
+			handler(ctx, s, i)
+			return
+		}
 	}
 }
 
