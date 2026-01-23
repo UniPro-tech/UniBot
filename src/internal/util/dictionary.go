@@ -5,16 +5,15 @@ import (
 	"strings"
 
 	"unibot/internal/model"
-	"unibot/internal/repository"
 
 	"gorm.io/gorm"
 )
 
-// 辞書を適用する関数
+// 辞書を適用する関数（キャッシュを使用）
 func ApplyDictionary(db *gorm.DB, guildID, content string) string {
-	repo := repository.NewTTSDictionaryRepository(db)
+	cache := GetDictionaryCache()
 
-	entries, err := repo.ListByGuild(guildID)
+	entries, err := cache.Get(db, guildID)
 	if err != nil {
 		log.Println("辞書の取得に失敗しました:", err)
 		return content
