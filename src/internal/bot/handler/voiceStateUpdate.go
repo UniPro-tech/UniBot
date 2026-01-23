@@ -21,10 +21,14 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 			return
 		}
 
+		if vsu.BeforeUpdate.ChannelID != vsu.ChannelID {
+			return
+		}
+
 		changeType := "left"
 		if vsu.BeforeUpdate == nil || vsu.BeforeUpdate.ChannelID != s.VoiceConnections[vsu.GuildID].ChannelID {
 			changeType = "joined"
-		} else if vsu.BeforeUpdate != nil && vsu.ChannelID != "" && vsu.BeforeUpdate.ChannelID != "" && vsu.BeforeUpdate.ChannelID != vsu.ChannelID {
+		} else if vsu.BeforeUpdate != nil && vsu.ChannelID != "" && vsu.BeforeUpdate.ChannelID != "" {
 			changeType = "moved"
 		}
 
