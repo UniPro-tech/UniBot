@@ -4,7 +4,6 @@ import (
 	"time"
 	"unibot/internal"
 	"unibot/internal/bot/command/general/tts"
-	"unibot/internal/bot/command/general/tts/dict"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -17,16 +16,7 @@ func LoadTtsCommandContext() *discordgo.ApplicationCommand {
 			tts.LoadJoinCommandContext(),
 			tts.LoadLeaveCommandContext(),
 			tts.LoadSkipCommandContext(),
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
-				Name:        "dict",
-				Description: "TTS辞書を管理します",
-				Options: []*discordgo.ApplicationCommandOption{
-					dict.LoadAddCommandContext(),
-					dict.LoadRemoveCommandContext(),
-					dict.LoadListCommandContext(),
-				},
-			},
+			tts.LoadDictCommandContext(),
 		},
 	}
 }
@@ -35,12 +25,7 @@ var ttsHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session,
 	"join":  tts.Join,
 	"leave": tts.Leave,
 	"skip":  tts.Skip,
-}
-
-var ttsDictHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate){
-	"add":    dict.Add,
-	"remove": dict.Remove,
-	"list":   dict.List,
+	"dict":  tts.Dict,
 }
 
 func Tts(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -49,12 +34,9 @@ func Tts(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interactio
 
 	// サブコマンドグループの場合
 	if subCommandGroup.Type == discordgo.ApplicationCommandOptionSubCommandGroup {
-		if subCommandGroup.Name == "dict" {
-			subCommand := subCommandGroup.Options[0]
-			if handler, exists := ttsDictHandler[subCommand.Name]; exists {
-				handler(ctx, s, i)
-				return
-			}
+		if handler, exists := ttsHandler[subCommandGroup.Name]; exists {
+			handler(ctx, s, i)
+			return
 		}
 	} else {
 		// サブコマンドの場合
