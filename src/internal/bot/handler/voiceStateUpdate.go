@@ -43,7 +43,7 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 			voiceStates := guild.VoiceStates
 			var stillInChannel bool
 			for _, vs := range voiceStates {
-				if vs.UserID == vsu.Member.User.ID && vs.ChannelID == s.VoiceConnections[vsu.GuildID].ChannelID {
+				if vs.ChannelID == s.VoiceConnections[vsu.GuildID].ChannelID && vs.Member.User.Bot == false {
 					stillInChannel = true
 					break
 				}
