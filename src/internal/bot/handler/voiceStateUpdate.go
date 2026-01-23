@@ -21,7 +21,7 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 			return
 		}
 
-		if vsu.BeforeUpdate.ChannelID != vsu.ChannelID {
+		if vsu.BeforeUpdate.ChannelID == vsu.ChannelID {
 			return
 		}
 
