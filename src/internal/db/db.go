@@ -25,6 +25,7 @@ func SetupDB(db *gorm.DB) error {
 		&model.ScheduleSetting{},
 		&model.TTSConnection{},
 		&model.TTSPersonalSetting{},
+		&model.TTSDictionary{},
 	)
 	return err
 }
