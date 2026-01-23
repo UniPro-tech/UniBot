@@ -194,8 +194,15 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 	}
 	channelName := channel.Name
 
-	player := voice.NewVoicePlayer(i.GuildID, vc)
+	player := voice.NewVoicePlayer(i.GuildID, vc, ctx)
 	voice.GetManager().Set(i.GuildID, player)
 
-	voice.SynthesizeAndPlay(ctx, s, repository.DefaultTTSPersonalSetting, i.GuildID, fmt.Sprintf("%sに、読み上げを接続しました。", channelName))
+	content := fmt.Sprintf("%sに、読み上げを接続しました。", channelName)
+
+	vp := voice.GetManager().Get(i.GuildID)
+
+	vp.EnqueueText(voice.QueueItem{
+		Text:    content,
+		Setting: repository.DefaultTTSPersonalSetting,
+	})
 }

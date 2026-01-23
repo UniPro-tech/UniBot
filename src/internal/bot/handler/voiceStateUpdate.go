@@ -35,7 +35,11 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 				return
 			}
 			text := fmt.Sprintf("%sが %s に参加しました。", vsu.Member.DisplayName(), channel.Name)
-			voice.SynthesizeAndPlay(ctx, s, repository.DefaultTTSPersonalSetting, vsu.GuildID, text)
+			vp := voice.GetManager().Get(vsu.GuildID)
+			vp.EnqueueText(voice.QueueItem{
+				Text:    text,
+				Setting: repository.DefaultTTSPersonalSetting,
+			})
 			return
 		}
 		if changeType == "left" && s.VoiceConnections[vsu.GuildID].ChannelID == vsu.BeforeUpdate.ChannelID {
@@ -82,7 +86,11 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 				return
 			}
 			text := fmt.Sprintf("%sが %s から退出しました。", vsu.Member.DisplayName(), channel.Name)
-			voice.SynthesizeAndPlay(ctx, s, repository.DefaultTTSPersonalSetting, vsu.GuildID, text)
+			vp := voice.GetManager().Get(vsu.GuildID)
+			vp.EnqueueText(voice.QueueItem{
+				Text:    text,
+				Setting: repository.DefaultTTSPersonalSetting,
+			})
 			return
 		}
 		if changeType == "moved" && s.VoiceConnections[vsu.GuildID].ChannelID == vsu.BeforeUpdate.ChannelID {
@@ -92,7 +100,11 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 				return
 			}
 			text := fmt.Sprintf("%sが %s に移動しました。", vsu.Member.DisplayName(), channel.Name)
-			voice.SynthesizeAndPlay(ctx, s, repository.DefaultTTSPersonalSetting, vsu.GuildID, text)
+			vp := voice.GetManager().Get(vsu.GuildID)
+			vp.EnqueueText(voice.QueueItem{
+				Text:    text,
+				Setting: repository.DefaultTTSPersonalSetting,
+			})
 			return
 		}
 	}
