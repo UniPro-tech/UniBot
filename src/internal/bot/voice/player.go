@@ -159,5 +159,9 @@ func (p *VoicePlayer) SkipCurrent() {
 
 // クローズ
 func (p *VoicePlayer) Close() {
+	if p.Stop == nil {
+		return
+	}
 	close(p.Stop)
+	p.Stop = nil
 }
