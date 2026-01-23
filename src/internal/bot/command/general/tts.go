@@ -15,6 +15,7 @@ func LoadTtsCommandContext() *discordgo.ApplicationCommand {
 		Options: []*discordgo.ApplicationCommandOption{
 			tts.LoadJoinCommandContext(),
 			tts.LoadLeaveCommandContext(),
+			tts.LoadSkipCommandContext(),
 		},
 	}
 }
@@ -22,6 +23,7 @@ func LoadTtsCommandContext() *discordgo.ApplicationCommand {
 var ttsHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate){
 	"join":  tts.Join,
 	"leave": tts.Leave,
+	"skip":  tts.Skip,
 }
 
 func Tts(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
