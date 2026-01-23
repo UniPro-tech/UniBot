@@ -3,6 +3,7 @@ package tts
 import (
 	"time"
 	"unibot/internal"
+	"unibot/internal/bot/voice"
 	"unibot/internal/repository"
 
 	"github.com/bwmarrin/discordgo"
@@ -175,6 +176,15 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 
 	dbConnection := ctx.DB
 	repo := repository.NewTTSConnectionRepository(dbConnection)
+
+	mgr := voice.GetManager()
+	player := mgr.Get(i.GuildID)
+
+	if player != nil {
+		player.Close()
+		player.VC.Disconnect()
+		mgr.Delete(i.GuildID)
+	}
 
 	err = repo.DeleteByGuildID(i.GuildID)
 	if err != nil {

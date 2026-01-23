@@ -3,12 +3,65 @@ package voice
 import (
 	"encoding/binary"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/hraban/opus"
 )
+
+type VoicePlayer struct {
+	GuildID string
+	VC      *discordgo.VoiceConnection
+
+	Queue chan [][]byte
+	Stop  chan struct{}
+}
+
+func NewVoicePlayer(guildID string, vc *discordgo.VoiceConnection) *VoicePlayer {
+	p := &VoicePlayer{
+		GuildID: guildID,
+		VC:      vc,
+		Queue:   make(chan [][]byte, 100),
+		Stop:    make(chan struct{}),
+	}
+
+	go p.worker()
+	return p
+}
+
+func (p *VoicePlayer) worker() {
+	for {
+		select {
+		case frames := <-p.Queue:
+			for _, frame := range frames {
+				select {
+				case <-p.Stop:
+					return
+				default:
+					p.VC.OpusSend <- frame
+				}
+			}
+
+		case <-p.Stop:
+			log.Println("voice worker stopped:", p.GuildID)
+			return
+		}
+	}
+}
+
+func (p *VoicePlayer) Enqueue(frames [][]byte) {
+	select {
+	case p.Queue <- frames:
+	default:
+		log.Println("voice queue full:", p.GuildID)
+	}
+}
+
+func (p *VoicePlayer) Close() {
+	close(p.Stop)
+}
 
 const (
 	frameSize = 960 // 20ms @ 48kHz
@@ -59,13 +112,14 @@ func PlayWavBytes(vc *discordgo.VoiceConnection, wav []byte) error {
 	pcm := make([]int16, frameSize*channels)
 	byteBuf := make([]byte, len(pcm)*2)
 
+	var frames [][]byte
+
 	for {
 		_, err := io.ReadFull(stdout, byteBuf)
 		if err != nil {
 			break
 		}
 
-		// bytes → int16
 		for i := 0; i < len(pcm); i++ {
 			pcm[i] = int16(binary.LittleEndian.Uint16(byteBuf[i*2:]))
 		}
@@ -77,8 +131,17 @@ func PlayWavBytes(vc *discordgo.VoiceConnection, wav []byte) error {
 			return err
 		}
 
-		vc.OpusSend <- opusBuf[:n]
+		frame := make([]byte, n)
+		copy(frame, opusBuf[:n])
+		frames = append(frames, frame)
 	}
+
+	player := GetManager().Get(vc.GuildID)
+	if player == nil {
+		return nil
+	}
+
+	player.Enqueue(frames)
 
 	return cmd.Wait()
 }

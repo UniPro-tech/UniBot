@@ -110,7 +110,7 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 
-	_, err = s.ChannelVoiceJoin(i.GuildID, userVoiceState.ChannelID, false, true)
+	vc, err := s.ChannelVoiceJoin(i.GuildID, userVoiceState.ChannelID, false, true)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -193,6 +193,9 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		log.Println("Failed to get channel:", err)
 	}
 	channelName := channel.Name
+
+	player := voice.NewVoicePlayer(i.GuildID, vc)
+	voice.GetManager().Set(i.GuildID, player)
 
 	voice.SynthesizeAndPlay(ctx, s, repository.DefaultTTSPersonalSetting, i.GuildID, fmt.Sprintf("%sに、読み上げを接続しました。", channelName))
 }
