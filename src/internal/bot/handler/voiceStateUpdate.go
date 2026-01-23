@@ -35,7 +35,7 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 				return
 			}
 			text := fmt.Sprintf("%sが %s に参加しました。", vsu.Member.DisplayName(), channel.Name)
-			vp := voice.GetManager().Get(vsu.GuildID)
+			vp := voice.GetManager().GetOrCreate(vsu.GuildID, s.VoiceConnections[vsu.GuildID], ctx)
 			vp.EnqueueText(voice.QueueItem{
 				Text:    text,
 				Setting: repository.DefaultTTSPersonalSetting,
@@ -47,7 +47,13 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 			voiceStates := guild.VoiceStates
 			var stillInChannel bool
 			for _, vs := range voiceStates {
-				if vs.ChannelID == s.VoiceConnections[vsu.GuildID].ChannelID && vs.Member.User.Bot == false {
+				vc := s.VoiceConnections[vsu.GuildID]
+
+				user, err := s.User(vs.UserID)
+				if err != nil || user.Bot {
+					continue
+				}
+				if vs.ChannelID == vc.ChannelID {
 					stillInChannel = true
 					break
 				}
@@ -86,7 +92,7 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 				return
 			}
 			text := fmt.Sprintf("%sが %s から退出しました。", vsu.Member.DisplayName(), channel.Name)
-			vp := voice.GetManager().Get(vsu.GuildID)
+			vp := voice.GetManager().GetOrCreate(vsu.GuildID, s.VoiceConnections[vsu.GuildID], ctx)
 			vp.EnqueueText(voice.QueueItem{
 				Text:    text,
 				Setting: repository.DefaultTTSPersonalSetting,
@@ -100,7 +106,7 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 				return
 			}
 			text := fmt.Sprintf("%sが %s に移動しました。", vsu.Member.DisplayName(), channel.Name)
-			vp := voice.GetManager().Get(vsu.GuildID)
+			vp := voice.GetManager().GetOrCreate(vsu.GuildID, s.VoiceConnections[vsu.GuildID], ctx)
 			vp.EnqueueText(voice.QueueItem{
 				Text:    text,
 				Setting: repository.DefaultTTSPersonalSetting,
