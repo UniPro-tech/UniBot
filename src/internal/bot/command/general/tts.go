@@ -16,6 +16,7 @@ func LoadTtsCommandContext() *discordgo.ApplicationCommand {
 			tts.LoadJoinCommandContext(),
 			tts.LoadLeaveCommandContext(),
 			tts.LoadSkipCommandContext(),
+			tts.LoadDictCommandContext(),
 		},
 	}
 }
@@ -24,17 +25,21 @@ var ttsHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session,
 	"join":  tts.Join,
 	"leave": tts.Leave,
 	"skip":  tts.Skip,
+	"dict":  tts.Dict,
 }
 
 func Tts(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
 	subCommandGroup := i.ApplicationCommandData().Options[0]
+
+	// サブコマンドグループの場合
 	if subCommandGroup.Type == discordgo.ApplicationCommandOptionSubCommandGroup {
 		if handler, exists := ttsHandler[subCommandGroup.Name]; exists {
 			handler(ctx, s, i)
 			return
 		}
 	} else {
+		// サブコマンドの場合
 		if handler, exists := ttsHandler[subCommandGroup.Name]; exists {
 			handler(ctx, s, i)
 			return

@@ -6,6 +6,7 @@ import (
 	"unibot/internal"
 	"unibot/internal/bot/voice"
 	"unibot/internal/repository"
+	"unibot/internal/util"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -65,6 +66,10 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 				personalSetting = &repository.DefaultTTSPersonalSetting
 			}
 			content := SanitizeMessageContent(s, r.GuildID, r.Content)
+
+			// 辞書を適用
+			content = util.ApplyDictionary(ctx.DB, r.GuildID, content)
+
 			content = TruncateForTTS(content, 250)
 
 			vp := voice.GetManager().GetOrCreate(r.GuildID, s.VoiceConnections[r.GuildID], ctx)
