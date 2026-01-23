@@ -66,6 +66,14 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 					log.Printf("Error fetching TTS connection data: %v", err)
 					return
 				}
+				mgr := voice.GetManager()
+				player := mgr.Get(vsu.GuildID)
+
+				if player != nil {
+					player.Close()
+					player.VC.Disconnect()
+					mgr.Delete(vsu.GuildID)
+				}
 				if data != nil {
 					channelId := data.ChannelID
 					err = repo.DeleteByGuildID(vsu.GuildID)
