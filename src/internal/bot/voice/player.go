@@ -20,9 +20,8 @@ type QueueItem struct {
 }
 
 type VoicePlayer struct {
-	GuildID string
-	VC      *discordgo.VoiceConnection
-
+	GuildID   string
+	VC        *discordgo.VoiceConnection
 	TextQueue chan QueueItem
 	Stop      chan struct{}
 	Skip      chan struct{}
@@ -37,40 +36,40 @@ func NewVoicePlayer(guildID string, vc *discordgo.VoiceConnection, ctx *internal
 	p := &VoicePlayer{
 		GuildID:   guildID,
 		VC:        vc,
-		TextQueue: make(chan QueueItem, 50), // 文章単位で十分
+		TextQueue: make(chan QueueItem, 50),
 		Stop:      make(chan struct{}),
 		Skip:      make(chan struct{}),
 	}
-
 	go p.worker(ctx)
 	return p
 }
 
-// TextQueue から TTS → 再生
 func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 	for {
 		select {
 		case item := <-p.TextQueue:
-			audio, err := ctx.VoiceVox.Synthesize(
-				context.Background(),
-				item.Text,
-				item.Setting.SpeakerID,
-				float64(item.Setting.SpeakerPitch),
-			)
+			// 再生用の context 作成
+			playCtx, cancel := context.WithCancel(context.Background())
+
+			// skip で cancel
+			go func() {
+				select {
+				case <-p.Skip:
+					cancel()
+				case <-p.Stop:
+					cancel()
+				}
+			}()
+
+			audio, err := ctx.VoiceVox.Synthesize(context.Background(), item.Text, item.Setting.SpeakerID, float64(item.Setting.SpeakerPitch))
 			if err != nil {
 				log.Println("synth error:", err)
 				continue
 			}
 
-			err = p.playAudio(audio)
-			if err != nil {
+			if err := p.playAudio(playCtx, audio); err != nil {
 				log.Println("play error:", err)
 			}
-
-		case <-p.Skip:
-			log.Println("skip signal: stopping current playback")
-			// 実際に再生中の ffmpeg は kill して次の TextQueue に進む
-			// TODO: 管理するなら context.WithCancel() で制御
 
 		case <-p.Stop:
 			return
@@ -78,18 +77,20 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 	}
 }
 
-// 音声を VC に送信
-func (p *VoicePlayer) playAudio(wav []byte) error {
+func (p *VoicePlayer) playAudio(ctx context.Context, wav []byte) error {
 	tmp, err := os.CreateTemp("", "tts-*.wav")
 	if err != nil {
 		return err
 	}
 	defer os.Remove(tmp.Name())
 
-	tmp.Write(wav)
+	if _, err := tmp.Write(wav); err != nil {
+		tmp.Close()
+		return err
+	}
 	tmp.Close()
 
-	cmd := exec.Command(
+	cmd := exec.CommandContext(ctx,
 		"ffmpeg",
 		"-loglevel", "quiet",
 		"-i", tmp.Name(),
@@ -117,30 +118,35 @@ func (p *VoicePlayer) playAudio(wav []byte) error {
 	byteBuf := make([]byte, len(pcm)*2)
 
 	for {
-		_, err := io.ReadFull(stdout, byteBuf)
-		if err != nil {
-			break
-		}
+		select {
+		case <-ctx.Done():
+			// skip or stop
+			cmd.Process.Kill()
+			return nil
+		default:
+			_, err := io.ReadFull(stdout, byteBuf)
+			if err != nil {
+				return nil // 再生終了
+			}
 
-		for i := 0; i < len(pcm); i++ {
-			pcm[i] = int16(binary.LittleEndian.Uint16(byteBuf[i*2:]))
-		}
+			for i := 0; i < len(pcm); i++ {
+				pcm[i] = int16(binary.LittleEndian.Uint16(byteBuf[i*2:]))
+			}
 
-		opusBuf := make([]byte, 4000)
-		n, err := enc.Encode(pcm, opusBuf)
-		if err != nil {
-			return err
-		}
+			opusBuf := make([]byte, 4000)
+			n, err := enc.Encode(pcm, opusBuf)
+			if err != nil {
+				return err
+			}
 
-		if p.VC != nil {
-			p.VC.OpusSend <- opusBuf[:n]
+			if p.VC != nil {
+				p.VC.OpusSend <- opusBuf[:n]
+			}
 		}
 	}
-
-	return cmd.Wait()
 }
 
-// キューに TTS 追加
+// TextQueue に追加
 func (p *VoicePlayer) EnqueueText(item QueueItem) {
 	select {
 	case p.TextQueue <- item:
@@ -157,11 +163,12 @@ func (p *VoicePlayer) SkipCurrent() {
 	}
 }
 
-// クローズ
+// worker 停止
 func (p *VoicePlayer) Close() {
-	if p.Stop == nil {
-		return
+	select {
+	case <-p.Stop:
+		// すでに closed
+	default:
+		close(p.Stop)
 	}
-	close(p.Stop)
-	p.Stop = nil
 }
