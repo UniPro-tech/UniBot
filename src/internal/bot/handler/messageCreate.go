@@ -49,9 +49,9 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 			}
 
 			if r.Content == "s" || r.Content == "skip" {
-				vp := voice.GetManager().GetOrCreate(r.GuildID, s.VoiceConnections[r.GuildID], ctx)
-				if vp != nil {
-					vp.SkipCurrent()
+				player := voice.GetManager().Get(r.GuildID)
+				if player != nil {
+					player.SkipCurrent()
 				}
 				return
 			}
