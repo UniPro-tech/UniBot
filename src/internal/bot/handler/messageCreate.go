@@ -49,7 +49,7 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 			}
 
 			if r.Content == "s" || r.Content == "skip" {
-				vp := voice.GetManager().Get(r.GuildID)
+				vp := voice.GetManager().GetOrCreate(r.GuildID, s.VoiceConnections[r.GuildID], ctx)
 				if vp != nil {
 					vp.SkipCurrent()
 				}
@@ -67,7 +67,7 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 			content := SanitizeMessageContent(s, r.GuildID, r.Content)
 			content = TruncateForTTS(content, 250)
 
-			vp := voice.GetManager().Get(r.GuildID)
+			vp := voice.GetManager().GetOrCreate(r.GuildID, s.VoiceConnections[r.GuildID], ctx)
 
 			vp.EnqueueText(voice.QueueItem{
 				Text:    content,

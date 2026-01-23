@@ -2,35 +2,55 @@ package voice
 
 import (
 	"sync"
+	"unibot/internal"
+
+	"github.com/bwmarrin/discordgo"
 )
 
-type VoiceManager struct {
+type Manager struct {
 	players map[string]*VoicePlayer
 	mu      sync.Mutex
 }
 
-var manager = &VoiceManager{
-	players: map[string]*VoicePlayer{},
-}
+var manager *Manager
 
-func GetManager() *VoiceManager {
+func GetManager() *Manager {
+	if manager == nil {
+		manager = &Manager{
+			players: make(map[string]*VoicePlayer),
+		}
+	}
 	return manager
 }
 
-func (m *VoiceManager) Get(guildID string) *VoicePlayer {
+// 既存の VoicePlayer を返す。なければ nil
+func (m *Manager) Get(guildID string) *VoicePlayer {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.players[guildID]
 }
 
-func (m *VoiceManager) Set(guildID string, p *VoicePlayer) {
+// 既存なら返す、なければ新規作成して返す
+func (m *Manager) GetOrCreate(guildID string, vc *discordgo.VoiceConnection, ctx *internal.BotContext) *VoicePlayer {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	if p, ok := m.players[guildID]; ok {
+		return p
+	}
+
+	p := NewVoicePlayer(guildID, vc, ctx)
 	m.players[guildID] = p
+	return p
 }
 
-func (m *VoiceManager) Delete(guildID string) {
+// ギルドの VoicePlayer を削除
+func (m *Manager) Delete(guildID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	delete(m.players, guildID)
+
+	if p, ok := m.players[guildID]; ok {
+		p.Close()
+		delete(m.players, guildID)
+	}
 }
