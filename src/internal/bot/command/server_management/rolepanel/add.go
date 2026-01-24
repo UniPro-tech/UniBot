@@ -26,18 +26,21 @@ func LoadAddCommandContext() *discordgo.ApplicationCommandOption {
 				Name:        "label",
 				Description: "セレクトメニューに表示するラベル",
 				Required:    true,
+				MaxLength:   100,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "description",
 				Description: "ロールの説明",
 				Required:    false,
+				MaxLength:   100,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "emoji",
 				Description: "絵文字 (例: 🎮)",
 				Required:    false,
+				MaxLength:   100,
 			},
 		},
 	}
