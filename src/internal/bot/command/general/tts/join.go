@@ -23,6 +23,40 @@ func LoadJoinCommandContext() *discordgo.ApplicationCommandOption {
 func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
 	userVoiceState, err := s.State.VoiceState(i.GuildID, i.Member.User.ID)
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+
+	// タイムアウト監視（3分）。タイムアウト時は defer したメッセージを編集して通知する。
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-done:
+			return
+		case <-time.After(3 * time.Minute):
+			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "ボイスチャンネルの情報を取得できませんでした。",
+						Color:       config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+						Timestamp: time.Now().Format(time.RFC3339),
+					},
+				},
+			})
+			if err != nil {
+				log.Println("Failed to edit deferred interaction on timeout:", err)
+			}
+		}
+	}()
+	defer close(done)
+
+	// テスト用に処理をブロックしてタイムアウトを発生させる（5分）
+	time.Sleep(5 * time.Minute)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -110,7 +144,6 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 
-	log.Print("[DEBUG] Joining voice channel: ", userVoiceState.ChannelID)
 	vc, err := s.ChannelVoiceJoin(i.GuildID, userVoiceState.ChannelID, false, true)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -134,8 +167,6 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 
-	log.Print("[DEBUG] Joining voice channel: ", userVoiceState.ChannelID, " succeeded")
-	log.Print("[DEBUG] Setting up TTSConnection in DB")
 	dbConnection := ctx.DB
 	repo := repository.NewTTSConnectionRepository(dbConnection)
 
