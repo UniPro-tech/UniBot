@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+	"gorm.io/gorm/logger"
 
 	"unibot/internal"
 	"unibot/internal/api/voicevox"
@@ -27,6 +28,7 @@ func main() {
 	}
 
 	dbConnection, err := db.NewDB()
+	dbConnection.Logger = dbConnection.Logger.LogMode(logger.Info)
 	if err != nil {
 		log.Fatal(err)
 	}
