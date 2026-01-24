@@ -96,15 +96,19 @@ func HandleRolePanelSelect(ctx *internal.BotContext, s *discordgo.Session, i *di
 		if shouldHaveRole && !hasRole {
 			// ロールを追加
 			err := s.GuildMemberRoleAdd(i.GuildID, i.Member.User.ID, roleID)
-			if err == nil {
-				addedRoles = append(addedRoles, roleID)
+			if err != nil {
+				fmt.Printf("failed to add role %s to user %s in guild %s: %v\n", roleID, i.Member.User.ID, i.GuildID, err)
+				continue
 			}
+			addedRoles = append(addedRoles, roleID)
 		} else if !shouldHaveRole && hasRole {
 			// ロールを削除
 			err := s.GuildMemberRoleRemove(i.GuildID, i.Member.User.ID, roleID)
-			if err == nil {
-				removedRoles = append(removedRoles, roleID)
+			if err != nil {
+				fmt.Printf("failed to remove role %s from user %s in guild %s: %v\n", roleID, i.Member.User.ID, i.GuildID, err)
+				continue
 			}
+			removedRoles = append(removedRoles, roleID)
 		}
 	}
 
