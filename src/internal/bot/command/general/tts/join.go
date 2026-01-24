@@ -110,6 +110,7 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 
+	log.Print("[DEBUG] Joining voice channel: ", userVoiceState.ChannelID)
 	vc, err := s.ChannelVoiceJoin(i.GuildID, userVoiceState.ChannelID, false, true)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -133,6 +134,8 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 
+	log.Print("[DEBUG] Joining voice channel: ", userVoiceState.ChannelID, " succeeded")
+	log.Print("[DEBUG] Setting up TTSConnection in DB")
 	dbConnection := ctx.DB
 	repo := repository.NewTTSConnectionRepository(dbConnection)
 
