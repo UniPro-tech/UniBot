@@ -21,12 +21,14 @@ func LoadCreateCommandContext() *discordgo.ApplicationCommandOption {
 				Name:        "title",
 				Description: "パネルのタイトル",
 				Required:    true,
+				MaxLength:   256,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "description",
 				Description: "パネルの説明",
 				Required:    false,
+				MaxLength:   4096,
 			},
 		},
 	}
