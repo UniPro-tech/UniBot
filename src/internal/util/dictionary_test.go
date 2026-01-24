@@ -4,23 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 
 	"unibot/internal/model"
 	"unibot/internal/repository"
 )
-
-func setupTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	require.NoError(t, err)
-
-	err = db.AutoMigrate(&model.TTSDictionary{})
-	require.NoError(t, err)
-
-	return db
-}
 
 // TypeScript版と同じ動作をするかテスト
 
