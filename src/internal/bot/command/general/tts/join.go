@@ -55,8 +55,6 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 	}()
 	defer close(done)
 
-	// テスト用に処理をブロックしてタイムアウトを発生させる（5分）
-	time.Sleep(5 * time.Minute)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
