@@ -21,6 +21,26 @@ func init() {
 // HandleRolePanelSelect はロールパネルのセレクトメニューを処理します
 func HandleRolePanelSelect(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
+
+	// Guildチェック
+	if i.GuildID == "" {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "このコマンドはサーバー内でのみ使用できます。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
 	customID := i.MessageComponentData().CustomID
 	selectedRoleIDs := i.MessageComponentData().Values
 
@@ -38,6 +58,25 @@ func HandleRolePanelSelect(ctx *internal.BotContext, s *discordgo.Session, i *di
 					{
 						Title:       "エラー",
 						Description: "パネルが見つかりませんでした。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
+	// GuildID一致チェック
+	if panel.GuildID != i.GuildID {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "このパネルは別のサーバーのものです。",
 						Color:       config.Colors.Error,
 						Timestamp:   time.Now().Format(time.RFC3339),
 					},
@@ -217,6 +256,45 @@ func intPtr(i int) *int {
 // HandleRolePanelAdd はロール追加用のパネル選択を処理します
 func HandleRolePanelAdd(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
+
+	// Guildチェック
+	if i.GuildID == "" {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "このコマンドはサーバー内でのみ使用できます。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Components: []discordgo.MessageComponent{},
+			},
+		})
+		return
+	}
+
+	// 権限チェック
+	if i.Member.Permissions&discordgo.PermissionManageRoles == 0 {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "この操作には「ロールの管理」権限が必要です。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Components: []discordgo.MessageComponent{},
+			},
+		})
+		return
+	}
+
 	customID := i.MessageComponentData().CustomID
 	values := i.MessageComponentData().Values
 
@@ -256,6 +334,25 @@ func HandleRolePanelAdd(ctx *internal.BotContext, s *discordgo.Session, i *disco
 					{
 						Title:       "エラー",
 						Description: "パネルが見つかりませんでした。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Components: []discordgo.MessageComponent{},
+			},
+		})
+		return
+	}
+
+	// GuildID一致チェック
+	if panel.GuildID != i.GuildID {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "このパネルは別のサーバーのものです。",
 						Color:       config.Colors.Error,
 						Timestamp:   time.Now().Format(time.RFC3339),
 					},
@@ -357,6 +454,45 @@ func HandleRolePanelAdd(ctx *internal.BotContext, s *discordgo.Session, i *disco
 // HandleRolePanelDelete はパネル削除用のセレクトを処理します
 func HandleRolePanelDelete(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
+
+	// Guildチェック
+	if i.GuildID == "" {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "このコマンドはサーバー内でのみ使用できます。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Components: []discordgo.MessageComponent{},
+			},
+		})
+		return
+	}
+
+	// 権限チェック
+	if i.Member.Permissions&discordgo.PermissionManageRoles == 0 {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "この操作には「ロールの管理」権限が必要です。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Components: []discordgo.MessageComponent{},
+			},
+		})
+		return
+	}
+
 	values := i.MessageComponentData().Values
 
 	if len(values) == 0 {
@@ -376,6 +512,25 @@ func HandleRolePanelDelete(ctx *internal.BotContext, s *discordgo.Session, i *di
 					{
 						Title:       "エラー",
 						Description: "パネルが見つかりませんでした。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Components: []discordgo.MessageComponent{},
+			},
+		})
+		return
+	}
+
+	// GuildID一致チェック
+	if panel.GuildID != i.GuildID {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "このパネルは別のサーバーのものです。",
 						Color:       config.Colors.Error,
 						Timestamp:   time.Now().Format(time.RFC3339),
 					},
@@ -430,6 +585,45 @@ func HandleRolePanelDelete(ctx *internal.BotContext, s *discordgo.Session, i *di
 // HandleRolePanelRemove はロール削除用のパネル選択を処理します
 func HandleRolePanelRemove(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
+
+	// Guildチェック
+	if i.GuildID == "" {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "このコマンドはサーバー内でのみ使用できます。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Components: []discordgo.MessageComponent{},
+			},
+		})
+		return
+	}
+
+	// 権限チェック
+	if i.Member.Permissions&discordgo.PermissionManageRoles == 0 {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "この操作には「ロールの管理」権限が必要です。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Components: []discordgo.MessageComponent{},
+			},
+		})
+		return
+	}
+
 	customID := i.MessageComponentData().CustomID
 	values := i.MessageComponentData().Values
 
@@ -452,6 +646,25 @@ func HandleRolePanelRemove(ctx *internal.BotContext, s *discordgo.Session, i *di
 					{
 						Title:       "エラー",
 						Description: "パネルが見つかりませんでした。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Components: []discordgo.MessageComponent{},
+			},
+		})
+		return
+	}
+
+	// GuildID一致チェック
+	if panel.GuildID != i.GuildID {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "このパネルは別のサーバーのものです。",
 						Color:       config.Colors.Error,
 						Timestamp:   time.Now().Format(time.RFC3339),
 					},
