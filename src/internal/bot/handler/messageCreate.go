@@ -45,7 +45,7 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 				return
 			}
 
-			if r.ChannelID != ttsConnectionData.ChannelID && r.ChannelID != s.VoiceConnections[r.GuildID].ChannelID {
+			if s.VoiceConnections[r.GuildID] != nil && r.ChannelID != ttsConnectionData.ChannelID && r.ChannelID != s.VoiceConnections[r.GuildID].ChannelID {
 				return
 			}
 
