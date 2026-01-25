@@ -112,6 +112,12 @@ func (p *VoicePlayer) playAudio(ctx context.Context, wav []byte) error {
 		for {
 			_, err := io.ReadFull(stdout, byteBuf)
 			if err != nil {
+				// 読み取りが終了した（ストリームの終端）は正常終了とみなす
+				if err == io.EOF || err == io.ErrUnexpectedEOF {
+					_ = cmd.Wait()
+					done <- nil
+					return
+				}
 				done <- err
 				return
 			}
@@ -125,6 +131,8 @@ func (p *VoicePlayer) playAudio(ctx context.Context, wav []byte) error {
 				select {
 				case p.VC.OpusSend <- opusBuf[:n]:
 				case <-ctx.Done():
+					_ = cmd.Process.Kill()
+					_ = cmd.Wait()
 					done <- context.Canceled
 					return
 				}
@@ -134,7 +142,8 @@ func (p *VoicePlayer) playAudio(ctx context.Context, wav []byte) error {
 
 	select {
 	case <-ctx.Done():
-		cmd.Process.Kill()
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
 		return context.Canceled
 	case err := <-done:
 		return err
