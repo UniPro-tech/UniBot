@@ -65,6 +65,8 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 				}
 			}()
 
+			// 音声合成と再生
+			log.Println("synthesizing:", item.Text)
 			audio, err := ctx.VoiceVox.Synthesize(
 				playCtx,
 				item.Text,
@@ -76,6 +78,7 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 				continue
 			}
 
+			log.Print("start playing:", item.Text)
 			err = p.playAudio(playCtx, audio)
 			if err != nil && err != context.Canceled {
 				log.Println("play error:", err)
@@ -105,19 +108,23 @@ func (p *VoicePlayer) playAudio(ctx context.Context, wav []byte) error {
 	done := make(chan error, 1)
 
 	go func() {
+		log.Println("[DEBUG] playAudio goroutine started")
 		enc, _ := opus.NewEncoder(48000, channels, opus.AppAudio)
 		pcm := make([]int16, frameSize*channels)
 		byteBuf := make([]byte, len(pcm)*2)
 
+		frameCount := 0
 		for {
 			_, err := io.ReadFull(stdout, byteBuf)
 			if err != nil {
 				// 読み取りが終了した（ストリームの終端）は正常終了とみなす
 				if err == io.EOF || err == io.ErrUnexpectedEOF {
+					log.Printf("[DEBUG] stream ended naturally (frames processed: %d)", frameCount)
 					_ = cmd.Wait()
 					done <- nil
 					return
 				}
+				log.Printf("[DEBUG] read error: %v (frames processed: %d)", err, frameCount)
 				done <- err
 				return
 			}
@@ -127,10 +134,16 @@ func (p *VoicePlayer) playAudio(ctx context.Context, wav []byte) error {
 			opusBuf := make([]byte, 4000)
 			n, _ := enc.Encode(pcm, opusBuf)
 
+			frameCount++
+			if frameCount%100 == 0 {
+				log.Printf("[DEBUG] processed %d frames, opus size: %d bytes", frameCount, n)
+			}
+
 			if p.VC != nil {
 				select {
 				case p.VC.OpusSend <- opusBuf[:n]:
 				case <-ctx.Done():
+					log.Printf("[DEBUG] context canceled, killing ffmpeg (frames processed: %d)", frameCount)
 					_ = cmd.Process.Kill()
 					_ = cmd.Wait()
 					done <- context.Canceled
