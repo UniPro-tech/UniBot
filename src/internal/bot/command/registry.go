@@ -11,6 +11,7 @@ import (
 var Handlers = map[string]func(*internal.BotContext, *discordgo.Session, *discordgo.InteractionCreate){
 	"ping":        general.Ping,
 	"about":       general.About,
+	"schedule":    general.Schedule,
 	"maintenance": admin.Maintenance,
 	"tts":         general.Tts,
 	"help":        general.Help,
