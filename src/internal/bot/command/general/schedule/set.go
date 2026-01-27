@@ -80,9 +80,9 @@ func showRepeatModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				discordgo.ActionsRow{Components: []discordgo.MessageComponent{
 					discordgo.TextInput{
 						CustomID:    "time",
-						Label:       "投稿時間 (cron / JST)",
+						Label:       "投稿時間 (JST)",
 						Style:       discordgo.TextInputShort,
-						Placeholder: "例: 0 9 * * *",
+						Placeholder: "例: every day at 12:00, every Monday at 09:00",
 						Required:    true,
 					},
 				}},

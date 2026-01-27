@@ -90,17 +90,23 @@ func handleCreateRepeat(ctx *internal.BotContext, s *discordgo.Session, i *disco
 	}
 
 	message := getTextInputValue(data, "message")
-	cronText := getTextInputValue(data, "time")
+	inputText := getTextInputValue(data, "time")
 
-	if message == "" || cronText == "" {
-		replyError(s, i, config, "入力エラー", "投稿内容とcronを入力してください。")
+	if message == "" || inputText == "" {
+		replyError(s, i, config, "入力エラー", "投稿内容と時間を入力してください。")
 		return
 	}
 
 	jst := scheduler.JST()
-	nextRunAt, err := scheduler.NextRunAtFromCron(strings.TrimSpace(cronText), time.Now().In(jst))
+	cronText, err := convertToCron(strings.TrimSpace(inputText))
 	if err != nil {
-		replyError(s, i, config, "時間の形式が不正です。", "cron形式で入力してください。")
+		replyError(s, i, config, "時間の形式が不正です。", "時間の形式が正しくありません。もう一度確認してください。")
+		return
+	}
+
+	nextRunAt, err := scheduler.NextRunAtFromCron(cronText, time.Now().In(jst))
+	if err != nil {
+		replyError(s, i, config, "時間の形式が不正です。", "時間の形式が正しくありません。もう一度確認してください。")
 		return
 	}
 
@@ -123,7 +129,7 @@ func handleCreateRepeat(ctx *internal.BotContext, s *discordgo.Session, i *disco
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("メッセージを%sに送信するようにスケジュールしました。(ジョブID: %s)", strings.TrimSpace(cronText), i.ID),
+			Content: fmt.Sprintf("メッセージを%sに送信するようにスケジュールしました。(ジョブID: %s)", strings.TrimSpace(inputText), i.ID),
 			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})

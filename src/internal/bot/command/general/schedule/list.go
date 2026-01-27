@@ -68,7 +68,7 @@ func List(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 	for _, setting := range settings {
 		repeatText := "いいえ"
 		if setting.Cron != "" {
-			repeatText = setting.Cron
+			repeatText = describeCron(setting.Cron)
 		}
 
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
