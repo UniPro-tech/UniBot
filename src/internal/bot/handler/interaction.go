@@ -49,4 +49,3 @@ func handleModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *discor
 		return
 	}
 }
-

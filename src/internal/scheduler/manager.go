@@ -84,7 +84,7 @@ func (m *Manager) execute(setting *model.ScheduleSetting) {
 	}
 
 	// 繰り返しの場合は次回実行時刻を更新
-	base := time.Now().In(JST())
+	base := time.Unix(setting.NextRunAt, 0).In(JST())
 	nextRunAt, err := NextRunAtFromCron(setting.Cron, base)
 	if err != nil {
 		log.Printf("Failed to parse cron (id=%s): %v", setting.ID, err)
