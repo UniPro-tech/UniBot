@@ -1,7 +1,6 @@
 package general
 
 import (
-	"time"
 	"unibot/internal"
 	"unibot/internal/model"
 	"unibot/internal/repository"
@@ -61,8 +60,18 @@ func HandlePinModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *dis
 		ChannelID: i.ChannelID,
 	}
 
-	if err := repo.Update(setting); err != nil {
+	existing, err := repo.GetByChannelID(i.ChannelID)
+	if err != nil {
+		replyPinError(s, i, config, "エラー", "ピン留めの保存に失敗しました。")
+		return true
+	}
+	if len(existing) == 0 {
 		if err := repo.Create(setting); err != nil {
+			replyPinError(s, i, config, "エラー", "ピン留めの保存に失敗しました。")
+			return true
+		}
+	} else {
+		if err := repo.Update(setting); err != nil {
 			replyPinError(s, i, config, "エラー", "ピン留めの保存に失敗しました。")
 			return true
 		}
@@ -83,30 +92,12 @@ func getPinModalValue(data discordgo.ModalSubmitInteractionData, customID string
 	for _, comp := range data.Components {
 		switch row := comp.(type) {
 		case *discordgo.ActionsRow:
-			for _, component := range row.Components {
-				if input, ok := component.(*discordgo.TextInput); ok {
-					if input.CustomID == customID {
-						return input.Value
-					}
-				}
-				if input, ok := component.(discordgo.TextInput); ok {
-					if input.CustomID == customID {
-						return input.Value
-					}
-				}
+			if value := getTextInputValue(row.Components, customID); value != "" {
+				return value
 			}
 		case discordgo.ActionsRow:
-			for _, component := range row.Components {
-				if input, ok := component.(*discordgo.TextInput); ok {
-					if input.CustomID == customID {
-						return input.Value
-					}
-				}
-				if input, ok := component.(discordgo.TextInput); ok {
-					if input.CustomID == customID {
-						return input.Value
-					}
-				}
+			if value := getTextInputValue(row.Components, customID); value != "" {
+				return value
 			}
 		}
 	}
@@ -114,18 +105,18 @@ func getPinModalValue(data discordgo.ModalSubmitInteractionData, customID string
 	return ""
 }
 
-func replyPinSuccess(s *discordgo.Session, i *discordgo.InteractionCreate, config *internal.Config, title string) {
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:     title,
-					Color:     config.Colors.Success,
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		},
-	})
+func getTextInputValue(components []discordgo.MessageComponent, customID string) string {
+	for _, component := range components {
+		switch input := component.(type) {
+		case *discordgo.TextInput:
+			if input.CustomID == customID {
+				return input.Value
+			}
+		case discordgo.TextInput:
+			if input.CustomID == customID {
+				return input.Value
+			}
+		}
+	}
+	return ""
 }

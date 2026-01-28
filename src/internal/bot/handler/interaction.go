@@ -5,7 +5,6 @@ import (
 	"unibot/internal"
 	"unibot/internal/bot/command"
 	"unibot/internal/bot/command/general"
-	"unibot/internal/bot/command/general/schedule"
 	"unibot/internal/bot/messageComponent"
 
 	"github.com/bwmarrin/discordgo"
@@ -46,9 +45,6 @@ func handleMessageComponent(ctx *internal.BotContext, s *discordgo.Session, i *d
 }
 
 func handleModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if schedule.HandleModalSubmit(ctx, s, i) {
-		return
-	}
 	if general.HandlePinModalSubmit(ctx, s, i) {
 		return
 	}

@@ -20,6 +20,11 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 			return
 		}
 
+		// Authorが存在しないメッセージは無視
+		if r.Author == nil {
+			return
+		}
+
 		// ----- Pin -----
 		resendPinnedMessage(ctx, s, r)
 
