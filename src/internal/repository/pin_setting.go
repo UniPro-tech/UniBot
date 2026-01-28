@@ -70,3 +70,8 @@ func (r *PinSettingRepository) Update(pinSetting *model.PinSetting) error {
 func (r *PinSettingRepository) Delete(id string) error {
 	return r.db.Delete(&model.PinSetting{}, "id = ?", id).Error
 }
+
+// ChannelIDでPinSettingを削除する関数
+func (r *PinSettingRepository) DeleteByChannelID(channelID string) error {
+	return r.db.Delete(&model.PinSetting{}, "channel_id = ?", channelID).Error
+}
