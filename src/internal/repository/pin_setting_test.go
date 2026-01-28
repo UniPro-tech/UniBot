@@ -106,3 +106,29 @@ func TestPinSettingUpdateNonexistent(t *testing.T) {
 	retrieved, _ := repo.GetByID("nonexistent")
 	assert.NotNil(t, retrieved)
 }
+
+func TestPinSettingDeleteByChannelID(t *testing.T) {
+	db := setupTestDB(t)
+	repo := repository.NewPinSettingRepository(db)
+
+	pin1 := &model.PinSetting{ID: "ch1", GuildID: "guild1", ChannelID: "ch1"}
+	pin2 := &model.PinSetting{ID: "ch2", GuildID: "guild1", ChannelID: "ch2"}
+	db.Create(pin1)
+	db.Create(pin2)
+
+	err := repo.DeleteByChannelID("ch1")
+	assert.NoError(t, err)
+
+	deleted, _ := repo.GetByID("ch1")
+	remaining, _ := repo.GetByID("ch2")
+	assert.Nil(t, deleted)
+	assert.NotNil(t, remaining)
+}
+
+func TestPinSettingDeleteByChannelIDNonexistent(t *testing.T) {
+	db := setupTestDB(t)
+	repo := repository.NewPinSettingRepository(db)
+
+	err := repo.DeleteByChannelID("missing")
+	assert.NoError(t, err)
+}

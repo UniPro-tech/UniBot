@@ -64,6 +64,15 @@ func hasPinPermission(s *discordgo.Session, i *discordgo.InteractionCreate) bool
 }
 
 func replyPinError(s *discordgo.Session, i *discordgo.InteractionCreate, config *internal.Config, title, description string) {
+	footer := &discordgo.MessageEmbedFooter{Text: "Requested by Unknown"}
+	if i.Member != nil {
+		footer.Text = "Requested by " + i.Member.DisplayName()
+		footer.IconURL = i.Member.AvatarURL("")
+	} else if i.User != nil {
+		footer.Text = "Requested by " + i.User.Username
+		footer.IconURL = i.User.AvatarURL("")
+	}
+
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -72,10 +81,7 @@ func replyPinError(s *discordgo.Session, i *discordgo.InteractionCreate, config 
 					Title:       title,
 					Description: description,
 					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
+					Footer:      footer,
 					Timestamp: time.Now().Format(time.RFC3339),
 				},
 			},
