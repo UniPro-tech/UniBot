@@ -1,0 +1,31 @@
+## 別の人が同じディレクトリ名を使用している場合は変更してください。
+name: unibot
+
+services:
+  psql:
+    image: postgres:18
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=unibot
+    ports:
+      - "5432:5432"
+    volumes:
+      - unibot-psql-data:/var/lib/postgresql
+  adminer:
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=secret
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    ports:
+      - "8080:80"
+    depends_on:
+      - psql
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./dev/pgadmin/servers.json:/pgadmin4/servers.json
+volumes:
+  unibot-psql-data:
+  pgadmin-data:

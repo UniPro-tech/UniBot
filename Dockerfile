@@ -1,4 +1,4 @@
-FROM golang:1.25-alpine AS builder
+FROM golang:1.24-alpine AS builder
 WORKDIR /app
 
 RUN apk update && apk add --no-cache \
@@ -11,9 +11,9 @@ RUN apk update && apk add --no-cache \
 COPY . .
 
 WORKDIR /app/src
-
 RUN go mod tidy
-RUN ../scripts/_build.sh
+
+RUN go build -o /app/src/main ./cmd/bot
 
 FROM alpine:latest
 WORKDIR /root/

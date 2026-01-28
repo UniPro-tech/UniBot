@@ -7,10 +7,9 @@ if [[ "$*" == *"--dev"* ]]; then
   CONFIG_ADMIN_ROLE_ID="your_role_id_here"
   PG_DSN="your_postgres_dsn_here"
 
-  go run src/cmd/bot/main.go -ldflags "\
+  go run ./cmd/bot/main.go -ldflags "\
 -X unibot/internal.GitCommit=$COMMIT \
--X unibot/internal.GitBranch=$BRANCH" \
-cmd/bot/main.go
+-X unibot/internal.GitBranch=$BRANCH"
 else
   VERSION=$(git describe --tags --abbrev=0)
 
@@ -18,5 +17,5 @@ else
 -X unibot/internal.Version=$VERSION \
 -X unibot/internal.GitCommit=$COMMIT \
 -X unibot/internal.GitBranch=$BRANCH" \
-cmd/bot/main.go
+-o main ./cmd/bot/main.go
 fi

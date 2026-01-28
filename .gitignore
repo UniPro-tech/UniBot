@@ -1,6 +1,9 @@
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
+
+# ==========================================
+# Go
+# ==========================================
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -17,20 +20,139 @@ coverage.*
 *.coverprofile
 profile.cov
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Dependency directories
+vendor/
 
 # Go workspace file
 go.work
 go.work.sum
 
-# env file
+# Build artifacts
+main
+bot
+*.bin
+
+# ==========================================
+# Environment & Configuration
+# ==========================================
 .env
+.env.local
+.env.*.local
+*.secret
+secrets/
 
-# Editor/IDE
-# .idea/
-# .vscode/
+# ==========================================
+# Docker & Container
+# ==========================================
+# Docker volumes and data
+*.log
+docker-compose.override.yml
 
-# Scripts included sensitive information
+# ==========================================
+# Database
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+*.sql.bak
+pgdata/
+postgres-data/
+
+# ==========================================
+# IDE & Editors
+# ==========================================
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ==========================================
+# OS Specific
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+# ==========================================
+# Temporary & Cache
+# ==========================================
+*.tmp
+*.temp
+*.cache
+tmp/
+temp/
+cache/
+
+# ==========================================
+# Python (for scripts)
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# ==========================================
+# Logs
+# ==========================================
+*.log
+logs/
+log/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================================
+# Sensitive Files (Project Specific)
+# ==========================================
+# Scripts with sensitive information
 scripts/build.sh
 docker-compose.prod.yaml
+
+# Backup files
+*.bak
+*.backup
+*.old

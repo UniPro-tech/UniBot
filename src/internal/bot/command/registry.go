@@ -13,4 +13,5 @@ var Handlers = map[string]func(*internal.BotContext, *discordgo.Session, *discor
 	"about":       general.About,
 	"maintenance": admin.Maintenance,
 	"tts":         general.Tts,
+	"help":		   general.Help,
 }
