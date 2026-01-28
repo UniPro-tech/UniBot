@@ -1,41 +1,12 @@
 package general
 
 import (
-	"encoding/json"
 	"time"
 	"unibot/internal"
-
-	_ "embed"
+	"unibot/internal/bot/command/general/help"
 
 	"github.com/bwmarrin/discordgo"
 )
-
-type helpCommandData struct {
-	Title       string             `json:"title"`
-	Description string             `json:"description"`
-	Fields      []helpCommandField `json:"fields"`
-}
-
-type helpCommandField struct {
-	Name     string `json:"name"`
-	Value    string `json:"value"`
-	HowToUse string `json:"How to use"`
-}
-
-//go:embed help/commands.json
-var helpCommandsJSON []byte
-
-func loadHelpCommands() helpCommandData {
-	var data helpCommandData
-	if err := json.Unmarshal(helpCommandsJSON, &data); err != nil {
-		return helpCommandData{
-			Title:       "Help - 利用可能なコマンド一覧",
-			Description: "コマンド情報の読み込みに失敗しました。",
-		}
-	}
-
-	return data
-}
 
 func LoadHelpCommandContext() *discordgo.ApplicationCommand {
 	return &discordgo.ApplicationCommand{
@@ -93,8 +64,6 @@ func Help(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		specificCommand = options[0].StringValue()
 	}
 
-	commandData := loadHelpCommands()
-
 	var fields []*discordgo.MessageEmbedField
 	var title string
 	var description string
@@ -105,19 +74,19 @@ func Help(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		description = "コマンドの詳細情報です。"
 
 		// 指定されたコマンドのフィールドのみを抽出
-		for _, field := range commandData.Fields {
-			if field.Name == specificCommand {
+		for _, cmd := range help.HelpCommands {
+			if cmd.Name == specificCommand {
 				fields = append(fields, &discordgo.MessageEmbedField{
 					Name:   "説明",
-					Value:  field.Value,
+					Value:  cmd.Description,
 					Inline: false,
 				})
 
-				// How to use が設定されている場合は表示
-				if field.HowToUse != "" {
+				// Usage が設定されている場合は表示
+				if cmd.Usage != "" {
 					fields = append(fields, &discordgo.MessageEmbedField{
 						Name:   "使い方",
-						Value:  field.HowToUse,
+						Value:  cmd.Usage,
 						Inline: false,
 					})
 				}
@@ -134,11 +103,11 @@ func Help(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		title = "Help - 利用可能なコマンド一覧"
 		description = "以下は利用可能なコマンドの一覧です。"
 
-		fields = make([]*discordgo.MessageEmbedField, 0, len(commandData.Fields))
-		for _, field := range commandData.Fields {
+		fields = make([]*discordgo.MessageEmbedField, 0, len(help.HelpCommands))
+		for _, cmd := range help.HelpCommands {
 			fields = append(fields, &discordgo.MessageEmbedField{
-				Name:  field.Name,
-				Value: field.Value,
+				Name:  cmd.Name,
+				Value: cmd.Description,
 			})
 		}
 	}
