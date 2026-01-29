@@ -32,7 +32,6 @@ func (c *Client) Synthesize(
 	text string,
 	speakerID string,
 	speakerPitch float64,
-	speedScale float64,
 ) ([]byte, error) {
 
 	// ---- audio_query ----
@@ -70,14 +69,13 @@ func (c *Client) Synthesize(
 		return nil, err
 	}
 
-	// ---- pitch & speed 変更 ----
+	// ---- pitch 変更 ----
 	var query map[string]any
 	if err := json.Unmarshal(queryBody, &query); err != nil {
 		return nil, err
 	}
 
 	query["pitchScale"] = speakerPitch
-	query["speedScale"] = speedScale
 
 	modified, _ := json.Marshal(query)
 

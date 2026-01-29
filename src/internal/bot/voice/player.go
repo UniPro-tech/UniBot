@@ -71,8 +71,7 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 				playCtx,
 				item.Text,
 				item.Setting.SpeakerID,
-				float64(item.Setting.SpeakerPitch),
-				float64(item.Setting.SpeedScale) / 100.0,
+				float64(item.Setting.SpeakerPitch)/ 100.0,
 			)
 			if err != nil {
 				log.Println("synth error:", err)
