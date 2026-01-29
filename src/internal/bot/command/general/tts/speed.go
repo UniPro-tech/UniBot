@@ -68,7 +68,7 @@ func HandleSpeedCommand(s *discordgo.Session, i *discordgo.InteractionCreate, ct
 		setting = &repository.DefaultTTSPersonalSetting
 		setting.MemberID = memberID
 	}
-	setting.SpeakerPitch = speed
+	setting.SpeakerSpeed = speed
 	err = repo.Update(setting)
 	if err != nil {
 		log.Println("Error updating TTS personal setting:", err)

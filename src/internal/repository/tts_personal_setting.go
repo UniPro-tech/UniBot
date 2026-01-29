@@ -55,5 +55,5 @@ func (r *TTSPersonalSettingRepository) DeleteByMember(memberID string) error {
 // デフォルトのTTSPersonalSetting
 var DefaultTTSPersonalSetting = model.TTSPersonalSetting{
 	SpeakerID:    "0",
-	SpeakerPitch: 100,
+	SpeakerSpeed: 100,
 }
