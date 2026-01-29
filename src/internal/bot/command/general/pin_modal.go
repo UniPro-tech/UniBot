@@ -36,6 +36,17 @@ func HandlePinModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *dis
 		return true
 	}
 
+	repo := repository.NewPinSettingRepository(ctx.DB)
+	existing, err := repo.GetByChannelID(i.ChannelID)
+	if err != nil {
+		replyPinError(s, i, config, "エラー", "ピン留めの取得に失敗しました。")
+		return true
+	}
+	if len(existing) > 0 {
+		replyPinError(s, i, config, "エラー", "このチャンネルには既にピン留めされたメッセージがあります。\n最初にそれを`/unpin`で解除してください。")
+		return true
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Description: message,
 		Color:       config.Colors.Success,
@@ -50,7 +61,6 @@ func HandlePinModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *dis
 		return true
 	}
 
-	repo := repository.NewPinSettingRepository(ctx.DB)
 	setting := &model.PinSetting{
 		ID:        i.ChannelID,
 		URL:       sentMessage.ID,
@@ -60,21 +70,9 @@ func HandlePinModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *dis
 		ChannelID: i.ChannelID,
 	}
 
-	existing, err := repo.GetByChannelID(i.ChannelID)
-	if err != nil {
+	if err := repo.Create(setting); err != nil {
 		replyPinError(s, i, config, "エラー", "ピン留めの保存に失敗しました。")
 		return true
-	}
-	if len(existing) == 0 {
-		if err := repo.Create(setting); err != nil {
-			replyPinError(s, i, config, "エラー", "ピン留めの保存に失敗しました。")
-			return true
-		}
-	} else {
-		if err := repo.Update(setting); err != nil {
-			replyPinError(s, i, config, "エラー", "ピン留めの保存に失敗しました。")
-			return true
-		}
 	}
 
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
