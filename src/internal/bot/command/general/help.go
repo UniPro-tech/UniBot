@@ -153,7 +153,6 @@ func Help(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		},
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
-
 	_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 		Embeds: &[]*discordgo.MessageEmbed{responseEmbed},
 	})
