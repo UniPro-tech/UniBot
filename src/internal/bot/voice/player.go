@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sync"
 	"unibot/internal"
 	"unibot/internal/model"
 
@@ -22,6 +23,7 @@ type QueueItem struct {
 type VoicePlayer struct {
 	GuildID   string
 	VC        *discordgo.VoiceConnection
+	vcMu      sync.RWMutex
 	TextQueue chan QueueItem
 	Stop      chan struct{}
 	Skip      chan struct{}
@@ -44,6 +46,28 @@ func NewVoicePlayer(guildID string, vc *discordgo.VoiceConnection, ctx *internal
 
 	go p.worker(ctx)
 	return p
+}
+
+// GetVC: 現在のボイス接続を安全に取得する
+func (p *VoicePlayer) GetVC() *discordgo.VoiceConnection {
+	p.vcMu.RLock()
+	defer p.vcMu.RUnlock()
+	return p.VC
+}
+
+// SetVC: ボイス接続を安全に更新する
+func (p *VoicePlayer) SetVC(vc *discordgo.VoiceConnection) {
+	if vc == nil {
+		return
+	}
+	p.vcMu.Lock()
+	prev := p.VC
+	p.VC = vc
+	p.vcMu.Unlock()
+
+	if prev != vc {
+		log.Printf("[DEBUG] voice connection updated: guild=%s channel=%s opusSend_nil=%v", p.GuildID, vc.ChannelID, vc.OpusSend == nil)
+	}
 }
 
 // Worker: TextQueue から順に再生
@@ -92,6 +116,13 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 
 // playAudio を context 対応
 func (p *VoicePlayer) playAudio(ctx context.Context, wav []byte) error {
+	vc := p.GetVC()
+	if vc == nil {
+		log.Printf("[DEBUG] voice connection is nil; audio will be dropped (guild=%s)", p.GuildID)
+	} else {
+		log.Printf("[DEBUG] voice connection state: guild=%s channel=%s opusSend_nil=%v", p.GuildID, vc.ChannelID, vc.OpusSend == nil)
+	}
+
 	tmp, _ := os.CreateTemp("", "tts-*.wav")
 	defer os.Remove(tmp.Name())
 	tmp.Write(wav)
@@ -139,9 +170,10 @@ func (p *VoicePlayer) playAudio(ctx context.Context, wav []byte) error {
 				log.Printf("[DEBUG] processed %d frames, opus size: %d bytes", frameCount, n)
 			}
 
-			if p.VC != nil {
+			vc := p.GetVC()
+			if vc != nil && vc.OpusSend != nil {
 				select {
-				case p.VC.OpusSend <- opusBuf[:n]:
+				case vc.OpusSend <- opusBuf[:n]:
 				case <-ctx.Done():
 					log.Printf("[DEBUG] context canceled, killing ffmpeg (frames processed: %d)", frameCount)
 					_ = cmd.Process.Kill()
