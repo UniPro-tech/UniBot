@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - unibot-psql-data:/var/lib/postgresql/data
+      - unibot-psql-data:/var/lib/postgresql
   adminer:
     image: dpage/pgadmin4:latest
     environment:
