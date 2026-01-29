@@ -1,6 +1,7 @@
 package voice
 
 import (
+	"log"
 	"sync"
 	"unibot/internal"
 
@@ -36,6 +37,11 @@ func (m *Manager) GetOrCreate(guildID string, vc *discordgo.VoiceConnection, ctx
 	defer m.mu.Unlock()
 
 	if p, ok := m.players[guildID]; ok {
+		if vc != nil && p.GetVC() != vc {
+			p.SetVC(vc)
+		} else if vc == nil && p.GetVC() == nil {
+			log.Printf("[DEBUG] voice connection is nil (guild=%s)", guildID)
+		}
 		return p
 	}
 
