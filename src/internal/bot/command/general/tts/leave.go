@@ -182,7 +182,9 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 
 	if player != nil {
 		player.Close()
-		player.VC.Disconnect()
+		if vc := player.GetVC(); vc != nil {
+			vc.Disconnect()
+		}
 		mgr.Delete(i.GuildID)
 	}
 
