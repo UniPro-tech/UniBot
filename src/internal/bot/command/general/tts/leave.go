@@ -1,6 +1,7 @@
 package tts
 
 import (
+	"log"
 	"time"
 	"unibot/internal"
 	"unibot/internal/bot/voice"
@@ -20,11 +21,14 @@ func LoadLeaveCommandContext() *discordgo.ApplicationCommandOption {
 func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
 	userVoiceState, err := s.State.VoiceState(i.GuildID, i.Member.User.ID)
-	if err != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-done:
+			return
+		case <-time.After(3 * time.Minute):
+			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
 						Description: "ボイスチャンネルの情報を取得できませんでした。",
@@ -36,16 +40,16 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
-		return
-	}
+			})
+			if err != nil {
+				log.Println("Failed to edit deferred interaction on timeout:", err)
+			}
+		}
+	}()
+	defer close(done)
 	if userVoiceState == nil || userVoiceState.ChannelID == "" {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
 						Description: "先にボイスチャンネルに参加してください。",
@@ -57,18 +61,15 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 
 	botVoiceStatus, err := s.State.VoiceState(i.GuildID, s.State.User.ID)
 	if err != nil && err != discordgo.ErrStateNotFound {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
 						Description: "Botの情報を取得できませんでした。",
@@ -80,16 +81,13 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 	if botVoiceStatus == nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
 						Description: "ボイスチャンネルに参加していません。",
@@ -101,16 +99,13 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 	if botVoiceStatus.ChannelID != userVoiceState.ChannelID {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
 						Description: "同じボイスチャンネルに参加していません。",
@@ -122,18 +117,15 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 
 	voiceConnection := s.VoiceConnections[i.GuildID]
 	if voiceConnection == nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
 						Description: "ボイスチャンネルに接続していません。",
@@ -145,18 +137,15 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 
 	err = voiceConnection.Disconnect()
 	if err != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
 						Description: "ボイスチャンネルから退出できませんでした。",
@@ -168,8 +157,7 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
@@ -188,10 +176,8 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 
 	err = repo.DeleteByGuildID(i.GuildID)
 	if err != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
 						Description: "TTS接続情報の削除に失敗しました。",
@@ -203,16 +189,13 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 
-	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
+	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
 				{
 					Title:       "TTSボイスチャンネル退出",
 					Description: "ボイスチャンネルから退出しました。",
@@ -224,6 +207,6 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 					Timestamp: time.Now().Format(time.RFC3339),
 				},
 			},
-		},
-	})
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
 }

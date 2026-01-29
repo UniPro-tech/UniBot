@@ -1,6 +1,7 @@
 package general
 
 import (
+	"log"
 	"time"
 	"unibot/internal"
 	"unibot/internal/bot/command/general/help"
@@ -51,7 +52,32 @@ func LoadHelpCommandContext() *discordgo.ApplicationCommand {
 
 func Help(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
-
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-done:
+			return
+		case <-time.After(3 * time.Minute):
+			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "ヘルプの表示に失敗しました。",
+						Color:       config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+						Timestamp: time.Now().Format(time.RFC3339),
+					},
+				},
+			})
+			if err != nil {
+				log.Println("Failed to edit deferred interaction on timeout:", err)
+			}
+		}
+	}()
+	defer close(done)
 	user := i.User
 	if i.Member != nil {
 		user = i.Member.User
@@ -128,10 +154,25 @@ func Help(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{responseEmbed},
-		},
+	_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Embeds: &[]*discordgo.MessageEmbed{responseEmbed},
 	})
+	if err != nil {
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
+				{
+					Title:       "エラー",
+					Description: "ヘルプを表示できませんでした。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
+					},
+					Timestamp: time.Now().Format(time.RFC3339),
+				},
+			},
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
+		return
+	}
 }

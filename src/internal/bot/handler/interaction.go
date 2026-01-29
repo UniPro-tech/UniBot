@@ -22,7 +22,9 @@ func InteractionCreate(ctx *internal.BotContext) func(s *discordgo.Session, i *d
 
 func handleApplicationCommand(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	name := i.ApplicationCommandData().Name
-
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
 	if h, ok := command.Handlers[name]; ok {
 		h(ctx, s, i)
 	}
