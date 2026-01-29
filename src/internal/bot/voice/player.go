@@ -58,6 +58,7 @@ func (p *VoicePlayer) GetVC() *discordgo.VoiceConnection {
 // SetVC: ボイス接続を安全に更新する
 func (p *VoicePlayer) SetVC(vc *discordgo.VoiceConnection) {
 	if vc == nil {
+		log.Printf("[WARN] SetVC called with nil voice connection: guild=%s", p.GuildID)
 		return
 	}
 	p.vcMu.Lock()
