@@ -10,6 +10,9 @@ import (
 var Commands = []*discordgo.ApplicationCommand{
 	general.LoadPingCommandContext(),
 	general.LoadAboutCommandContext(),
+	general.LoadPinCommandContext(),
+	general.LoadUnpinCommandContext(),
+	general.LoadPinSelectCommandContext(),
 	general.LoadTtsCommandContext(),
 	general.LoadHelpCommandContext(),
 	admin.LoadMaintenanceCommandContext(),

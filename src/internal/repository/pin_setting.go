@@ -21,6 +21,9 @@ func NewPinSettingRepository(db *gorm.DB) *PinSettingRepository {
 
 // PinSettingを作成する関数
 func (r *PinSettingRepository) Create(pinSetting *model.PinSetting) error {
+	if err := r.ensureGuild(pinSetting); err != nil {
+		return err
+	}
 	return r.db.Create(pinSetting).Error
 }
 
@@ -63,10 +66,26 @@ func (r *PinSettingRepository) List() ([]*model.PinSetting, error) {
 
 // PinSettingを更新する関数
 func (r *PinSettingRepository) Update(pinSetting *model.PinSetting) error {
+	if err := r.ensureGuild(pinSetting); err != nil {
+		return err
+	}
 	return r.db.Save(pinSetting).Error
 }
 
 // IDでPinSettingを削除する関数
 func (r *PinSettingRepository) Delete(id string) error {
 	return r.db.Delete(&model.PinSetting{}, "id = ?", id).Error
+}
+
+// ChannelIDでPinSettingを削除する関数
+func (r *PinSettingRepository) DeleteByChannelID(channelID string) error {
+	return r.db.Delete(&model.PinSetting{}, "channel_id = ?", channelID).Error
+}
+
+func (r *PinSettingRepository) ensureGuild(pinSetting *model.PinSetting) error {
+	if pinSetting == nil || pinSetting.GuildID == "" {
+		return nil
+	}
+	guild := model.Guild{DiscordID: pinSetting.GuildID}
+	return r.db.FirstOrCreate(&guild).Error
 }

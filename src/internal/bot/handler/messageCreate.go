@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"regexp"
+	"strings"
 	"unibot/internal"
 	"unibot/internal/bot/voice"
 	"unibot/internal/repository"
@@ -14,13 +15,21 @@ import (
 func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, r *discordgo.MessageCreate) {
 
-		// Ignore bot itself
-		if r.Author.ID == s.State.User.ID {
+		// Ignore DM
+		if r.GuildID == "" {
 			return
 		}
 
-		// Ignore DM
-		if r.GuildID == "" {
+		// Authorが存在しないメッセージは無視
+		if r.Author == nil {
+			return
+		}
+
+		// ----- Pin -----
+		resendPinnedMessage(ctx, s, r)
+
+		// Ignore bot itself
+		if r.Author.ID == s.State.User.ID {
 			return
 		}
 
@@ -80,6 +89,50 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 			})
 		}
 	}
+}
+
+func resendPinnedMessage(ctx *internal.BotContext, s *discordgo.Session, r *discordgo.MessageCreate) {
+	// 自分のピン留めメッセージの場合は無視
+	if r.Author != nil && r.Author.ID == s.State.User.ID {
+		if len(r.Embeds) == 0 {
+			return
+		}
+		if r.Embeds[0].Footer != nil && strings.Contains(r.Embeds[0].Footer.Text, "Pinned Message") {
+			return
+		}
+	}
+
+	repo := repository.NewPinSettingRepository(ctx.DB)
+	settings, err := repo.GetByChannelID(r.ChannelID)
+	if err != nil || len(settings) == 0 {
+		return
+	}
+
+	setting := settings[0]
+	if setting.Content == "" {
+		return
+	}
+
+	if setting.URL != "" {
+		_ = s.ChannelMessageDelete(r.ChannelID, setting.URL)
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Description: setting.Content,
+		Color:       ctx.Config.Colors.Success,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: "Pinned Message",
+		},
+	}
+
+	sentMessage, err := s.ChannelMessageSendEmbed(r.ChannelID, embed)
+	if err != nil {
+		return
+	}
+
+	setting.URL = sentMessage.ID
+	setting.Title = "Pinned Message"
+	_ = repo.Update(setting)
 }
 
 // 正規表現パターン

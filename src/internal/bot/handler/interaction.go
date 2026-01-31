@@ -4,6 +4,7 @@ import (
 	"strings"
 	"unibot/internal"
 	"unibot/internal/bot/command"
+	"unibot/internal/bot/command/general"
 	"unibot/internal/bot/messageComponent"
 
 	"github.com/bwmarrin/discordgo"
@@ -16,6 +17,8 @@ func InteractionCreate(ctx *internal.BotContext) func(s *discordgo.Session, i *d
 			handleApplicationCommand(ctx, s, i)
 		case discordgo.InteractionMessageComponent:
 			handleMessageComponent(ctx, s, i)
+		case discordgo.InteractionModalSubmit:
+			handleModalSubmit(ctx, s, i)
 		}
 	}
 }
@@ -38,6 +41,12 @@ func handleMessageComponent(ctx *internal.BotContext, s *discordgo.Session, i *d
 			handler(ctx, s, i)
 			return
 		}
+	}
+}
+
+func handleModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if general.HandlePinModalSubmit(ctx, s, i) {
+		return
 	}
 }
 
