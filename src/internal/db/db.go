@@ -27,5 +27,8 @@ func SetupDB(db *gorm.DB) error {
 		&model.TTSPersonalSetting{},
 		&model.TTSDictionary{},
 	)
+	db.Migrator().DropColumn(&model.TTSPersonalSetting{}, "speaker_seed")
+	db.Migrator().DropColumn(&model.TTSPersonalSetting{}, "speaker_pitch")
+	db.Migrator().DropColumn(&model.TTSPersonalSetting{}, "speed_scale")
 	return err
 }

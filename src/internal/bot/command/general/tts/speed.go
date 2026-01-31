@@ -58,21 +58,103 @@ func Speed(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 
 func HandleSpeedCommand(s *discordgo.Session, i *discordgo.InteractionCreate, ctx *internal.BotContext, speed int64) {
 	memberID := i.Member.User.ID
+	memberRepo := repository.NewMemberRepository(ctx.DB)
+	if err := memberRepo.Create(memberID); err != nil {
+		log.Println("Error creating member:", err)
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "メンバー情報の作成に失敗しました。",
+						Color:       ctx.Config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
 	repo := repository.NewTTSPersonalSettingRepository(ctx.DB)
 	setting, err := repo.GetByMember(memberID)
 	if err != nil {
 		log.Println("Error fetching TTS personal setting:", err)
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "TTS個人設定の取得に失敗しました。",
+						Color:       ctx.Config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		})
 		return
 	}
 	if setting == nil {
-		setting = &repository.DefaultTTSPersonalSetting
+		defaultSetting := repository.DefaultTTSPersonalSetting
+		setting = &defaultSetting
 		setting.MemberID = memberID
-	}
-	setting.SpeakerSpeed = speed
-	err = repo.Update(setting)
-	if err != nil {
-		log.Println("Error updating TTS personal setting:", err)
-		return
+		setting.SpeakerSpeed = speed
+		err = repo.Create(setting)
+		if err != nil {
+			log.Println("Error creating TTS personal setting:", err)
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Embeds: []*discordgo.MessageEmbed{
+						{
+							Title:       "エラー",
+							Description: "TTS個人設定の作成に失敗しました。",
+							Color:       ctx.Config.Colors.Error,
+							Footer: &discordgo.MessageEmbedFooter{
+								Text:    "Requested by " + i.Member.DisplayName(),
+								IconURL: i.Member.AvatarURL(""),
+							},
+						},
+					},
+					Flags: discordgo.MessageFlagsEphemeral,
+				},
+			})
+			return
+		}
+	} else {
+		setting.SpeakerSpeed = speed
+		err = repo.Update(setting)
+		if err != nil {
+			log.Println("Error updating TTS personal setting:", err)
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Embeds: []*discordgo.MessageEmbed{
+						{
+							Title:       "エラー",
+							Description: "TTS個人設定の更新に失敗しました。",
+							Color:       ctx.Config.Colors.Error,
+							Footer: &discordgo.MessageEmbedFooter{
+								Text:    "Requested by " + i.Member.DisplayName(),
+								IconURL: i.Member.AvatarURL(""),
+							},
+						},
+					},
+					Flags: discordgo.MessageFlagsEphemeral,
+				},
+			})
+			return
+		}
 	}
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
