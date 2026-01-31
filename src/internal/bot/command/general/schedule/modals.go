@@ -72,12 +72,16 @@ func handleCreateOnetime(ctx *internal.BotContext, s *discordgo.Session, i *disc
 		return
 	}
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("メッセージを<t:%d:F>に送信するようにスケジュールしました。(ジョブID: %s)", scheduledTime.Unix(), i.ID),
-			Flags:   discordgo.MessageFlagsEphemeral,
-		},
+	successEmbed := &discordgo.MessageEmbed{
+		Title:       "予約投稿を作成しました",
+		Description: fmt.Sprintf("メッセージを<t:%d:F>に送信するようにスケジュールしました。\nジョブID: %s", scheduledTime.Unix(), i.ID),
+		Color:       config.Colors.Success,
+		Timestamp:   time.Now().Format(time.RFC3339),
+	}
+
+	_ = RespondEdit(s, i, &discordgo.InteractionResponseData{
+		Embeds: []*discordgo.MessageEmbed{successEmbed},
+		Flags:  discordgo.MessageFlagsEphemeral,
 	})
 }
 
@@ -126,12 +130,16 @@ func handleCreateRepeat(ctx *internal.BotContext, s *discordgo.Session, i *disco
 		return
 	}
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("メッセージを%sに送信するようにスケジュールしました。(ジョブID: %s)", strings.TrimSpace(inputText), i.ID),
-			Flags:   discordgo.MessageFlagsEphemeral,
-		},
+	successEmbed := &discordgo.MessageEmbed{
+		Title:       "予約投稿を作成しました",
+		Description: fmt.Sprintf("メッセージを%sに送信するようにスケジュールしました。\nジョブID: %s", strings.TrimSpace(inputText), i.ID),
+		Color:       config.Colors.Success,
+		Timestamp:   time.Now().Format(time.RFC3339),
+	}
+
+	_ = RespondEdit(s, i, &discordgo.InteractionResponseData{
+		Embeds: []*discordgo.MessageEmbed{successEmbed},
+		Flags:  discordgo.MessageFlagsEphemeral,
 	})
 }
 
@@ -186,22 +194,19 @@ func replyPermissionError(s *discordgo.Session, i *discordgo.InteractionCreate, 
 }
 
 func replyError(s *discordgo.Session, i *discordgo.InteractionCreate, config *internal.Config, title, description string) {
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       title,
-					Description: description,
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
+	_ = RespondEdit(s, i, &discordgo.InteractionResponseData{
+		Embeds: []*discordgo.MessageEmbed{
+			{
+				Title:       title,
+				Description: description,
+				Color:       config.Colors.Error,
+				Footer: &discordgo.MessageEmbedFooter{
+					Text:    "Requested by " + i.Member.DisplayName(),
+					IconURL: i.Member.AvatarURL(""),
 				},
+				Timestamp: time.Now().Format(time.RFC3339),
 			},
-			Flags: discordgo.MessageFlagsEphemeral,
 		},
+		Flags: discordgo.MessageFlagsEphemeral,
 	})
 }

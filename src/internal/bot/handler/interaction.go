@@ -7,7 +7,6 @@ import (
 	"unibot/internal/bot/command/general"
 	"unibot/internal/bot/command/general/schedule"
 	"unibot/internal/bot/messageComponent"
-
 	"github.com/bwmarrin/discordgo"
 )
 

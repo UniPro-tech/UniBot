@@ -32,46 +32,40 @@ func Schedule(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Inter
 	config := ctx.Config
 
 	if i.GuildID == "" {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "このコマンドはサーバー内でのみ使用できます。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
+		_ = schedulecmd.RespondEdit(s, i, &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       "エラー",
+					Description: "このコマンドはサーバー内でのみ使用できます。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
 					},
+					Timestamp: time.Now().Format(time.RFC3339),
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
 			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 
 	perms, err := s.UserChannelPermissions(i.Member.User.ID, i.ChannelID)
 	if err != nil || perms&discordgo.PermissionManageMessages == 0 {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "このコマンドを実行する権限がありません。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
+		_ = schedulecmd.RespondEdit(s, i, &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       "エラー",
+					Description: "このコマンドを実行する権限がありません。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
 					},
+					Timestamp: time.Now().Format(time.RFC3339),
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
 			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
@@ -82,22 +76,19 @@ func Schedule(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Inter
 		return
 	}
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "不明なサブコマンドです。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
+	_ = schedulecmd.RespondEdit(s, i, &discordgo.InteractionResponseData{
+		Embeds: []*discordgo.MessageEmbed{
+			{
+				Title:       "エラー",
+				Description: "不明なサブコマンドです。",
+				Color:       config.Colors.Error,
+				Footer: &discordgo.MessageEmbedFooter{
+					Text:    "Requested by " + i.Member.DisplayName(),
+					IconURL: i.Member.AvatarURL(""),
 				},
+				Timestamp: time.Now().Format(time.RFC3339),
 			},
-			Flags: discordgo.MessageFlagsEphemeral,
 		},
+		Flags: discordgo.MessageFlagsEphemeral,
 	})
 }
