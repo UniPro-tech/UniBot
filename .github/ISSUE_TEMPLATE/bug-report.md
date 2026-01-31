@@ -2,7 +2,7 @@
 name: Bug report
 about: 不具合の報告
 title: ''
-labels: kind/bug, kind/enhancement
+labels: kind/bug
 assignees: ''
 
 ---
