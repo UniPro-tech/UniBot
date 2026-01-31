@@ -2,6 +2,7 @@ package dict
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 	"unibot/internal"
@@ -20,15 +21,39 @@ func LoadListCommandContext() *discordgo.ApplicationCommandOption {
 
 func List(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-done:
+			return
+		case <-time.After(3 * time.Minute):
+			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "ボイスチャンネルの情報を取得できませんでした。",
+						Color:       config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+						Timestamp: time.Now().Format(time.RFC3339),
+					},
+				},
+			})
+			if err != nil {
+				log.Println("Failed to edit deferred interaction on timeout:", err)
+			}
+		}
+	}()
+	defer close(done)
 	repo := repository.NewTTSDictionaryRepository(ctx.DB)
 
 	entries, err := repo.ListByGuild(i.GuildID)
 	if err != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
+				{
 						Title:       "エラー",
 						Description: "辞書の取得中にエラーが発生しました。",
 						Color:       config.Colors.Error,
@@ -38,19 +63,16 @@ func List(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 						},
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
-				},
-				Flags: discordgo.MessageFlagsEphemeral,
 			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 
 	if len(entries) == 0 {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
+				{
 						Title:       "辞書が空です",
 						Description: "辞書に登録されている単語がありません。",
 						Color:       config.Colors.Warning,
@@ -60,9 +82,8 @@ func List(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 						},
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
-				},
-				Flags: discordgo.MessageFlagsEphemeral,
 			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
@@ -82,11 +103,9 @@ func List(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		description = description[:4000] + "\n..."
 	}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
+	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Embeds: &[]*discordgo.MessageEmbed{
+			{
 					Title:       fmt.Sprintf("TTS辞書 (%d件)", len(entries)),
 					Description: description,
 					Color:       config.Colors.Primary,
@@ -95,8 +114,25 @@ func List(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 						IconURL: i.Member.AvatarURL(""),
 					},
 					Timestamp: time.Now().Format(time.RFC3339),
-				},
 			},
 		},
 	})
+	if err != nil {
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
+				{
+					Title:       "エラー",
+					Description: "辞書の表示中にエラーが発生しました。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
+					},
+					Timestamp: time.Now().Format(time.RFC3339),
+				},
+			},
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
+		return
+	}
 }

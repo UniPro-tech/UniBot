@@ -23,9 +23,6 @@ func LoadJoinCommandContext() *discordgo.ApplicationCommandOption {
 func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
 	userVoiceState, err := s.State.VoiceState(i.GuildID, i.Member.User.ID)
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-	})
 
 	// タイムアウト監視（3分）。タイムアウト時は defer したメッセージを編集して通知する。
 	done := make(chan struct{})

@@ -20,15 +20,17 @@ type StatusData struct {
 func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
 
-	options := i.ApplicationCommandData().Options[0].Options
-	if len(options) == 0 {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-done:
+			return
+		case <-time.After(3 * time.Minute):
+			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
-						Description: "サブコマンドが指定されていません。",
+						Description: "ステータスの取得に失敗しました。",
 						Color:       config.Colors.Error,
 						Footer: &discordgo.MessageEmbedFooter{
 							Text:    "Requested by " + i.Member.DisplayName(),
@@ -37,9 +39,31 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 						Timestamp: time.Now().Format(time.RFC3339),
 					},
 				},
+			})
+			if err != nil {
+				log.Println("Failed to edit deferred interaction on timeout:", err)
+			}
+		}
+	}()
+	defer close(done)
+
+	options := i.ApplicationCommandData().Options[0].Options
+	if len(options) == 0 {
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
+				{
+							Title:       "エラー",
+							Description: "サブコマンドが指定されていません。",
+							Color:       config.Colors.Error,
+							Footer: &discordgo.MessageEmbedFooter{
+								Text:    "Requested by " + i.Member.DisplayName(),
+								IconURL: i.Member.AvatarURL(""),
+							},
+							Timestamp: time.Now().Format(time.RFC3339),
+					},
+				},
 				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
+			})
 		return
 	}
 
@@ -78,11 +102,8 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 				},
 				Timestamp: time.Now().Format(time.RFC3339),
 			}
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{embed},
-				},
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{embed},
 			})
 			return
 		}
@@ -129,12 +150,8 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 				},
 				Timestamp: time.Now().Format(time.RFC3339),
 			}
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{errorEmbed},
-					Flags:  discordgo.MessageFlagsEphemeral,
-				},
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{errorEmbed},
 			})
 			return
 		}
@@ -162,12 +179,8 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 					},
 					Timestamp: time.Now().Format(time.RFC3339),
 				}
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Embeds: []*discordgo.MessageEmbed{errorEmbed},
-						Flags:  discordgo.MessageFlagsEphemeral,
-					},
+				s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+					Embeds: &[]*discordgo.MessageEmbed{errorEmbed},
 				})
 				return
 			}
@@ -189,23 +202,15 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 					},
 					Timestamp: time.Now().Format(time.RFC3339),
 				}
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Embeds: []*discordgo.MessageEmbed{errorEmbed},
-						Flags:  discordgo.MessageFlagsEphemeral,
-					},
+				s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+					Embeds: &[]*discordgo.MessageEmbed{errorEmbed},
 				})
 				return
 			}
 		}
 
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "ステータスを更新しました。",
-				Embeds:  []*discordgo.MessageEmbed{responseEmbed},
-			},
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{responseEmbed},
 		})
 	case "reset":
 		err := ResetBotStatus(s)
@@ -221,11 +226,8 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 				},
 				Timestamp: time.Now().Format(time.RFC3339),
 			}
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{embed},
-				},
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{embed},
 			})
 			return
 		}
@@ -246,11 +248,8 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 				},
 				Timestamp: time.Now().Format(time.RFC3339),
 			}
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{embed},
-				},
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{embed},
 			})
 			return
 		}
@@ -265,18 +264,13 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 			},
 			Timestamp: time.Now().Format(time.RFC3339),
 		}
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{embed},
-			},
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{embed},
 		})
 	default:
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
+				{
 						Title:       "エラー",
 						Description: "不明なサブコマンドです。",
 						Color:       config.Colors.Error,
@@ -285,11 +279,11 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 							IconURL: i.Member.AvatarURL(""),
 						},
 						Timestamp: time.Now().Format(time.RFC3339),
-					},
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
 			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
+		return
 	}
 }
 
