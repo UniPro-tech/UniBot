@@ -57,6 +57,13 @@ func (r *ScheduleSettingRepository) GetByChannelID(channelID string) ([]*model.S
 	return scheduleSettings, err
 }
 
+// 指定時刻以前のスケジュール設定を取得する関数
+func (r *ScheduleSettingRepository) ListDue(now int64) ([]*model.ScheduleSetting, error) {
+	var scheduleSettings []*model.ScheduleSetting
+	err := r.db.Where("next_run_at <= ?", now).Order("next_run_at ASC").Find(&scheduleSettings).Error
+	return scheduleSettings, err
+}
+
 // 全てのスケジュール設定を取得する関数
 func (r *ScheduleSettingRepository) List() ([]*model.ScheduleSetting, error) {
 	var scheduleSettings []*model.ScheduleSetting

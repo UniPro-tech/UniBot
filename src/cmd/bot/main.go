@@ -14,6 +14,7 @@ import (
 	"unibot/internal/bot/command"
 	"unibot/internal/bot/handler"
 	"unibot/internal/db"
+	"unibot/internal/scheduler"
 )
 
 func main() {
@@ -56,6 +57,10 @@ func main() {
 		log.Fatal(err)
 	}
 	defer dg.Close()
+
+	schedulerManager := scheduler.NewManager(ctx, dg)
+	schedulerManager.Start()
+	defer schedulerManager.Stop()
 
 	log.Println("Bot is running...")
 

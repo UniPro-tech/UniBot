@@ -11,6 +11,7 @@ var Commands = []*discordgo.ApplicationCommand{
 	general.LoadPingCommandContext(),
 	general.LoadAboutCommandContext(),
 	general.LoadTtsCommandContext(),
+	general.LoadScheduleCommandContext(),
 	general.LoadHelpCommandContext(),
 	admin.LoadMaintenanceCommandContext(),
 }
