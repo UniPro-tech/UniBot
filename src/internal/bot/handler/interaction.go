@@ -25,14 +25,14 @@ func handleApplicationCommand(ctx *internal.BotContext, s *discordgo.Session, i 
 	response := &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	}
-	if command.ShouldDeferEphemeral(i) {
+	if entry, ok := command.Handlers[name]; ok && entry.Ephemeral {
 		response.Data = &discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		}
 	}
 	s.InteractionRespond(i.Interaction, response)
-	if h, ok := command.Handlers[name]; ok {
-		h(ctx, s, i)
+	if entry, ok := command.Handlers[name]; ok {
+		entry.Handler(ctx, s, i)
 	}
 }
 

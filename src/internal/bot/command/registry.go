@@ -8,10 +8,26 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var Handlers = map[string]func(*internal.BotContext, *discordgo.Session, *discordgo.InteractionCreate){
-	"ping":        general.Ping,
-	"about":       general.About,
-	"maintenance": admin.Maintenance,
-	"tts":         general.Tts,
-	"help":        general.Help,
+type HandlerEntry struct {
+	Handler   func(*internal.BotContext, *discordgo.Session, *discordgo.InteractionCreate)
+	Ephemeral bool
+}
+
+var Handlers = map[string]HandlerEntry{
+	"ping": {
+		Handler: general.Ping,
+	},
+	"about": {
+		Handler: general.About,
+	},
+	"maintenance": {
+		Handler:   admin.Maintenance,
+		Ephemeral: true,
+	},
+	"tts": {
+		Handler: general.Tts,
+	},
+	"help": {
+		Handler: general.Help,
+	},
 }
