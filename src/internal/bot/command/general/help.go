@@ -25,6 +25,10 @@ func LoadHelpCommandContext() *discordgo.ApplicationCommand {
 						Value: "/about",
 					},
 					{
+						Name:  "ColorCode",
+						Value: "/colorcode",
+					},
+					{
 						Name:  "Help",
 						Value: "/help",
 					},

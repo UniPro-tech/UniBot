@@ -30,4 +30,7 @@ var Handlers = map[string]HandlerEntry{
 	"help": {
 		Handler: general.Help,
 	},
+	"colorcode": {
+		Handler: general.ColorCode,
+	},
 }

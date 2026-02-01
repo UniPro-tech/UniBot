@@ -23,6 +23,11 @@ var HelpCommands = []HelpCommand{
 		Usage:       "テキストチャンネルで/about",
 	},
 	{
+		Name:        "/colorcode",
+		Description: "カラーコードの画像を表示します。",
+		Usage:       "テキストチャンネルで/colorcode code:#RRGGBB",
+	},
+	{
 		Name:        "/tts <subcommand>",
 		Description: "読み上げにまつわるコマンドです。\nサブコマンド一覧:\n・`join` : ボイスチャンネルに参加します。\n・`leave`: ボイスチャンネルから退出します。\n・`dict` : 読み上げ辞書の管理を行います。",
 		Usage:       "基本はVC接続中に使用を推奨します。",
