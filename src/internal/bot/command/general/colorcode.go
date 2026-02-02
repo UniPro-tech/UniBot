@@ -133,10 +133,6 @@ func ColorCode(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Inte
 		Image: &discordgo.MessageEmbedImage{
 			URL: "attachment://" + colorCodeImageName,
 		},
-		Author: &discordgo.MessageEmbedAuthor{
-			IconURL: user.AvatarURL(""),
-			Name:    user.Username,
-		},
 		Footer: &discordgo.MessageEmbedFooter{
 			Text:    "Requested by " + user.Username,
 			IconURL: user.AvatarURL(""),
