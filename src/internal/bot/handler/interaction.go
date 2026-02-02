@@ -22,11 +22,17 @@ func InteractionCreate(ctx *internal.BotContext) func(s *discordgo.Session, i *d
 
 func handleApplicationCommand(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	name := i.ApplicationCommandData().Name
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	response := &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-	})
-	if h, ok := command.Handlers[name]; ok {
-		h(ctx, s, i)
+	}
+	if entry, ok := command.Handlers[name]; ok && entry.Ephemeral {
+		response.Data = &discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		}
+	}
+	s.InteractionRespond(i.Interaction, response)
+	if entry, ok := command.Handlers[name]; ok {
+		entry.Handler(ctx, s, i)
 	}
 }
 
@@ -40,4 +46,3 @@ func handleMessageComponent(ctx *internal.BotContext, s *discordgo.Session, i *d
 		}
 	}
 }
-
