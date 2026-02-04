@@ -29,7 +29,7 @@ var HelpCommands = []HelpCommand{
 	},
 	{
 		Name:        "/tts <subcommand>",
-		Description: "読み上げにまつわるコマンドです。\nサブコマンド一覧:\n・`join` : ボイスチャンネルに参加します。\n・`leave`: ボイスチャンネルから退出します。\n・`skip` : 現在再生中の音声をスキップします。\n・`speed` : 再生速度を設定します。\n・`dict` : 読み上げ辞書の管理を行います。",
+		Description: "読み上げにまつわるコマンドです。\nサブコマンド一覧:\n・`join` : ボイスチャンネルに参加します。\n・`leave`: ボイスチャンネルから退出します。\n・`skip` : 現在再生中の音声をスキップします。\n・`speed` : 再生速度を設定します。\n・`dict` : 読み上げ辞書の管理を行います。\n・`set` : 読み上げの設定を変更します。",
 		Usage:       "基本はVC接続中に使用を推奨します。",
 	},
 	{
@@ -46,5 +46,10 @@ var HelpCommands = []HelpCommand{
 		Name:        "/tts speed <value>",
 		Description: "TTSの再生速度を設定します。",
 		Usage:       "VC接続中に`/tts speed 120`のように指定します。",
+	},
+	{
+		Name:        "/tts set voice",
+		Description: "TTSの話者を選択します。",
+		Usage:       "VC接続中に`/tts set voice`で表示される選択肢から話者を選びます。",
 	},
 }
