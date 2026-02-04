@@ -45,8 +45,12 @@ func LoadHelpCommandContext() *discordgo.ApplicationCommand {
 						Value: "/tts dict <subcommands>",
 					},
 					{
-						Name:  "Skip",
-						Value: "/skip",
+						Name:  "TTS Skip",
+						Value: "/tts skip",
+					},
+					{
+						Name:  "TTS Speed",
+						Value: "/tts speed <value>",
 					},
 				},
 			},
