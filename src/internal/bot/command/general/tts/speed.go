@@ -31,28 +31,6 @@ func Speed(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 	options := i.ApplicationCommandData().Options[0].Options
 	speed := options[0].IntValue()
 
-	// バリデーション
-	if speed < 50 || speed > 200 {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "速度は50-200の範囲で指定してください。",
-						Color:       ctx.Config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-					},
-				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
-		return
-	}
-
 	HandleSpeedCommand(s, i, ctx, speed)
 }
 
