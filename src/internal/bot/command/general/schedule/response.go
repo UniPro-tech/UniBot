@@ -7,13 +7,6 @@ func RespondEdit(s *discordgo.Session, i *discordgo.InteractionCreate, data *dis
 		data = &discordgo.InteractionResponseData{}
 	}
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Flags: data.Flags,
-		},
-	})
-
 	edit := &discordgo.WebhookEdit{Flags: data.Flags}
 	if data.Content != "" {
 		content := data.Content

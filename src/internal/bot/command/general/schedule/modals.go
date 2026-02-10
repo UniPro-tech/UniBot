@@ -18,14 +18,25 @@ func HandleModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *discor
 
 	switch data.CustomID {
 	case "schedule_create_onetime":
+		deferModalResponse(s, i)
 		handleCreateOnetime(ctx, s, i, data)
 		return true
 	case "schedule_create_repeat":
+		deferModalResponse(s, i)
 		handleCreateRepeat(ctx, s, i, data)
 		return true
 	default:
 		return false
 	}
+}
+
+func deferModalResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		},
+	})
 }
 
 func handleCreateOnetime(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ModalSubmitInteractionData) {

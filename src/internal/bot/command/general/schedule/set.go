@@ -6,6 +6,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const (
+	ScheduleModalOnetimeButtonID = "schedule_open_onetime"
+	ScheduleModalRepeatButtonID  = "schedule_open_repeat"
+)
+
 func LoadSetCommandContext() *discordgo.ApplicationCommandOption {
 	return &discordgo.ApplicationCommandOption{
 		Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -25,22 +30,71 @@ func LoadSetCommandContext() *discordgo.ApplicationCommandOption {
 func Set(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options[0].Options
 	isRepeat := false
+	hasRepeatOption := false
 
 	for _, opt := range options {
 		if opt.Name == "repeat" {
 			isRepeat = opt.BoolValue()
+			hasRepeatOption = true
 		}
 	}
 
-	if isRepeat {
-		showRepeatModal(s, i)
-		return
+	showOnetime := true
+	showRepeat := false
+	if hasRepeatOption {
+		showOnetime = !isRepeat
+		showRepeat = isRepeat
 	}
 
-	showOnetimeModal(s, i)
+	promptScheduleModal(s, i, showOnetime, showRepeat)
 }
 
-func showOnetimeModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func promptScheduleModal(s *discordgo.Session, i *discordgo.InteractionCreate, showOnetime, showRepeat bool) {
+	components := buildScheduleModalButtons(showOnetime, showRepeat)
+	if len(components) == 0 {
+		components = buildScheduleModalButtons(true, false)
+	}
+
+	content := "単発の予約投稿を作成します。下のボタンからフォームを開いてください。"
+	if showOnetime && showRepeat {
+		content = "作成する予約投稿の種類を選んでください。"
+	} else if showRepeat {
+		content = "繰り返しの予約投稿を作成します。下のボタンからフォームを開いてください。"
+	}
+
+	_ = RespondEdit(s, i, &discordgo.InteractionResponseData{
+		Content:    content,
+		Components: components,
+		Flags:      discordgo.MessageFlagsEphemeral,
+	})
+}
+
+func buildScheduleModalButtons(showOnetime, showRepeat bool) []discordgo.MessageComponent {
+	buttons := make([]discordgo.MessageComponent, 0, 2)
+	if showOnetime {
+		buttons = append(buttons, discordgo.Button{
+			CustomID: ScheduleModalOnetimeButtonID,
+			Label:    "単発",
+			Style:    discordgo.PrimaryButton,
+		})
+	}
+	if showRepeat {
+		buttons = append(buttons, discordgo.Button{
+			CustomID: ScheduleModalRepeatButtonID,
+			Label:    "繰り返し",
+			Style:    discordgo.SecondaryButton,
+		})
+	}
+	if len(buttons) == 0 {
+		return nil
+	}
+	return []discordgo.MessageComponent{
+		discordgo.ActionsRow{Components: buttons},
+	}
+}
+
+// ShowOnetimeModal opens the one-time schedule modal.
+func ShowOnetimeModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseModal,
 		Data: &discordgo.InteractionResponseData{
@@ -70,7 +124,8 @@ func showOnetimeModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 }
 
-func showRepeatModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// ShowRepeatModal opens the repeating schedule modal.
+func ShowRepeatModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseModal,
 		Data: &discordgo.InteractionResponseData{
