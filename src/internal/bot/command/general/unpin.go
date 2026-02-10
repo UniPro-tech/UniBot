@@ -36,12 +36,10 @@ func Unpin(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 		return
 	}
 	if len(settings) == 0 {
-		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "このチャンネルにはピン留めされたメッセージがありません。",
-				Flags:   discordgo.MessageFlagsEphemeral,
-			},
+		content := "このチャンネルにはピン留めされたメッセージがありません。"
+		_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Content: &content,
+			Flags:   discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
@@ -58,11 +56,8 @@ func Unpin(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{successEmbed},
-			Flags:  discordgo.MessageFlagsEphemeral,
-		},
+	_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Embeds: &[]*discordgo.MessageEmbed{successEmbed},
+		Flags:  discordgo.MessageFlagsEphemeral,
 	})
 }

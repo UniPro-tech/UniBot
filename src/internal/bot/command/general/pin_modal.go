@@ -15,6 +15,13 @@ func HandlePinModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *dis
 		return false
 	}
 
+	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		},
+	})
+
 	config := ctx.Config
 	if !hasPinPermission(s, i) {
 		replyPinError(s, i, config, "権限がありません", "この操作を実行する権限がありません。")
@@ -75,12 +82,9 @@ func HandlePinModalSubmit(ctx *internal.BotContext, s *discordgo.Session, i *dis
 		return true
 	}
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "メッセージをピン留めしました: `" + message + "`",
-			Flags:   discordgo.MessageFlagsEphemeral,
-		},
+	content := "メッセージをピン留めしました: `" + message + "`"
+	_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Content: &content,
 	})
 
 	return true

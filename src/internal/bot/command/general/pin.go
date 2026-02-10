@@ -73,19 +73,16 @@ func replyPinError(s *discordgo.Session, i *discordgo.InteractionCreate, config 
 		footer.IconURL = i.User.AvatarURL("")
 	}
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       title,
-					Description: description,
-					Color:       config.Colors.Error,
-					Footer:      footer,
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
+	_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Embeds: &[]*discordgo.MessageEmbed{
+			{
+				Title:       title,
+				Description: description,
+				Color:       config.Colors.Error,
+				Footer:      footer,
+				Timestamp: time.Now().Format(time.RFC3339),
 			},
-			Flags: discordgo.MessageFlagsEphemeral,
 		},
+		Flags: discordgo.MessageFlagsEphemeral,
 	})
 }
