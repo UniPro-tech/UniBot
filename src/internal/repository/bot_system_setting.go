@@ -32,7 +32,7 @@ func (r *BotSystemSettingRepository) GetByID(id string) (*model.BotSystemSetting
 	if result.RowsAffected == 0 {
 		return nil, nil
 	}
-	return &botSystemSetting, result.Error
+	return &botSystemSetting, nil
 }
 
 // 全てのBotSystemSettingを取得する関数
