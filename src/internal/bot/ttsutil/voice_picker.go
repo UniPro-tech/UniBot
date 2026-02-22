@@ -47,7 +47,6 @@ func FetchSpeakers(ctx *internal.BotContext) ([]voicevox.Speaker, error) {
 		cachedSpeakers.mu.Unlock()
 		return speakers, nil
 	}
-	cachedSpeakers.mu.Unlock()
 
 	baseCtx := context.Background()
 	if ctx != nil {
@@ -61,10 +60,10 @@ func FetchSpeakers(ctx *internal.BotContext) ([]voicevox.Speaker, error) {
 
 	speakers, err := ctx.VoiceVox.GetSpeakers(requestCtx)
 	if err != nil {
+		cachedSpeakers.mu.Unlock()
 		return nil, err
 	}
 
-	cachedSpeakers.mu.Lock()
 	cachedSpeakers.speakers = speakers
 	cachedSpeakers.expires = time.Now().Add(speakerCacheTTL)
 	cachedSpeakers.mu.Unlock()

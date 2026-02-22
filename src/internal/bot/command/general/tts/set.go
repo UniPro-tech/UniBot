@@ -23,7 +23,14 @@ var setHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session,
 }
 
 func Set(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	subCommandGroup := i.ApplicationCommandData().Options[0]
+	options := i.ApplicationCommandData().Options
+	if len(options) == 0 {
+		return
+	}
+	subCommandGroup := options[0]
+	if len(subCommandGroup.Options) == 0 {
+		return
+	}
 	subCommand := subCommandGroup.Options[0]
 
 	if handler, exists := setHandler[subCommand.Name]; exists {
