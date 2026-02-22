@@ -26,6 +26,59 @@ func HandleTTSSetVoice(ctx *internal.BotContext, s *discordgo.Session, i *discor
 	}
 
 	speakerID := values[0]
+	validSpeaker := false
+	if i.Message != nil {
+		for _, row := range i.Message.Components {
+			actionRow, ok := row.(*discordgo.ActionsRow)
+			if !ok {
+				continue
+			}
+			for _, comp := range actionRow.Components {
+				selectMenu, ok := comp.(*discordgo.SelectMenu)
+				if !ok {
+					continue
+				}
+				if selectMenu.CustomID != ttsutil.VoiceSelectCustomID {
+					continue
+				}
+				for _, opt := range selectMenu.Options {
+					if opt.Value == speakerID {
+						validSpeaker = true
+						break
+					}
+				}
+				if validSpeaker {
+					break
+				}
+			}
+			if validSpeaker {
+				break
+			}
+		}
+	}
+	if !validSpeaker {
+		validSpeaker = ttsutil.IsSpeakerIDValid(ctx, speakerID)
+	}
+	if !validSpeaker {
+		log.Println("HandleTTSSetVoice: invalid speakerID selected:", speakerID)
+		if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "不正な話者IDが選択されました。もう一度お試しください。",
+						Color:       config.Colors.Error,
+						Timestamp:   time.Now().Format(time.RFC3339),
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		}); err != nil {
+			log.Println("Failed to respond interaction:", err)
+		}
+		return
+	}
 	memberID, _, _ := ttsutil.GetInteractionUser(i)
 	if memberID == "" {
 		log.Println("HandleTTSSetVoice: missing user information on interaction")

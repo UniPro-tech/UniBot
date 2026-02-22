@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"strings"
 	"unibot/internal"
 	"unibot/internal/bot/command"
@@ -34,7 +35,10 @@ func handleApplicationCommand(ctx *internal.BotContext, s *discordgo.Session, i 
 			Flags: discordgo.MessageFlagsEphemeral,
 		}
 	}
-	s.InteractionRespond(i.Interaction, response)
+	if err := s.InteractionRespond(i.Interaction, response); err != nil {
+		// Keep handler execution; response failures should still be logged.
+		log.Println("Failed to respond interaction:", err)
+	}
 	if entry, ok := command.Handlers[name]; ok {
 		entry.Handler(ctx, s, i)
 	}

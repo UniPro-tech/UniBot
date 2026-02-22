@@ -17,6 +17,7 @@ const (
 	VoiceSelectCustomID     = "tts_set_voice_select"
 	VoicePageCustomIDPrefix = "tts_set_voice_page"
 	speakerSelectMax        = 25
+	speakerCacheTTL         = 5 * time.Minute
 )
 
 type SpeakerPage struct {
@@ -40,7 +41,22 @@ func FetchSpeakers(ctx *internal.BotContext) ([]voicevox.Speaker, error) {
 	}
 	cachedSpeakers.mu.RUnlock()
 
-	requestCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	cachedSpeakers.mu.Lock()
+	if time.Now().Before(cachedSpeakers.expires) && len(cachedSpeakers.speakers) > 0 {
+		speakers := cachedSpeakers.speakers
+		cachedSpeakers.mu.Unlock()
+		return speakers, nil
+	}
+	cachedSpeakers.mu.Unlock()
+
+	baseCtx := context.Background()
+	if ctx != nil {
+		if parentCtx, ok := any(ctx).(context.Context); ok && parentCtx != nil {
+			baseCtx = parentCtx
+		}
+	}
+
+	requestCtx, cancel := context.WithTimeout(baseCtx, 30*time.Second)
 	defer cancel()
 
 	speakers, err := ctx.VoiceVox.GetSpeakers(requestCtx)
@@ -50,7 +66,7 @@ func FetchSpeakers(ctx *internal.BotContext) ([]voicevox.Speaker, error) {
 
 	cachedSpeakers.mu.Lock()
 	cachedSpeakers.speakers = speakers
-	cachedSpeakers.expires = time.Now().Add(5 * time.Minute)
+	cachedSpeakers.expires = time.Now().Add(speakerCacheTTL)
 	cachedSpeakers.mu.Unlock()
 
 	return speakers, nil
@@ -190,6 +206,23 @@ func ResolveSpeakerLabel(ctx *internal.BotContext, speakerID string) string {
 	}
 
 	return "ID: " + speakerID
+}
+
+func IsSpeakerIDValid(ctx *internal.BotContext, speakerID string) bool {
+	speakers, err := FetchSpeakers(ctx)
+	if err != nil {
+		return false
+	}
+
+	for _, speaker := range speakers {
+		for _, style := range speaker.Styles {
+			if fmt.Sprintf("%d", style.ID) == speakerID {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func GetInteractionUser(i *discordgo.InteractionCreate) (string, string, string) {

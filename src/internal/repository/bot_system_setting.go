@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"errors"
-
 	"unibot/internal/model"
 
 	"gorm.io/gorm"
@@ -27,8 +25,11 @@ func (r *BotSystemSettingRepository) Create(botSystemSetting *model.BotSystemSet
 // IDでBotSystemSettingを取得する関数
 func (r *BotSystemSettingRepository) GetByID(id string) (*model.BotSystemSetting, error) {
 	var botSystemSetting model.BotSystemSetting
-	result := r.db.First(&botSystemSetting, "id = ?", id)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	result := r.db.Where("id = ?", id).Limit(1).Find(&botSystemSetting)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
 		return nil, nil
 	}
 	return &botSystemSetting, result.Error
