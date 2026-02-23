@@ -17,6 +17,7 @@ func LoadTtsCommandContext() *discordgo.ApplicationCommand {
 			tts.LoadLeaveCommandContext(),
 			tts.LoadSkipCommandContext(),
 			tts.LoadDictCommandContext(),
+			tts.LoadSetCommandContext(),
 			tts.LoadSpeedCommandContext(),
 		},
 	}
@@ -27,6 +28,7 @@ var ttsHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session,
 	"leave": tts.Leave,
 	"skip":  tts.Skip,
 	"dict":  tts.Dict,
+	"set":   tts.Set,
 	"speed": tts.Speed,
 }
 
