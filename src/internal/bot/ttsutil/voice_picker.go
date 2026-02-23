@@ -48,14 +48,7 @@ func FetchSpeakers(ctx *internal.BotContext) ([]voicevox.Speaker, error) {
 		return speakers, nil
 	}
 
-	baseCtx := context.Background()
-	if ctx != nil {
-		if parentCtx, ok := any(ctx).(context.Context); ok && parentCtx != nil {
-			baseCtx = parentCtx
-		}
-	}
-
-	requestCtx, cancel := context.WithTimeout(baseCtx, 30*time.Second)
+	requestCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	speakers, err := ctx.VoiceVox.GetSpeakers(requestCtx)

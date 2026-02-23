@@ -39,17 +39,66 @@ func Voice(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 		return
 	}
 
+	userVoiceState, err := s.State.VoiceState(i.GuildID, memberID)
+	if err != nil {
+		_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
+				{
+					Title:       "エラー",
+					Description: "ボイスチャンネルの情報を取得できませんでした。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + requesterName,
+						IconURL: requesterAvatar,
+					},
+					Timestamp: time.Now().Format(time.RFC3339),
+				},
+			},
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
+		if err != nil {
+			log.Println("Failed to edit deferred interaction:", err)
+		}
+		return
+	}
+	if userVoiceState == nil || userVoiceState.ChannelID == "" {
+		_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{
+				{
+					Title:       "エラー",
+					Description: "先にボイスチャンネルに参加してください。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + requesterName,
+						IconURL: requesterAvatar,
+					},
+					Timestamp: time.Now().Format(time.RFC3339),
+				},
+			},
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
+		if err != nil {
+			log.Println("Failed to edit deferred interaction:", err)
+		}
+		return
+	}
+
 	done := make(chan struct{})
+	defer close(done)
+
+	timeout := time.NewTimer(3 * time.Minute)
+	defer timeout.Stop()
+
 	go func() {
 		select {
 		case <-done:
 			return
-		case <-time.After(3 * time.Minute):
+		case <-timeout.C:
 			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 				Embeds: &[]*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
-						Description: "話者情報の取得に失敗しました。",
+						Description: "処理がタイムアウトしました。もう一度お試しください。",
 						Color:       config.Colors.Error,
 						Footer: &discordgo.MessageEmbedFooter{
 							Text:    "Requested by " + requesterName,
@@ -64,7 +113,6 @@ func Voice(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 			}
 		}
 	}()
-	defer close(done)
 
 	speakers, err := ttsutil.FetchSpeakers(ctx)
 	if err != nil {
@@ -96,7 +144,7 @@ func Voice(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 			Embeds: &[]*discordgo.MessageEmbed{
 				{
 					Title:       "エラー",
-					Description: "話者情報が取得できませんでした。",
+					Description: "話者情報が見つかりませんでした。",
 					Color:       config.Colors.Error,
 					Footer: &discordgo.MessageEmbedFooter{
 						Text:    "Requested by " + requesterName,
