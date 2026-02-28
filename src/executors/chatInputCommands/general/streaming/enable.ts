@@ -1,5 +1,6 @@
 import { StreamingDataManager } from "@/lib/dataUtils";
 import {
+  ChannelType,
   ChatInputCommandInteraction,
   GuildMember,
   MessageFlags,
@@ -17,8 +18,12 @@ export const data = new SlashCommandSubcommandBuilder()
       .setDescription("配信モードを有効にするチャンネル(デフォルトは現在のチャンネル)")
       .setRequired(false)
   )
-  .addStringOption((option) =>
-    option.setName("ttsChannel").setDescription("読み上げているチャンネル").setRequired(false)
+  .addChannelOption((option) =>
+    option
+      .setName("tts_channel")
+      .setDescription("読み上げているチャンネル")
+      .addChannelTypes(ChannelType.GuildText)
+      .setRequired(false)
   );
 
 export const execute = async (interaction: ChatInputCommandInteraction) => {
@@ -43,7 +48,7 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
     }
     channel = voiceChannel;
   }
-  const ttsChannel = interaction.options.getChannel("ttsChannel");
+  const ttsChannel = interaction.options.getChannel("tts_channel");
   if (ttsChannel && ttsChannel instanceof TextChannel === false) {
     await interaction.reply({
       content: "読み上げチャンネルにはテキストチャンネルを指定してください。",
