@@ -10,6 +10,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const (
+	MinSpeakerSpeed int64 = 50
+	MaxSpeakerSpeed int64 = 200
+)
+
 func LoadSpeedCommandContext() *discordgo.ApplicationCommandOption {
 	return &discordgo.ApplicationCommandOption{
 		Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -21,8 +26,8 @@ func LoadSpeedCommandContext() *discordgo.ApplicationCommandOption {
 				Name:        "value",
 				Description: "再生速度（50-200、100=通常速度）",
 				Required:    true,
-				MinValue:    floatPtr(50),
-				MaxValue:    200,
+				MinValue:    floatPtr(float64(MinSpeakerSpeed)),
+				MaxValue:    float64(MaxSpeakerSpeed),
 			},
 		},
 	}
@@ -68,6 +73,10 @@ func HandleSpeedCommand(s *discordgo.Session, i *discordgo.InteractionCreate, ct
 	}
 
 	memberID := requester.ID
+	if speed < MinSpeakerSpeed || speed > MaxSpeakerSpeed {
+		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", fmt.Sprintf("再生速度は%d〜%dの範囲で指定してください。", MinSpeakerSpeed, MaxSpeakerSpeed), ctx.Config.Colors.Error, requester))
+		return
+	}
 
 	memberRepo := repository.NewMemberRepository(ctx.DB)
 	if err := memberRepo.Create(memberID); err != nil {
