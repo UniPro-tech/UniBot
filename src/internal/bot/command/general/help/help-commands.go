@@ -43,9 +43,9 @@ var HelpCommands = []HelpCommand{
 		Usage:       "VC接続中、音声が読み上げられているときに`/tts skip`",
 	},
 	{
-		Name:        "/tts speed <value>",
+		Name:        "/tts set speed <value>",
 		Description: "TTSの再生速度を設定します。",
-		Usage:       "VC接続中に`/tts speed 120`のように指定します。",
+		Usage:       "VC接続中に`/tts set speed 120`のように指定します。",
 	},
 	{
 		Name:        "/tts set voice",

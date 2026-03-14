@@ -18,7 +18,6 @@ func LoadTtsCommandContext() *discordgo.ApplicationCommand {
 			tts.LoadSkipCommandContext(),
 			tts.LoadDictCommandContext(),
 			tts.LoadSetCommandContext(),
-			tts.LoadSpeedCommandContext(),
 		},
 	}
 }
@@ -29,7 +28,6 @@ var ttsHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session,
 	"skip":  tts.Skip,
 	"dict":  tts.Dict,
 	"set":   tts.Set,
-	"speed": tts.Speed,
 }
 
 func Tts(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
