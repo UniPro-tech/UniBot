@@ -3,6 +3,7 @@ package set
 import (
 	"fmt"
 	"log"
+	"time"
 	"unibot/internal"
 	"unibot/internal/repository"
 
@@ -52,11 +53,23 @@ func Speed(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 }
 
 func HandleSpeedCommand(s *discordgo.Session, i *discordgo.InteractionCreate, ctx *internal.BotContext, speed int64) {
-	memberID := i.Member.User.ID
+	// Determine the requester user for footer and traceability
+	var requester *discordgo.User
+	if i.Member != nil && i.Member.User != nil {
+		requester = i.Member.User
+	} else if i.User != nil {
+		requester = i.User
+	}
+
+	memberID := ""
+	if requester != nil {
+		memberID = requester.ID
+	}
+
 	memberRepo := repository.NewMemberRepository(ctx.DB)
 	if err := memberRepo.Create(memberID); err != nil {
 		log.Println("Error creating member:", err)
-		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "メンバー情報の作成に失敗しました。", ctx.Config.Colors.Error))
+		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "メンバー情報の作成に失敗しました。", ctx.Config.Colors.Error, requester))
 		return
 	}
 
@@ -64,7 +77,7 @@ func HandleSpeedCommand(s *discordgo.Session, i *discordgo.InteractionCreate, ct
 	setting, err := repo.GetByMember(memberID)
 	if err != nil {
 		log.Println("Error fetching TTS personal setting:", err)
-		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "TTS個人設定の取得に失敗しました。", ctx.Config.Colors.Error))
+		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "TTS個人設定の取得に失敗しました。", ctx.Config.Colors.Error, requester))
 		return
 	}
 	if setting == nil {
@@ -75,7 +88,7 @@ func HandleSpeedCommand(s *discordgo.Session, i *discordgo.InteractionCreate, ct
 		err = repo.Create(setting)
 		if err != nil {
 			log.Println("Error creating TTS personal setting:", err)
-			safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "TTS個人設定の作成に失敗しました。", ctx.Config.Colors.Error))
+			safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "TTS個人設定の作成に失敗しました。", ctx.Config.Colors.Error, requester))
 			return
 		}
 	} else {
@@ -83,19 +96,29 @@ func HandleSpeedCommand(s *discordgo.Session, i *discordgo.InteractionCreate, ct
 		err = repo.Update(setting)
 		if err != nil {
 			log.Println("Error updating TTS personal setting:", err)
-			safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "TTS個人設定の更新に失敗しました。", ctx.Config.Colors.Error))
+			safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "TTS個人設定の更新に失敗しました。", ctx.Config.Colors.Error, requester))
 			return
 		}
 	}
-	safeEditSpeedResponse(s, i, buildSpeedEmbed("TTS再生速度設定", "TTSの再生速度を設定しました: "+formatSpeed(speed), ctx.Config.Colors.Success))
+	safeEditSpeedResponse(s, i, buildSpeedEmbed("TTS再生速度設定", "TTSの再生速度を設定しました: "+formatSpeed(speed), ctx.Config.Colors.Success, requester))
 }
 
-func buildSpeedEmbed(title, description string, color int) *discordgo.MessageEmbed {
-	return &discordgo.MessageEmbed{
+func buildSpeedEmbed(title, description string, color int, requester *discordgo.User) *discordgo.MessageEmbed {
+	embed := &discordgo.MessageEmbed{
 		Title:       title,
 		Description: description,
 		Color:       color,
+		Timestamp:   time.Now().Format(time.RFC3339),
 	}
+
+	if requester != nil {
+		embed.Footer = &discordgo.MessageEmbedFooter{
+			Text:    fmt.Sprintf("Requested by %s", requester.Username),
+			IconURL: requester.AvatarURL(""),
+		}
+	}
+
+	return embed
 }
 
 func safeEditSpeedResponse(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed) {
