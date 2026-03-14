@@ -61,10 +61,13 @@ func HandleSpeedCommand(s *discordgo.Session, i *discordgo.InteractionCreate, ct
 		requester = i.User
 	}
 
-	memberID := ""
-	if requester != nil {
-		memberID = requester.ID
+	if requester == nil {
+		log.Println("Speed: missing user information on interaction")
+		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "メンバー情報の作成に失敗しました。", ctx.Config.Colors.Error, requester))
+		return
 	}
+
+	memberID := requester.ID
 
 	memberRepo := repository.NewMemberRepository(ctx.DB)
 	if err := memberRepo.Create(memberID); err != nil {
