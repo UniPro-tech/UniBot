@@ -31,19 +31,19 @@ func LoadSpeedCommandContext() *discordgo.ApplicationCommandOption {
 func Speed(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	if len(options) == 0 {
-		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "コマンド引数の解析に失敗しました。", ctx.Config.Colors.Error))
+		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "コマンド引数の解析に失敗しました。", ctx.Config.Colors.Error, nil))
 		return
 	}
 
 	subCommandGroup := options[0]
 	if len(subCommandGroup.Options) == 0 {
-		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "コマンド引数の解析に失敗しました。", ctx.Config.Colors.Error))
+		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "コマンド引数の解析に失敗しました。", ctx.Config.Colors.Error, nil))
 		return
 	}
 
 	subCommand := subCommandGroup.Options[0]
 	if len(subCommand.Options) == 0 {
-		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "コマンド引数の解析に失敗しました。", ctx.Config.Colors.Error))
+		safeEditSpeedResponse(s, i, buildSpeedEmbed("エラー", "コマンド引数の解析に失敗しました。", ctx.Config.Colors.Error, nil))
 		return
 	}
 
