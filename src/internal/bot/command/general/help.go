@@ -50,7 +50,7 @@ func LoadHelpCommandContext() *discordgo.ApplicationCommand {
 					},
 					{
 						Name:  "TTS Speed",
-						Value: "/tts speed <value>",
+						Value: "/tts set speed <value>",
 					},
 				},
 			},

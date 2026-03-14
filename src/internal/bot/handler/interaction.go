@@ -30,7 +30,7 @@ func handleApplicationCommand(ctx *internal.BotContext, s *discordgo.Session, i 
 		response.Data = &discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		}
-	} else if isTtsSetVoice(i) {
+	} else if isTtsSetCommand(i) {
 		response.Data = &discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		}
@@ -44,7 +44,7 @@ func handleApplicationCommand(ctx *internal.BotContext, s *discordgo.Session, i 
 	}
 }
 
-func isTtsSetVoice(i *discordgo.InteractionCreate) bool {
+func isTtsSetCommand(i *discordgo.InteractionCreate) bool {
 	if i.ApplicationCommandData().Name != "tts" {
 		return false
 	}
@@ -60,7 +60,7 @@ func isTtsSetVoice(i *discordgo.InteractionCreate) bool {
 		return false
 	}
 	sub := group.Options[0]
-	return sub.Type == discordgo.ApplicationCommandOptionSubCommand && sub.Name == "voice"
+	return sub.Type == discordgo.ApplicationCommandOptionSubCommand
 }
 
 func handleMessageComponent(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {

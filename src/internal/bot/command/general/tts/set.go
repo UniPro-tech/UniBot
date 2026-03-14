@@ -14,12 +14,14 @@ func LoadSetCommandContext() *discordgo.ApplicationCommandOption {
 		Description: "TTSの設定を変更します",
 		Options: []*discordgo.ApplicationCommandOption{
 			set.LoadVoiceCommandContext(),
+			set.LoadSpeedCommandContext(),
 		},
 	}
 }
 
 var setHandler = map[string]func(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate){
 	"voice": set.Voice,
+	"speed": set.Speed,
 }
 
 func Set(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
