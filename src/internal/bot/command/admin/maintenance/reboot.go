@@ -12,23 +12,20 @@ import (
 func Reboot(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	config := ctx.Config
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "Now Rebooting",
-					Description: "The bot is rebooting...",
-					Color:       config.Colors.Success,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
+	s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Embeds: &[]*discordgo.MessageEmbed{
+			{
+				Title:       "Now Rebooting",
+				Description: "The bot is rebooting...",
+				Color:       config.Colors.Success,
+				Footer: &discordgo.MessageEmbedFooter{
+					Text:    "Requested by " + i.Member.DisplayName(),
+					IconURL: i.Member.AvatarURL(""),
 				},
+				Timestamp: time.Now().Format(time.RFC3339),
 			},
-			Flags: discordgo.MessageFlagsEphemeral,
 		},
+		Flags: discordgo.MessageFlagsEphemeral,
 	})
 
 	// 再起動と称してプロセスを終了する

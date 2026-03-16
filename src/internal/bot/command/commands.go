@@ -11,7 +11,9 @@ import (
 var Commands = []*discordgo.ApplicationCommand{
 	general.LoadPingCommandContext(),
 	general.LoadAboutCommandContext(),
+	general.LoadColorCodeCommandContext(),
 	general.LoadTtsCommandContext(),
+	general.LoadHelpCommandContext(),
 	admin.LoadMaintenanceCommandContext(),
 	server_management.LoadRolepanelCommandContext(),
 }

@@ -75,7 +75,9 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 
 				if player != nil {
 					player.Close()
-					player.VC.Disconnect()
+					if vc := player.GetVC(); vc != nil {
+						vc.Disconnect()
+					}
 					mgr.Delete(vsu.GuildID)
 				}
 				if data != nil {

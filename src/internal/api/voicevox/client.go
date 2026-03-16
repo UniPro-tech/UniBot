@@ -31,7 +31,7 @@ func (c *Client) Synthesize(
 	ctx context.Context,
 	text string,
 	speakerID string,
-	speakerPitch float64,
+	speakerSpeed float64,
 ) ([]byte, error) {
 
 	// ---- audio_query ----
@@ -69,13 +69,13 @@ func (c *Client) Synthesize(
 		return nil, err
 	}
 
-	// ---- pitch 変更 ----
+	// ---- speed 変更 ----
 	var query map[string]any
 	if err := json.Unmarshal(queryBody, &query); err != nil {
 		return nil, err
 	}
 
-	query["pitchScale"] = speakerPitch
+	query["speedScale"] = speakerSpeed
 
 	modified, _ := json.Marshal(query)
 
@@ -106,4 +106,39 @@ func (c *Client) Synthesize(
 	}
 
 	return io.ReadAll(res2.Body)
+}
+
+// GetSpeakers はVOICEVOXの話者一覧を取得します
+func (c *Client) GetSpeakers(ctx context.Context) ([]Speaker, error) {
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		c.BaseURL+"/speakers",
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.APIKey != "" {
+		req.Header.Set("Authorization", "ApiKey "+c.APIKey)
+	}
+
+	res, err := c.HTTP.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		b, _ := io.ReadAll(res.Body)
+		return nil, fmt.Errorf("speakers failed: %s", string(b))
+	}
+
+	var speakers []Speaker
+	if err := json.NewDecoder(res.Body).Decode(&speakers); err != nil {
+		return nil, err
+	}
+
+	return speakers, nil
 }

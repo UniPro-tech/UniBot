@@ -29,5 +29,15 @@ func SetupDB(db *gorm.DB) error {
 		&model.RolePanel{},
 		&model.RolePanelOption{},
 	)
+	migrator := db.Migrator()
+	if migrator.HasColumn(&model.TTSPersonalSetting{}, "speaker_seed") {
+		migrator.DropColumn(&model.TTSPersonalSetting{}, "speaker_seed")
+	}
+	if migrator.HasColumn(&model.TTSPersonalSetting{}, "speaker_pitch") {
+		migrator.DropColumn(&model.TTSPersonalSetting{}, "speaker_pitch")
+	}
+	if migrator.HasColumn(&model.TTSPersonalSetting{}, "speed_scale") {
+		migrator.DropColumn(&model.TTSPersonalSetting{}, "speed_scale")
+	}
 	return err
 }
