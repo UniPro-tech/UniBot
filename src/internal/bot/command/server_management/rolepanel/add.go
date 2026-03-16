@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 	"unibot/internal"
+	"unibot/internal/bot/messageComponent"
 	"unibot/internal/repository"
 
 	"github.com/bwmarrin/discordgo"
@@ -122,8 +123,37 @@ func Add(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interactio
 		})
 	}
 
-	// CustomIDにロール情報をエンコード (roleID|label|description|emoji)
-	customID := fmt.Sprintf("rolepanel_add_%s|%s|%s|%s", roleID, label, description, emoji)
+	token, err := messageComponent.SaveRolePanelPendingAdd(messageComponent.RolePanelPendingAdd{
+		UserID:      i.Member.User.ID,
+		GuildID:     i.GuildID,
+		RoleID:      roleID,
+		Label:       label,
+		Description: description,
+		Emoji:       emoji,
+	})
+	if err != nil {
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "エラー",
+						Description: "ロール追加情報の準備中にエラーが発生しました。",
+						Color:       config.Colors.Error,
+						Footer: &discordgo.MessageEmbedFooter{
+							Text:    "Requested by " + i.Member.DisplayName(),
+							IconURL: i.Member.AvatarURL(""),
+						},
+						Timestamp: time.Now().Format(time.RFC3339),
+					},
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
+	customID := "rolepanel_add_" + token
 
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

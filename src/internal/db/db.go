@@ -39,5 +39,8 @@ func SetupDB(db *gorm.DB) error {
 	if migrator.HasColumn(&model.TTSPersonalSetting{}, "speed_scale") {
 		migrator.DropColumn(&model.TTSPersonalSetting{}, "speed_scale")
 	}
+	if migrator.HasColumn(&model.RolePanelOption{}, "role_id") {
+		migrator.DropColumn(&model.RolePanelOption{}, "role_id")
+	}
 	return err
 }

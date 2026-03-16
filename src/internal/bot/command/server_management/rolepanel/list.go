@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 	"unibot/internal"
+	"unibot/internal/bot/messageComponent"
+	"unibot/internal/model"
 	"unibot/internal/repository"
 
 	"github.com/bwmarrin/discordgo"
@@ -70,8 +72,21 @@ func List(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 	var fields []*discordgo.MessageEmbedField
 	for _, panel := range panels {
 		var roles []string
+		roleIDsByKey, err := loadPanelRoleIDs(s, panel)
+		if err != nil {
+			fields = append(fields, &discordgo.MessageEmbedField{
+				Name:   fmt.Sprintf("%s (ID: %s)", panel.Title, panel.MessageID),
+				Value:  fmt.Sprintf("チャンネル: <#%s>\nロール: 取得失敗", panel.ChannelID),
+				Inline: false,
+			})
+			continue
+		}
+
 		for _, opt := range panel.Options {
-			roles = append(roles, fmt.Sprintf("<@&%s>", opt.RoleID))
+			roleID, ok := roleIDsByKey[opt.OptionKey]
+			if ok {
+				roles = append(roles, fmt.Sprintf("<@&%s>", roleID))
+			}
 		}
 
 		roleList := "なし"
@@ -105,4 +120,12 @@ func List(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 			Flags: discordgo.MessageFlagsEphemeral,
 		},
 	})
+}
+
+func loadPanelRoleIDs(s *discordgo.Session, panel *model.RolePanel) (map[string]string, error) {
+	message, err := s.ChannelMessage(panel.ChannelID, panel.MessageID)
+	if err != nil {
+		return nil, err
+	}
+	return messageComponent.RolePanelRoleIDsByOptionKey(message)
 }

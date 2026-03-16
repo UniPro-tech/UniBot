@@ -68,31 +68,44 @@ func Remove(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 		MessageID string
 		RoleCount int
 	}
+	hadReadError := false
 	for _, panel := range panels {
-		for _, opt := range panel.Options {
-			if opt.RoleID == roleID {
-				matchingPanels = append(matchingPanels, &struct {
-					Title     string
-					MessageID string
-					RoleCount int
-				}{
-					Title:     panel.Title,
-					MessageID: panel.MessageID,
-					RoleCount: len(panel.Options),
-				})
-				break
+		roleIDsByKey, err := loadPanelRoleIDs(s, panel)
+		if err != nil {
+			hadReadError = true
+			continue
+		}
+
+		for _, currentRoleID := range roleIDsByKey {
+			if currentRoleID != roleID {
+				continue
 			}
+
+			matchingPanels = append(matchingPanels, &struct {
+				Title     string
+				MessageID string
+				RoleCount int
+			}{
+				Title:     panel.Title,
+				MessageID: panel.MessageID,
+				RoleCount: len(panel.Options),
+			})
+			break
 		}
 	}
 
 	if len(matchingPanels) == 0 {
+		description := fmt.Sprintf("ロール <@&%s> を含むパネルが見つかりません。", roleID)
+		if hadReadError {
+			description += "\n一部のパネルを確認できませんでした。"
+		}
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Embeds: []*discordgo.MessageEmbed{
 					{
 						Title:       "エラー",
-						Description: fmt.Sprintf("ロール <@&%s> を含むパネルが見つかりません。", roleID),
+						Description: description,
 						Color:       config.Colors.Error,
 						Footer: &discordgo.MessageEmbedFooter{
 							Text:    "Requested by " + i.Member.DisplayName(),
@@ -116,7 +129,6 @@ func Remove(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 			Description: fmt.Sprintf("%d個のロール", panel.RoleCount),
 		})
 	}
-
 	customID := fmt.Sprintf("rolepanel_remove_%s", roleID)
 
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
