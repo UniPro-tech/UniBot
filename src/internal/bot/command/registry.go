@@ -4,6 +4,7 @@ import (
 	"unibot/internal"
 	"unibot/internal/bot/command/admin"
 	"unibot/internal/bot/command/general"
+	"unibot/internal/bot/command/server_management"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -32,5 +33,8 @@ var Handlers = map[string]HandlerEntry{
 	},
 	"colorcode": {
 		Handler: general.ColorCode,
+	},
+	"rolepanel": {
+		Handler: server_management.Rolepanel,
 	},
 }
