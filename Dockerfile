@@ -20,10 +20,10 @@ COPY . .
 
 RUN ../scripts/_build.sh
 
-FROM gcr.io/distroless/static-debian13:nonroot
+FROM alpine:3.23.3
 WORKDIR /root/
 
-RUN apt update && apt install -y \
+RUN apk update && apk add --no-cache \
     opus \
     opus-dev \
     opusfile \
@@ -31,6 +31,10 @@ RUN apt update && apt install -y \
     ffmpeg
 
 COPY --from=builder /app/src/main .
+RUN chmod 777 ./main
+
+# non root
+USER nobody
 
 CMD ["./main"]
 
