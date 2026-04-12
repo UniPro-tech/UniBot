@@ -15,8 +15,9 @@ WORKDIR /app/src
 RUN --mount=type=cache,target=/go/pkg/mod/,sharing=locked \
     --mount=type=bind,source=src/go.sum,target=go.sum \
     --mount=type=bind,source=src/go.mod,target=go.mod \
-    go mod download -x
-COPY . .
+    cd src && go mod download -x
+
+COPY ./src .
 
 RUN ../scripts/_build.sh
 
