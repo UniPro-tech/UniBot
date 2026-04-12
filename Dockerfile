@@ -1,4 +1,6 @@
-FROM golang:1.25-alpine AS builder
+# check=error=true
+# syntax=docker/dockerfile:1
+FROM golang:1.26.2-alpine3.22 AS builder
 WORKDIR /app
 
 RUN apk update && apk add --no-cache \
@@ -8,14 +10,17 @@ RUN apk update && apk add --no-cache \
     opus-dev \
     opusfile-dev
 
-COPY . .
-
 WORKDIR /app/src
 
-RUN go mod tidy
+RUN --mount=type=cache,target=/go/pkg/mod/,sharing=locked \
+    --mount=type=bind,source=go.sum,target=go.sum \
+    --mount=type=bind,source=go.mod,target=go.mod \
+    go mod download -x
+COPY . .
+
 RUN ../scripts/_build.sh
 
-FROM alpine:latest
+FROM gcr.io/distroless/static-debian13:nonroot
 WORKDIR /root/
 
 RUN apk update && apk add --no-cache \
