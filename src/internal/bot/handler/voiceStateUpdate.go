@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -26,44 +27,45 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 		}
 
 		changeType := "left"
-		if vsu.BeforeUpdate == nil || vsu.BeforeUpdate.ChannelID != s.VoiceConnections[vsu.GuildID].ChannelID {
+		botChannelID := getBotChannelID(s, vsu.GuildID)
+
+		if vsu.BeforeUpdate == nil || vsu.BeforeUpdate.ChannelID != botChannelID {
 			changeType = "joined"
 		} else if vsu.BeforeUpdate != nil && vsu.ChannelID != "" && vsu.BeforeUpdate.ChannelID != "" {
 			changeType = "moved"
 		}
 
-		if changeType == "joined" && s.VoiceConnections[vsu.GuildID].ChannelID == vsu.ChannelID {
+		if changeType == "joined" && botChannelID == vsu.ChannelID {
 			channel, err := s.State.Channel(vsu.ChannelID)
 			if err != nil {
 				log.Printf("Error fetching channel: %v", err)
 				return
 			}
 			text := fmt.Sprintf("%sが %s に参加しました。", vsu.Member.DisplayName(), channel.Name)
-			vp := voice.GetManager().GetOrCreate(vsu.GuildID, s.VoiceConnections[vsu.GuildID], ctx)
+			vp := voice.GetManager().GetOrCreate(vsu.GuildID, botChannelID, s.VoiceConnections[vsu.GuildID], ctx)
 			vp.EnqueueText(voice.QueueItem{
 				Text:    text,
 				Setting: repository.DefaultTTSPersonalSetting,
 			})
 			return
 		}
-		if changeType == "left" && s.VoiceConnections[vsu.GuildID].ChannelID == vsu.BeforeUpdate.ChannelID {
+		if changeType == "left" && botChannelID == vsu.BeforeUpdate.ChannelID {
 			guild, err := s.State.Guild(vsu.GuildID)
 			voiceStates := guild.VoiceStates
 			var stillInChannel bool
 			for _, vs := range voiceStates {
-				vc := s.VoiceConnections[vsu.GuildID]
-
 				user, err := s.User(vs.UserID)
 				if err != nil || user.Bot {
 					continue
 				}
-				if vs.ChannelID == vc.ChannelID {
+				if vs.ChannelID == botChannelID {
 					stillInChannel = true
 					break
 				}
 			}
 			if !stillInChannel {
-				s.VoiceConnections[vsu.GuildID].Disconnect()
+				backCtx := context.Background()
+				s.VoiceConnections[vsu.GuildID].Disconnect(backCtx)
 				repo := repository.NewTTSConnectionRepository(ctx.DB)
 				data, err := repo.GetByGuildID(vsu.GuildID)
 				if err != nil {
@@ -76,7 +78,7 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 				if player != nil {
 					player.Close()
 					if vc := player.GetVC(); vc != nil {
-						vc.Disconnect()
+						vc.Disconnect(backCtx)
 					}
 					mgr.Delete(vsu.GuildID)
 				}
@@ -106,21 +108,31 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 				return
 			}
 			text := fmt.Sprintf("%sが %s から退出しました。", vsu.Member.DisplayName(), channel.Name)
-			vp := voice.GetManager().GetOrCreate(vsu.GuildID, s.VoiceConnections[vsu.GuildID], ctx)
+			vp := voice.GetManager().GetOrCreate(
+				vsu.GuildID,
+				botChannelID,
+				s.VoiceConnections[vsu.GuildID],
+				ctx,
+			)
 			vp.EnqueueText(voice.QueueItem{
 				Text:    text,
 				Setting: repository.DefaultTTSPersonalSetting,
 			})
 			return
 		}
-		if changeType == "moved" && s.VoiceConnections[vsu.GuildID].ChannelID == vsu.BeforeUpdate.ChannelID {
+		if changeType == "moved" && botChannelID == vsu.BeforeUpdate.ChannelID {
 			channel, err := s.State.Channel(vsu.ChannelID)
 			if err != nil {
 				log.Printf("Error fetching channel: %v", err)
 				return
 			}
 			text := fmt.Sprintf("%sが %s に移動しました。", vsu.Member.DisplayName(), channel.Name)
-			vp := voice.GetManager().GetOrCreate(vsu.GuildID, s.VoiceConnections[vsu.GuildID], ctx)
+			vp := voice.GetManager().GetOrCreate(
+				vsu.GuildID,
+				botChannelID,
+				s.VoiceConnections[vsu.GuildID],
+				ctx,
+			)
 			vp.EnqueueText(voice.QueueItem{
 				Text:    text,
 				Setting: repository.DefaultTTSPersonalSetting,
@@ -128,4 +140,18 @@ func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *
 			return
 		}
 	}
+}
+
+func getBotChannelID(s *discordgo.Session, guildID string) string {
+	guild, err := s.State.Guild(guildID)
+	if err != nil {
+		return ""
+	}
+
+	for _, vs := range guild.VoiceStates {
+		if vs.UserID == s.State.User.ID {
+			return vs.ChannelID
+		}
+	}
+	return ""
 }

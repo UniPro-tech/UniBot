@@ -1,6 +1,7 @@
 package tts
 
 import (
+	"context"
 	"log"
 	"time"
 	"unibot/internal"
@@ -50,17 +51,17 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 	if userVoiceState == nil || userVoiceState.ChannelID == "" {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "先にボイスチャンネルに参加してください。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
+				{
+					Title:       "エラー",
+					Description: "先にボイスチャンネルに参加してください。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
 					},
+					Timestamp: time.Now().Format(time.RFC3339),
 				},
+			},
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
@@ -70,17 +71,17 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 	if err != nil && err != discordgo.ErrStateNotFound {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "Botの情報を取得できませんでした。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
+				{
+					Title:       "エラー",
+					Description: "Botの情報を取得できませんでした。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
 					},
+					Timestamp: time.Now().Format(time.RFC3339),
 				},
+			},
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
@@ -88,17 +89,17 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 	if botVoiceStatus == nil {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "ボイスチャンネルに参加していません。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
+				{
+					Title:       "エラー",
+					Description: "ボイスチャンネルに参加していません。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
 					},
+					Timestamp: time.Now().Format(time.RFC3339),
 				},
+			},
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
@@ -106,17 +107,17 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 	if botVoiceStatus.ChannelID != userVoiceState.ChannelID {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "同じボイスチャンネルに参加していません。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
+				{
+					Title:       "エラー",
+					Description: "同じボイスチャンネルに参加していません。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
 					},
+					Timestamp: time.Now().Format(time.RFC3339),
 				},
+			},
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
@@ -126,37 +127,39 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 	if voiceConnection == nil {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "ボイスチャンネルに接続していません。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
+				{
+					Title:       "エラー",
+					Description: "ボイスチャンネルに接続していません。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
 					},
+					Timestamp: time.Now().Format(time.RFC3339),
 				},
+			},
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 
-	err = voiceConnection.Disconnect()
+	backCtx := context.Background()
+
+	err = voiceConnection.Disconnect(backCtx)
 	if err != nil {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "ボイスチャンネルから退出できませんでした。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
+				{
+					Title:       "エラー",
+					Description: "ボイスチャンネルから退出できませんでした。",
+					Color:       config.Colors.Error,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text:    "Requested by " + i.Member.DisplayName(),
+						IconURL: i.Member.AvatarURL(""),
 					},
+					Timestamp: time.Now().Format(time.RFC3339),
 				},
+			},
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
@@ -171,7 +174,7 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 	if player != nil {
 		player.Close()
 		if vc := player.GetVC(); vc != nil {
-			vc.Disconnect()
+			vc.Disconnect(backCtx)
 		}
 		mgr.Delete(i.GuildID)
 	}
@@ -180,28 +183,10 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 	if err != nil {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "TTS接続情報の削除に失敗しました。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-				},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-
-	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
 				{
-					Title:       "TTSボイスチャンネル退出",
-					Description: "ボイスチャンネルから退出しました。",
-					Color:       config.Colors.Success,
+					Title:       "エラー",
+					Description: "TTS接続情報の削除に失敗しました。",
+					Color:       config.Colors.Error,
 					Footer: &discordgo.MessageEmbedFooter{
 						Text:    "Requested by " + i.Member.DisplayName(),
 						IconURL: i.Member.AvatarURL(""),
@@ -211,4 +196,22 @@ func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interact
 			},
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
+		return
+	}
+
+	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Embeds: &[]*discordgo.MessageEmbed{
+			{
+				Title:       "TTSボイスチャンネル退出",
+				Description: "ボイスチャンネルから退出しました。",
+				Color:       config.Colors.Success,
+				Footer: &discordgo.MessageEmbedFooter{
+					Text:    "Requested by " + i.Member.DisplayName(),
+					IconURL: i.Member.AvatarURL(""),
+				},
+				Timestamp: time.Now().Format(time.RFC3339),
+			},
+		},
+		Flags: discordgo.MessageFlagsEphemeral,
+	})
 }

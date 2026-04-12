@@ -1,7 +1,6 @@
 package voice
 
 import (
-	"log"
 	"sync"
 	"unibot/internal"
 
@@ -32,20 +31,24 @@ func (m *Manager) Get(guildID string) *VoicePlayer {
 }
 
 // 既存なら返す、なければ新規作成して返す
-func (m *Manager) GetOrCreate(guildID string, vc *discordgo.VoiceConnection, ctx *internal.BotContext) *VoicePlayer {
+func (m *Manager) GetOrCreate(
+	guildID string,
+	channelID string,
+	vc *discordgo.VoiceConnection,
+	ctx *internal.BotContext,
+) *VoicePlayer {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if p, ok := m.players[guildID]; ok {
 		if vc != nil && p.GetVC() != vc {
 			p.SetVC(vc)
-		} else if vc == nil && p.GetVC() == nil {
-			log.Printf("[DEBUG] voice connection is nil (guild=%s)", guildID)
+			p.ChannelID = channelID
 		}
 		return p
 	}
 
-	p := NewVoicePlayer(guildID, vc, ctx)
+	p := NewVoicePlayer(guildID, channelID, vc, ctx)
 	m.players[guildID] = p
 	return p
 }

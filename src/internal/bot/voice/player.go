@@ -22,6 +22,7 @@ type QueueItem struct {
 
 type VoicePlayer struct {
 	GuildID   string
+	ChannelID string
 	VC        *discordgo.VoiceConnection
 	vcMu      sync.RWMutex
 	TextQueue chan QueueItem
@@ -35,9 +36,10 @@ const (
 )
 
 // VoicePlayer を作る
-func NewVoicePlayer(guildID string, vc *discordgo.VoiceConnection, ctx *internal.BotContext) *VoicePlayer {
+func NewVoicePlayer(guildID string, channelID string, vc *discordgo.VoiceConnection, ctx *internal.BotContext) *VoicePlayer {
 	p := &VoicePlayer{
 		GuildID:   guildID,
+		ChannelID: channelID,
 		VC:        vc,
 		TextQueue: make(chan QueueItem, 50),
 		Stop:      make(chan struct{}),
@@ -67,7 +69,8 @@ func (p *VoicePlayer) SetVC(vc *discordgo.VoiceConnection) {
 	p.vcMu.Unlock()
 
 	if prev != vc {
-		log.Printf("[DEBUG] voice connection updated: guild=%s channel=%s opusSend_nil=%v", p.GuildID, vc.ChannelID, vc.OpusSend == nil)
+		log.Printf("[DEBUG] voice connection updated: guild=%s channel=%s opusSend_nil=%v",
+			p.GuildID, p.ChannelID, vc.OpusSend == nil)
 	}
 }
 
@@ -121,7 +124,8 @@ func (p *VoicePlayer) playAudio(ctx context.Context, wav []byte) error {
 	if vc == nil {
 		log.Printf("[DEBUG] voice connection is nil; audio will be dropped (guild=%s)", p.GuildID)
 	} else {
-		log.Printf("[DEBUG] voice connection state: guild=%s channel=%s opusSend_nil=%v", p.GuildID, vc.ChannelID, vc.OpusSend == nil)
+		log.Printf("[DEBUG] voice connection state: guild=%s channel=%s opusSend_nil=%v",
+			p.GuildID, p.ChannelID, vc.OpusSend == nil)
 	}
 
 	tmp, _ := os.CreateTemp("", "tts-*.wav")

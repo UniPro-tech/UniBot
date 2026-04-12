@@ -45,8 +45,23 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 				return
 			}
 
-			if s.VoiceConnections[r.GuildID] != nil && r.ChannelID != ttsConnectionData.ChannelID && r.ChannelID != s.VoiceConnections[r.GuildID].ChannelID {
-				return
+			vc := s.VoiceConnections[r.GuildID]
+
+			if vc != nil {
+				guild, _ := s.State.Guild(r.GuildID)
+
+				botChannelID := ""
+				for _, vs := range guild.VoiceStates {
+					if vs.UserID == s.State.User.ID {
+						botChannelID = vs.ChannelID
+						break
+					}
+				}
+
+				if r.ChannelID != ttsConnectionData.ChannelID &&
+					r.ChannelID != botChannelID {
+					return
+				}
 			}
 
 			if r.Content == "s" || r.Content == "skip" {
@@ -72,7 +87,12 @@ func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *disco
 
 			content = TruncateForTTS(content, 250)
 
-			vp := voice.GetManager().GetOrCreate(r.GuildID, s.VoiceConnections[r.GuildID], ctx)
+			vp := voice.GetManager().GetOrCreate(
+				r.GuildID,
+				ttsConnectionData.ChannelID,
+				s.VoiceConnections[r.GuildID],
+				ctx,
+			)
 
 			vp.EnqueueText(voice.QueueItem{
 				Text:    content,

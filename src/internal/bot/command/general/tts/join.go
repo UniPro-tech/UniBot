@@ -1,6 +1,7 @@
 package tts
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -130,7 +131,9 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 
-	vc, err := s.ChannelVoiceJoin(i.GuildID, userVoiceState.ChannelID, false, true)
+	backCtx := context.Background()
+
+	vc, err := s.ChannelVoiceJoin(backCtx, i.GuildID, userVoiceState.ChannelID, false, true)
 	if err != nil {
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
@@ -205,7 +208,7 @@ func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 	}
 	channelName := channel.Name
 
-	player := voice.GetManager().GetOrCreate(i.GuildID, vc, ctx)
+	player := voice.GetManager().GetOrCreate(i.GuildID, channelID, vc, ctx)
 
 	content := fmt.Sprintf("%sに、読み上げを接続しました。", channelName)
 
