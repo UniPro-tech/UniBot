@@ -23,7 +23,7 @@ RUN ../scripts/_build.sh
 FROM gcr.io/distroless/static-debian13:nonroot
 WORKDIR /root/
 
-RUN apk update && apk add --no-cache \
+RUN apt update && apt install -y \
     opus \
     opus-dev \
     opusfile \
