@@ -2,10 +2,10 @@ COMMIT=$(git rev-parse --short HEAD)
 BRANCH=$(git branch --show-current)
 
 if [[ "$*" == *"--dev"* ]]; then
-  DISCORD_TOKEN="your_token_here"
-  CONFIG_ADMIN_GUILD_ID="your_guild_id_here"
-  CONFIG_ADMIN_ROLE_ID="your_role_id_here"
-  PG_DSN="your_postgres_dsn_here"
+  export DISCORD_TOKEN="your_token_here"
+  export CONFIG_ADMIN_GUILD_ID="your_guild_id_here"
+  export CONFIG_ADMIN_ROLE_ID="your_role_id_here"
+  export PG_DSN="your_postgres_dsn_here"
 
   go run -ldflags "\
 -X unibot/internal.GitCommit=$COMMIT \
