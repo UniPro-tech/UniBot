@@ -1,12 +1,19 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo"
+	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/cache"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/gateway"
+	"github.com/disgoorg/snowflake/v2"
 	"gorm.io/gorm/logger"
 
 	"unibot/internal"
@@ -22,18 +29,13 @@ func main() {
 		log.Fatal("DISCORD_TOKEN is not set")
 	}
 
-	dg, err := discordgo.New("Bot " + token)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	dbConnection, err := db.NewDB()
-	dbConnection.Logger = dbConnection.Logger.LogMode(logger.Info)
 	if err != nil {
 		log.Fatal(err)
 	}
+	dbConnection.Logger = dbConnection.Logger.LogMode(logger.Info)
 
-	ctx := &internal.BotContext{
+	ctxData := &internal.BotContext{
 		DB:       dbConnection,
 		Config:   internal.LoadConfig(),
 		VoiceVox: voicevox.New(internal.LoadConfig().VoiceVoxURI, internal.LoadConfig().VoiceVoxAPIKey),
@@ -44,32 +46,58 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Register handlers
-	dg.AddHandler(handler.Ready(ctx))
-	dg.AddHandler(handler.MessageCreate(ctx))
-	dg.AddHandler(handler.InteractionCreate(ctx))
-	dg.AddHandler(handler.VoiceStateUpdate(ctx))
-
-	// Start the bot
-	err = dg.Open()
+	// disgo クライアントの構築
+	client, err := disgo.New(token,
+		bot.WithGatewayConfigOpts(
+			gateway.WithIntents(gateway.IntentGuilds|gateway.IntentGuildVoiceStates),
+		),
+		bot.WithCacheConfigOpts(
+			cache.WithCaches(cache.FlagVoiceStates),
+		),
+		bot.WithEventListenerFunc[events.Ready](func(e events.Ready) {
+			handler.Ready(ctxData, &e)
+		}),
+		bot.WithEventListenerFunc[events.MessageCreate](func(e events.MessageCreate) {
+			handler.MessageCreate(ctxData, &e)
+		}),
+		bot.WithEventListenerFunc[events.ApplicationCommandInteractionCreate](func(e events.ApplicationCommandInteractionCreate) {
+			handler.InteractionCreate(ctxData)(&e)
+		}),
+		bot.WithEventListenerFunc[events.GuildVoiceStateUpdate](func(e events.GuildVoiceStateUpdate) {
+			handler.VoiceStateUpdate(ctxData, &e)
+		}),
+	)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("error while building disgo instance: ", err)
 	}
-	defer dg.Close()
+
+	// 接続開始
+	if err = client.OpenGateway(context.TODO()); err != nil {
+		log.Fatal("error while connecting to gateway: ", err)
+	}
+	defer client.Close(context.TODO())
 
 	log.Println("Bot is running...")
 
-	// Register commands
-	appID := dg.State.User.ID
-
-	for _, cmd := range command.Commands {
-		_, err := dg.ApplicationCommandCreate(appID, "", cmd)
-		if err != nil {
-			log.Fatalf("cannot create command %s: %v", cmd.Name, err)
-		}
+	// Slash Command の登録
+	var generalCommands []discord.ApplicationCommandCreate
+	for _, cmd := range command.GeneralCommands {
+		generalCommands = append(generalCommands, cmd)
 	}
 
-	// Exit handling
+	var adminCommands []discord.ApplicationCommandCreate
+	for _, cmd := range command.AdminCommands {
+		adminCommands = append(adminCommands, cmd)
+	}
+
+	if _, err := client.Rest.SetGlobalCommands(client.ApplicationID, generalCommands); err != nil {
+		log.Fatalf("error while registering commands: %v", err)
+	}
+	if _, err := client.Rest.SetGuildCommands(client.ApplicationID, snowflake.MustParse(ctxData.Config.AdminGuildID), adminCommands); err != nil {
+		log.Fatalf("error while registering commands: %v", err)
+	}
+
+	// 終了待機
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
