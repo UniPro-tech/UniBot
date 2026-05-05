@@ -5,42 +5,55 @@ import (
 	"time"
 	"unibot/internal"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
 )
 
-func LoadPingCommandContext() *discordgo.ApplicationCommand {
-	return &discordgo.ApplicationCommand{
+func LoadPingCommandContext() discord.SlashCommandCreate {
+	return discord.SlashCommandCreate{
 		Name:        "ping",
 		Description: "スピードテストを行います",
 	}
 }
 
-func Ping(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Ping(ctx *internal.BotContext, e *events.ApplicationCommandInteractionCreate) {
 	config := ctx.Config
 
 	// Get ws websocketLatency
-	websocketLatency := s.HeartbeatLatency()
+	websocketLatency := e.Client().Gateway.Latency()
+
+	username := ""
+	if e.Member().Nick != nil {
+		username = *e.Member().Nick
+	} else if e.User().GlobalName != nil {
+		username = *e.User().GlobalName
+	} else {
+		username = e.User().Username
+	}
 
 	// Respond to the interaction
-	responseEmbed := &discordgo.MessageEmbed{
+	responseEmbed := discord.Embed{
 		Title:       "Pong 🏓",
 		Description: "スピードテストの結果です",
 		Color:       config.Colors.Primary,
-		Fields: []*discordgo.MessageEmbedField{
+		Fields: []discord.EmbedField{
 			{
 				Name:  "WebSocket Latency",
 				Value: websocketLatency.String(),
 			},
 		},
-		Author: &discordgo.MessageEmbedAuthor{
-			IconURL: i.Member.AvatarURL(""),
-			Name:    i.Member.DisplayName(),
+		Author: &discord.EmbedAuthor{
+			IconURL: *e.Member().Avatar,
+			Name:    *e.Member().Nick,
 		},
-		Footer: &discordgo.MessageEmbedFooter{
-			Text:    "Requested by " + i.Member.DisplayName(),
-			IconURL: i.Member.AvatarURL(""),
+		Footer: &discord.EmbedFooter{
+			Text:    "Requested by " + username,
+			IconURL: *e.Member().Avatar,
 		},
-		Timestamp: time.Now().Format(time.RFC3339),
+		Timestamp: func() *time.Time {
+			t := time.Now()
+			return &t
+		}(),
 	}
 	done := make(chan struct{})
 	go func() {
@@ -48,20 +61,12 @@ func Ping(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 		case <-done:
 			return
 		case <-time.After(3 * time.Minute):
-			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "スピードテストに失敗しました。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-				},
-			})
+			embed := discord.NewEmbed().
+				WithTitle("Embed Title").
+				WithDescription("This is a description").
+				WithColor(0x5865F2)
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(),
+				discord.NewMessageCreate().WithEmbeds(embed))
 			if err != nil {
 				log.Println("Failed to edit deferred interaction on timeout:", err)
 			}
@@ -69,25 +74,23 @@ func Ping(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interacti
 	}()
 	defer close(done)
 
-	_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Embeds: &[]*discordgo.MessageEmbed{responseEmbed},
-	})
+	_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(),
+		discord.NewMessageCreate().WithEmbeds(responseEmbed))
 	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "スピードテストに失敗しました。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
+		embed := discord.Embed{
+			Title:       "エラー",
+			Description: "スピードテストに失敗しました。",
+			Color:       config.Colors.Error,
+			Footer: &discord.EmbedFooter{
+				Text:    "Requested by " + username,
+				IconURL: *e.Member().Avatar,
 			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
+			Timestamp: func() *time.Time {
+				t := time.Now()
+				return &t
+			}(),
+		}
+		e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(embed).WithEphemeral(true))
 		return
 	}
 }

@@ -7,68 +7,71 @@ import (
 	"unibot/internal/bot/command"
 	"unibot/internal/bot/messageComponent"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/events"
 )
 
-func InteractionCreate(ctx *internal.BotContext) func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	return func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		switch i.Type {
-		case discordgo.InteractionApplicationCommand:
-			handleApplicationCommand(ctx, s, i)
-		case discordgo.InteractionMessageComponent:
-			handleMessageComponent(ctx, s, i)
-		}
+// IdisgoのApplicationCommandInteractionイベントを処理する
+func InteractionCreate(ctx *internal.BotContext) func(e *events.ApplicationCommandInteractionCreate) {
+	return func(e *events.ApplicationCommandInteractionCreate) {
+		handleApplicationCommand(ctx, e)
 	}
 }
 
-func handleApplicationCommand(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	name := i.ApplicationCommandData().Name
-	response := &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+// ボタンやセレクトメニューのイベントを処理
+func ComponentInteractionCreate(ctx *internal.BotContext) func(e *events.ComponentInteractionCreate) {
+	return func(e *events.ComponentInteractionCreate) {
+		handleMessageComponent(ctx, e)
 	}
-	if entry, ok := command.Handlers[name]; ok && entry.Ephemeral {
-		response.Data = &discordgo.InteractionResponseData{
-			Flags: discordgo.MessageFlagsEphemeral,
-		}
-	} else if isTtsSetCommand(i) {
-		response.Data = &discordgo.InteractionResponseData{
-			Flags: discordgo.MessageFlagsEphemeral,
-		}
+}
+
+func handleApplicationCommand(ctx *internal.BotContext, e *events.ApplicationCommandInteractionCreate) {
+	name := e.Data.CommandName()
+
+	// 1. エフェメラル（自分にだけ見える）設定の判定
+	isEphemeral := false
+	if entry, ok := command.Handlers[name]; (ok && entry.Ephemeral) || isTtsSetCommand(e) {
+		isEphemeral = true
 	}
-	if err := s.InteractionRespond(i.Interaction, response); err != nil {
-		// Keep handler execution; response failures should still be logged.
+
+	// 2. Defer (考え中... の状態にする)
+	if err := e.DeferCreateMessage(isEphemeral); err != nil {
 		log.Println("Failed to respond interaction:", err)
 	}
+
+	// 3. 実際の処理を実行
 	if entry, ok := command.Handlers[name]; ok {
-		entry.Handler(ctx, s, i)
+		entry.Handler(ctx, e)
 	}
 }
 
-func isTtsSetCommand(i *discordgo.InteractionCreate) bool {
-	if i.ApplicationCommandData().Name != "tts" {
+func isTtsSetCommand(e *events.ApplicationCommandInteractionCreate) bool {
+	data := e.SlashCommandInteractionData()
+
+	if data.CommandName() != "tts" {
 		return false
 	}
-	options := i.ApplicationCommandData().Options
-	if len(options) == 0 {
-		return false
+
+	// .SubCommandGroupName は *string 型のフィールド
+	// 1. nil チェック (その階層があるか)
+	// 2. デリファレンスして値の比較
+	if data.SubCommandGroupName != nil && *data.SubCommandGroupName == "set" {
+		return true
 	}
-	group := options[0]
-	if group.Type != discordgo.ApplicationCommandOptionSubCommandGroup || group.Name != "set" {
-		return false
+
+	// グループがない直下のサブコマンドの場合
+	if data.SubCommandName != nil && *data.SubCommandName == "set" {
+		return true
 	}
-	if len(group.Options) == 0 {
-		return false
-	}
-	sub := group.Options[0]
-	return sub.Type == discordgo.ApplicationCommandOptionSubCommand
+
+	return false
 }
 
-func handleMessageComponent(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	customID := i.MessageComponentData().CustomID
+func handleMessageComponent(ctx *internal.BotContext, e *events.ComponentInteractionCreate) {
+	customID := e.Data.CustomID()
 
 	for prefix, handler := range messageComponent.Handlers {
 		if strings.HasPrefix(customID, prefix) {
-			handler(ctx, s, i)
+			handler(ctx, e)
 			return
 		}
 	}
