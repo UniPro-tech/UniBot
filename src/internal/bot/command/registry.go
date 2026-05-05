@@ -5,11 +5,13 @@ import (
 	"unibot/internal/bot/command/admin"
 	"unibot/internal/bot/command/general"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/events"
 )
 
+// HandlerEntry の型定義を disgo 用に更新
 type HandlerEntry struct {
-	Handler   func(*internal.BotContext, *discordgo.Session, *discordgo.InteractionCreate)
+	// Session は不要になり、InteractionCreate は events.ApplicationCommandInteractionCreate に変更
+	Handler   func(*internal.BotContext, *events.ApplicationCommandInteractionCreate)
 	Ephemeral bool
 }
 
