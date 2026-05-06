@@ -1,0 +1,9 @@
+_docker-compose.*
+Dockerfile
+*.md
+renovate.json
+.gitignore
+.env
+dev/
+argoCD/
+.github/
