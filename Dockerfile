@@ -40,6 +40,9 @@ RUN apk update && apk add --no-cache \
     opusfile-dev \
     ffmpeg
 
+ENV PKG_CONFIG_PATH=/root/.local/lib/pkgconfig
+COPY --from=builder /root/.local/* /root/.local/*
+
 COPY --from=builder /app/src/main .
 RUN chmod 777 ./main
 
