@@ -2,155 +2,107 @@ package dict
 
 import (
 	"fmt"
-	"log"
 	"time"
 	"unibot/internal"
 	"unibot/internal/model"
 	"unibot/internal/repository"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
-func LoadRemoveCommandContext() *discordgo.ApplicationCommandOption {
-	return &discordgo.ApplicationCommandOption{
-		Type:        discordgo.ApplicationCommandOptionSubCommand,
+func LoadRemoveCommandContext() discord.ApplicationCommandOptionSubCommand {
+	return discord.ApplicationCommandOptionSubCommand{
 		Name:        "remove",
 		Description: "TTS辞書から単語を削除します",
 	}
 }
 
-func Remove(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := ctx.Config
-	repo := repository.NewTTSDictionaryRepository(ctx.DB)
+func Remove(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+		config := ctx.Config
+		repo := repository.NewTTSDictionaryRepository(ctx.DB)
 
-	done := make(chan struct{})
-	go func() {
-		select {
-		case <-done:
-			return
-		case <-time.After(3 * time.Minute):
-			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "ボイスチャンネルの情報を取得できませんでした。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
+		// 管理者かどうか確認
+		perms := e.Member().Permissions
+		isAdmin := perms&discordgo.PermissionAdministrator != 0
+
+		// 辞書エントリを取得
+		var entries []*model.TTSDictionary
+		var err error
+		if isAdmin {
+			entries, err = repo.ListByGuild(e.GuildID().String())
+		} else {
+			entries, err = repo.ListByGuildUser(e.GuildID().String(), e.User().ID.String())
+		}
+
+		if err != nil {
+			responseEmbed := discord.Embed{
+				Title:       "エラー",
+				Description: "辞書の取得中にエラーが発生しました。",
+				Color:       config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
-			})
-			if err != nil {
-				log.Println("Failed to edit deferred interaction on timeout:", err)
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+			return err
+		}
+
+		if len(entries) == 0 {
+			responseEmbed := discord.Embed{
+				Title:       "辞書が空です",
+				Description: "辞書に登録されている単語がありません。",
+				Color:       config.Colors.Warning,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+			return err
+		}
+
+		// 25件以上ある場合は最初の25件のみ表示
+		displayEntries := entries
+		if len(entries) > 25 {
+			displayEntries = entries[:25]
+		}
+
+		// セレクトメニューを作成
+		options := make([]discord.StringSelectMenuOption, len(displayEntries))
+		for idx, entry := range displayEntries {
+			options[idx] = discord.StringSelectMenuOption{
+				Label:       entry.Word,
+				Value:       fmt.Sprintf("%d", entry.ID),
+				Description: entry.Definition,
 			}
 		}
-	}()
-	defer close(done)
 
-	// 管理者かどうか確認
-	perms, err := s.UserChannelPermissions(i.Member.User.ID, i.ChannelID)
-	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-						Title:       "エラー",
-						Description: "権限の確認中にエラーが発生しました。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
+		content := "削除したい単語を選んでください。"
+		components := []discord.LayoutComponent{
+			discord.ActionRowComponent{
+				Components: []discord.InteractiveComponent{
+					discord.StringSelectMenuComponent{
+						CustomID:    "tts_dict_remove",
+						Placeholder: "削除する単語を選んでください",
+						Options:     options,
 					},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-
-	isAdmin := perms&discordgo.PermissionAdministrator != 0
-
-	// 辞書エントリを取得
-	var entries []*model.TTSDictionary
-	if isAdmin {
-		entries, err = repo.ListByGuild(i.GuildID)
-	} else {
-		entries, err = repo.ListByGuildUser(i.GuildID, i.Member.User.ID)
-	}
-
-	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-						Title:       "エラー",
-						Description: "辞書の取得中にエラーが発生しました。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-
-	if len(entries) == 0 {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-						Title:       "辞書が空です",
-						Description: "辞書に登録されている単語がありません。",
-						Color:       config.Colors.Warning,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-
-	// 25件以上ある場合は最初の25件のみ表示
-	displayEntries := entries
-	if len(entries) > 25 {
-		displayEntries = entries[:25]
-	}
-
-	// セレクトメニューを作成
-	options := make([]discordgo.SelectMenuOption, len(displayEntries))
-	for idx, entry := range displayEntries {
-		options[idx] = discordgo.SelectMenuOption{
-			Label:       entry.Word,
-			Value:       fmt.Sprintf("%d", entry.ID),
-			Description: entry.Definition,
-		}
-	}
-
-	content := "削除したい単語を選んでください。"
-	components := []discordgo.MessageComponent{
-		discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.SelectMenu{
-					CustomID:    "tts_dict_remove",
-					Placeholder: "削除する単語を選んでください",
-					Options:     options,
 				},
 			},
-		},
-	}
+		}
 
-	// InteractionResponseEdit を実行
-	s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content:    &content,
-		Components: &components,
-	})
+		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithContent(content).WithComponents(components...))
+		return err
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"unibot/internal/bot/command/admin/maintenance"
 	"unibot/internal/bot/command/general"
 	"unibot/internal/bot/command/general/tts"
+	"unibot/internal/bot/command/general/tts/dict"
 	"unibot/internal/bot/command/general/tts/ttsSet"
 
 	"github.com/disgoorg/disgo/discord"
@@ -27,6 +28,11 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 		r.Route("/set", func(r handler.Router) {
 			r.SlashCommand("/speed", ttsSet.Speed(ctxData))
 			r.SlashCommand("/voice", ttsSet.Voice(ctxData))
+		})
+		r.Route("/dict", func(r handler.Router) {
+			r.SlashCommand("/add", dict.Add(ctxData))
+			r.SlashCommand("/list", dict.List(ctxData))
+			r.SlashCommand("/remove", dict.Remove(ctxData))
 		})
 	})
 	r.Route("/maintenance", func(r handler.Router) {
