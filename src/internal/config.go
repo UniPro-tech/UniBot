@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -149,7 +150,8 @@ func LoadConfig() *Config {
 	var bodyJson []GitHubContributorsResponse
 	err = json.Unmarshal(body, &bodyJson)
 	if err != nil {
-		log.Print("body", bodyJson, "https://api.github.com/repos/"+GitHubRepoEnv+"/contributors")
+		fmt.Println(string(body))
+		log.Print("https://api.github.com/repos/" + GitHubRepoEnv + "/contributors")
 		log.Fatal(err)
 	}
 
