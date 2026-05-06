@@ -5,215 +5,139 @@ import (
 	"fmt"
 	"log"
 	"time"
+
 	"unibot/internal"
-	"unibot/internal/bot/voice"
 	"unibot/internal/model"
 	"unibot/internal/repository"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
-func LoadJoinCommandContext() *discordgo.ApplicationCommandOption {
-	return &discordgo.ApplicationCommandOption{
-		Type:        discordgo.ApplicationCommandOptionSubCommand,
+func LoadJoinCommandContext() discord.ApplicationCommandOption {
+	return discord.ApplicationCommandOptionSubCommand{
 		Name:        "join",
 		Description: "ボイスチャンネルに参加します",
 	}
 }
 
-func Join(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := ctx.Config
-	userVoiceState, err := s.State.VoiceState(i.GuildID, i.Member.User.ID)
+func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+		config := ctx.Config
+		guildID := *e.GuildID()
 
-	// タイムアウト監視（3分）。タイムアウト時は defer したメッセージを編集して通知する。
-	done := make(chan struct{})
-	go func() {
-		select {
-		case <-done:
-			return
-		case <-time.After(3 * time.Minute):
-			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "ボイスチャンネルの情報を取得できませんでした。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
+		// ユーザーのボイスステート取得
+		userVoiceState, ok := e.Client().Caches.VoiceState(guildID, e.User().ID)
+
+		if !ok || userVoiceState.ChannelID == nil {
+			responseEmbed := discord.Embed{
+				Title:       "エラー",
+				Description: "ボイスチャンネルの情報を取得できませんでした。\nボイスチャンネルに参加していますか？",
+				Color:       config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
-			})
-			if err != nil {
-				log.Println("Failed to edit deferred interaction on timeout:", err)
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
 			}
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+			return err
 		}
-	}()
-	defer close(done)
 
-	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "ボイスチャンネルの情報を取得できませんでした。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
+		// Botのボイスステート取得
+		botVoiceStatus, botHasVoice := e.Client().Caches.VoiceState(guildID, e.Client().ID())
+		if botHasVoice && botVoiceStatus.ChannelID != nil {
+			// すでに参加している場合は CreateMessage (Defer済みでない場合) か Update...
+			responseEmbed := discord.Embed{
+				Title:       "エラー",
+				Description: "既にVCに接続しています。",
+				Color:       config.Colors.Warning,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-	if userVoiceState == nil || userVoiceState.ChannelID == "" {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "先にボイスチャンネルに参加してください。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-
-	botVoiceStatus, err := s.State.VoiceState(i.GuildID, s.State.User.ID)
-	if err != nil && err != discordgo.ErrStateNotFound {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "Botの情報を取得できませんでした。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-	if botVoiceStatus != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "既にボイスチャンネルに参加しています。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
-		return
-	}
-
-	backCtx := context.Background()
-
-	vc, err := s.ChannelVoiceJoin(backCtx, i.GuildID, userVoiceState.ChannelID, false, true)
-	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "ボイスチャンネルに参加できませんでした。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-
-	dbConnection := ctx.DB
-	repo := repository.NewTTSConnectionRepository(dbConnection)
-
-	ttsConnection, err := repo.GetByGuildID(i.GuildID)
-	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "TTS接続情報の取得に失敗しました。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-	if ttsConnection == nil {
-		ttsConnection = &model.TTSConnection{
-			GuildID:   i.GuildID,
-			ChannelID: i.ChannelID,
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+			return err
 		}
-		err = repo.Create(ttsConnection)
-	} else {
-		ttsConnection.ChannelID = i.ChannelID
-		err = repo.Update(ttsConnection)
-	}
 
-	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Embeds: &[]*discordgo.MessageEmbed{
-			{
-				Title:       "TTSボイスチャンネル接続",
-				Description: "ボイスチャンネルに参加しました。",
-				Color:       config.Colors.Success,
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    "Requested by " + i.Member.DisplayName(),
-					IconURL: i.Member.AvatarURL(""),
-				},
-				Timestamp: time.Now().Format(time.RFC3339),
+		// ボイスチャンネル接続
+		// disgo の VoiceManager を使用する
+		conn := e.Client().VoiceManager.CreateConn(guildID)
+		go func() {
+			conCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer cancel()
+
+			// 非同期で実行することで、メインスレッドのイベントループを止めないようにする
+			err := conn.Open(conCtx, *userVoiceState.ChannelID, false, true)
+			if err != nil {
+				log.Printf("Voice connection failed: %v", err)
+				return
+			}
+			log.Println("Voice connection established with DAVE")
+		}()
+
+		// DB処理
+		repo := repository.NewTTSConnectionRepository(ctx.DB)
+		ttsConnection, _ := repo.GetByGuildID(guildID.String())
+
+		if ttsConnection == nil {
+			ttsConnection = &model.TTSConnection{
+				GuildID:   guildID.String(),
+				ChannelID: e.Channel().ID().String(),
+			}
+			_ = repo.Create(ttsConnection)
+		} else {
+			ttsConnection.ChannelID = e.Channel().ID().String()
+			_ = repo.Update(ttsConnection)
+		}
+
+		/*
+			go func() {
+				// 読み上げ開始の準備
+				channel, ok := e.Client().Caches.Channel(*userVoiceState.ChannelID)
+
+				channelName := "不明なチャンネル"
+				if ok {
+					// disgo v2 では、名前を取得するために型アサーションが必要な場合があります。
+					// もしくは、GuildChannel インターフェースとして扱います。
+					if guildChannel, ok := channel.(discord.GuildChannel); ok {
+						channelName = guildChannel.Name()
+					}
+				}
+
+				// ここは既存の voice パッケージ側も disgo.VoiceConn を受けるように修正が必要です
+				player := voice.GetManager().GetOrCreate(guildID.String(), userVoiceState.ChannelID.String(), conn, ctx)
+
+				player.EnqueueText(voice.QueueItem{
+					Text:    fmt.Sprintf("%sに、読み上げを接続しました。", channelName),
+					Setting: repository.DefaultTTSPersonalSetting,
+				})
+				}()
+		*/
+
+		// 成功レスポンス
+		responseEmbed := discord.Embed{
+			Title:       "TTSボイスチャンネル接続",
+			Description: "ボイスチャンネルに参加しました。",
+			Color:       config.Colors.Success,
+			Footer: &discord.EmbedFooter{
+				Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+				IconURL: e.User().EffectiveAvatarURL(),
 			},
-		},
-	})
-
-	channelID := userVoiceState.ChannelID
-	channel, err := s.State.Channel(channelID)
-	if err != nil {
-		log.Println("Failed to get channel:", err)
+			Timestamp: func() *time.Time {
+				t := time.Now()
+				return &t
+			}(),
+		}
+		_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(false))
+		return err
 	}
-	channelName := channel.Name
-
-	player := voice.GetManager().GetOrCreate(i.GuildID, channelID, vc, ctx)
-
-	content := fmt.Sprintf("%sに、読み上げを接続しました。", channelName)
-
-	player.EnqueueText(voice.QueueItem{
-		Text:    content,
-		Setting: repository.DefaultTTSPersonalSetting,
-	})
 }

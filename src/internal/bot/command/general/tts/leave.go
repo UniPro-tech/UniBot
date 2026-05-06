@@ -2,216 +2,66 @@ package tts
 
 import (
 	"context"
-	"log"
 	"time"
 	"unibot/internal"
 	"unibot/internal/bot/voice"
 	"unibot/internal/repository"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
-func LoadLeaveCommandContext() *discordgo.ApplicationCommandOption {
-	return &discordgo.ApplicationCommandOption{
-		Type:        discordgo.ApplicationCommandOptionSubCommand,
+func LoadLeaveCommandContext() discord.ApplicationCommandOption {
+	return discord.ApplicationCommandOptionSubCommand{
 		Name:        "leave",
 		Description: "ボイスチャンネルから退出します",
 	}
 }
 
-func Leave(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := ctx.Config
-	userVoiceState, err := s.State.VoiceState(i.GuildID, i.Member.User.ID)
-	done := make(chan struct{})
-	go func() {
-		select {
-		case <-done:
-			return
-		case <-time.After(3 * time.Minute):
-			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "ボイスチャンネルの情報を取得できませんでした。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-				},
-			})
-			if err != nil {
-				log.Println("Failed to edit deferred interaction on timeout:", err)
-			}
+func Leave(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+		config := ctx.Config
+		guildID := *e.GuildID()
+
+		// 1. BotがVCに参加しているか確認
+		conn := e.Client().VoiceManager.GetConn(guildID)
+		if conn == nil {
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(),
+				discord.NewMessageCreate().WithContent("Botはボイスチャンネルに参加していません。").WithEphemeral(true))
+			return err
 		}
-	}()
-	defer close(done)
-	if userVoiceState == nil || userVoiceState.ChannelID == "" {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "先にボイスチャンネルに参加してください。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
 
-	botVoiceStatus, err := s.State.VoiceState(i.GuildID, s.State.User.ID)
-	if err != nil && err != discordgo.ErrStateNotFound {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "Botの情報を取得できませんでした。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-	if botVoiceStatus == nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "ボイスチャンネルに参加していません。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-	if botVoiceStatus.ChannelID != userVoiceState.ChannelID {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "同じボイスチャンネルに参加していません。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
+		// 2. 切断処理
+		conCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 
-	voiceConnection := s.VoiceConnections[i.GuildID]
-	if voiceConnection == nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "ボイスチャンネルに接続していません。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
+		// conn.Close はエラーを返さないので、そのまま呼び出す
+		conn.Close(conCtx)
 
-	backCtx := context.Background()
-
-	err = voiceConnection.Disconnect(backCtx)
-	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "ボイスチャンネルから退出できませんでした。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-
-	dbConnection := ctx.DB
-	repo := repository.NewTTSConnectionRepository(dbConnection)
-
-	mgr := voice.GetManager()
-	player := mgr.Get(i.GuildID)
-
-	if player != nil {
-		player.Close()
-		if vc := player.GetVC(); vc != nil {
-			vc.Disconnect(backCtx)
+		// 3. プレイヤーマネージャーやDBの掃除
+		mgr := voice.GetManager()
+		if player := mgr.Get(guildID.String()); player != nil {
+			player.Close()
+			mgr.Delete(guildID.String())
 		}
-		mgr.Delete(i.GuildID)
-	}
 
-	err = repo.DeleteByGuildID(i.GuildID)
-	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "TTS接続情報の削除に失敗しました。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
+		repo := repository.NewTTSConnectionRepository(ctx.DB)
+		_ = repo.DeleteByGuildID(guildID.String())
 
-	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Embeds: &[]*discordgo.MessageEmbed{
-			{
-				Title:       "TTSボイスチャンネル退出",
-				Description: "ボイスチャンネルから退出しました。",
-				Color:       config.Colors.Success,
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    "Requested by " + i.Member.DisplayName(),
-					IconURL: i.Member.AvatarURL(""),
-				},
-				Timestamp: time.Now().Format(time.RFC3339),
+		// 4. 成功レスポンス
+		responseEmbed := discord.Embed{
+			Title:       "TTSボイスチャンネル退出",
+			Description: "ボイスチャンネルから退出しました。",
+			Color:       config.Colors.Success,
+			Footer: &discord.EmbedFooter{
+				Text:    "Requested by " + e.User().Username,
+				IconURL: e.User().EffectiveAvatarURL(),
 			},
-		},
-		Flags: discordgo.MessageFlagsEphemeral,
-	})
+			Timestamp: func() *time.Time { t := time.Now(); return &t }(),
+		}
+
+		_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(),
+			discord.NewMessageCreate().WithEmbeds(responseEmbed))
+		return err
+	}
 }

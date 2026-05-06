@@ -6,6 +6,7 @@ import (
 	"unibot/internal"
 	"unibot/internal/bot/command/admin/maintenance"
 	"unibot/internal/bot/command/general"
+	"unibot/internal/bot/command/general/tts"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
@@ -18,13 +19,14 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 	r.SlashCommand("/about", general.About(ctxData))
 	r.SlashCommand("/help", general.Help(ctxData))
 	r.SlashCommand("/colorcode", general.ColorCode(ctxData))
-	/*r.Route("/tts", func(r handler.Router) {
+	r.Route("/tts", func(r handler.Router) {
 		r.SlashCommand("/join", tts.Join(ctxData))
-		r.Route("/set", func(r handler.Router) {
+		r.SlashCommand("/leave", tts.Leave(ctxData))
+		/*r.Route("/set", func(r handler.Router) {
 			r.SlashCommand("/speed", ttsSet.Speed(ctxData))
 			r.SlashCommand("/voice", ttsSet.Speed(ctxData))
-		})
-	})*/
+		})*/
+	})
 	r.Route("/maintenance", func(r handler.Router) {
 		r.Use(AdminOnlyMiddleware(ctxData))
 		r.SlashCommand("/status/set", maintenance.StatusSetHandler(ctxData))

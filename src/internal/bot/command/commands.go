@@ -12,8 +12,7 @@ var GeneralCommands = []discord.ApplicationCommandCreate{
 	general.LoadAboutCommandContext(),
 	general.LoadColorCodeCommandContext(),
 	general.LoadHelpCommandContext(),
-	//general.LoadTtsCommandContext(),
-	//general.LoadHelpCommandContext(),
+	general.LoadTtsCommandContext(),
 }
 
 var AdminCommands = []discord.ApplicationCommandCreate{
