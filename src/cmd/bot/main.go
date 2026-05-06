@@ -71,15 +71,9 @@ func main() {
 		bot.WithEventListenerFunc(func(e *events.Ready) {
 			customHandlers.Ready(ctxData, e)
 		}),
-		bot.WithEventListenerFunc(func(e *events.VoiceServerUpdate) {
-			log.Println("VoiceServerUpdate")
-		}),
-		bot.WithEventListenerFunc(func(e *events.GuildVoiceStateUpdate) {
-			log.Println("VoiceStateUpdate")
+		bot.WithEventListenerFunc(func(e *events.MessageCreate) {
+			customHandlers.MessageCreate(ctxData, e)
 		}), /*
-			bot.WithEventListenerFunc[events.MessageCreate](func(e events.MessageCreate) {
-				customHandlers.MessageCreate(ctxData, &e)
-			}),
 			bot.WithEventListenerFunc[events.GuildVoiceStateUpdate](func(e events.GuildVoiceStateUpdate) {
 				customHandlers.VoiceStateUpdate(ctxData, &e)
 			}),*/

@@ -8,97 +8,105 @@ import (
 	"unibot/internal/repository"
 	"unibot/internal/util"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/snowflake/v2"
 )
 
-func MessageCreate(ctx *internal.BotContext) func(s *discordgo.Session, r *discordgo.MessageCreate) {
-	return func(s *discordgo.Session, r *discordgo.MessageCreate) {
+func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
+	// Ignore bot itself
+	if e.Message.Author.ID == e.Client().ID() {
+		return
+	}
 
-		// Ignore bot itself
-		if r.Author.ID == s.State.User.ID {
+	guild, isGuild := e.Guild()
+
+	// Ignore DM
+	if isGuild {
+		return
+	}
+
+	// ----- TTS -----
+
+	repo := repository.NewTTSConnectionRepository(ctx.DB)
+
+	ttsConnectionData, err := repo.GetByGuildID(e.GuildID.String())
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	if e.Message.Flags&discord.MessageFlagSuppressNotifications != 0 {
+		return
+	}
+
+	if ttsConnectionData != nil {
+		userID := e.Message.Author.ID
+
+		if e.Message.Author.Bot {
 			return
 		}
 
-		// Ignore DM
-		if r.GuildID == "" {
+		inVC := false
+		for vs := range e.Client().Caches.VoiceStates(*e.GuildID) {
+			if vs.UserID == e.Client().ID() {
+				inVC = true
+				break
+			}
+		}
+
+		if inVC {
+			var botChannelID *snowflake.ID
+			for vs := range e.Client().Caches.VoiceStates(*e.GuildID) {
+				if vs.UserID == e.Client().ID() {
+					botChannelID = vs.ChannelID
+					break
+				}
+			}
+
+			if e.ChannelID.String() != ttsConnectionData.ChannelID &&
+				e.ChannelID != *botChannelID {
+				return
+			}
+		}
+
+		if e.Message.Content == "s" || e.Message.Content == "skip" {
+			player := voice.GetManager().Get(guild.ID.String())
+			if player != nil {
+				player.SkipCurrent()
+			}
 			return
 		}
 
-		// ----- TTS -----
-
-		repo := repository.NewTTSConnectionRepository(ctx.DB)
-
-		ttsConnectionData, err := repo.GetByGuildID(r.GuildID)
+		personalSetting, err := repository.NewTTSPersonalSettingRepository(ctx.DB).GetByMember(userID.String())
 		if err != nil {
 			log.Println(err)
 			return
 		}
-
-		if r.Flags&discordgo.MessageFlagsSuppressNotifications != 0 {
-			return
+		if personalSetting == nil {
+			personalSetting = &repository.DefaultTTSPersonalSetting
 		}
+		content := SanitizeMessageContent(e.Client(), e.GuildID, e.Message.Content)
 
-		if ttsConnectionData != nil {
-			userID := r.Author.ID
+		// 辞書を適用
+		content = util.ApplyDictionary(ctx.DB, e.GuildID.String(), content)
 
-			if r.Author.Bot {
-				return
-			}
+		content = TruncateForTTS(content, 250)
 
-			vc := s.VoiceConnections[r.GuildID]
+		vcConn := e.Client().VoiceManager.GetConn(*e.GuildID)
 
-			if vc != nil {
-				guild, _ := s.State.Guild(r.GuildID)
+		vp := voice.GetManager().GetOrCreate(
+			e.GuildID.String(),
+			ttsConnectionData.ChannelID,
+			vcConn,
+			ctx,
+		)
 
-				botChannelID := ""
-				for _, vs := range guild.VoiceStates {
-					if vs.UserID == s.State.User.ID {
-						botChannelID = vs.ChannelID
-						break
-					}
-				}
-
-				if r.ChannelID != ttsConnectionData.ChannelID &&
-					r.ChannelID != botChannelID {
-					return
-				}
-			}
-
-			if r.Content == "s" || r.Content == "skip" {
-				player := voice.GetManager().Get(r.GuildID)
-				if player != nil {
-					player.SkipCurrent()
-				}
-				return
-			}
-
-			personalSetting, err := repository.NewTTSPersonalSettingRepository(ctx.DB).GetByMember(userID)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			if personalSetting == nil {
-				personalSetting = &repository.DefaultTTSPersonalSetting
-			}
-			content := SanitizeMessageContent(s, r.GuildID, r.Content)
-
-			// 辞書を適用
-			content = util.ApplyDictionary(ctx.DB, r.GuildID, content)
-
-			content = TruncateForTTS(content, 250)
-
-			vp := voice.GetManager().GetOrCreate(
-				r.GuildID,
-				ttsConnectionData.ChannelID,
-				s.VoiceConnections[r.GuildID],
-				ctx,
-			)
-
-			vp.EnqueueText(voice.QueueItem{
-				Text:    content,
-				Setting: *personalSetting,
-			})
-		}
+		vp.EnqueueText(voice.QueueItem{
+			Text:    content,
+			Setting: *personalSetting,
+		})
 	}
 }
 
@@ -115,7 +123,7 @@ var (
 )
 
 // メッセージ内容をサニタイズする関数
-func SanitizeMessageContent(s *discordgo.Session, guildID, content string) string {
+func SanitizeMessageContent(client *bot.Client, guildID *snowflake.ID, content string) string {
 	// コードブロック置換
 	content = codeBlockRegex.ReplaceAllStringFunc(content, func(block string) string {
 		matches := codeBlockRegex.FindStringSubmatch(block)
@@ -139,14 +147,11 @@ func SanitizeMessageContent(s *discordgo.Session, guildID, content string) strin
 			return match
 		}
 		channelID := matches[1]
-		channel, err := s.State.Channel(channelID)
-		if err != nil {
-			channel, err = s.Channel(channelID)
-			if err != nil {
-				return match
-			}
+		channel, ok := client.Caches.Channel(snowflake.MustParse(channelID))
+		if !ok {
+			return match
 		}
-		return "#" + channel.Name
+		return "#" + channel.Name()
 	})
 
 	// ユーザーメンション置換
@@ -156,14 +161,11 @@ func SanitizeMessageContent(s *discordgo.Session, guildID, content string) strin
 			return match
 		}
 		userID := matches[1]
-		user, err := s.User(userID)
-		if err != nil {
-			user, err = s.User(userID)
-			if err != nil {
-				return match
-			}
+		user, ok := client.Caches.Member(*guildID, snowflake.MustParse(userID))
+		if !ok {
+			return match
 		}
-		return "@" + user.Username
+		return "@" + user.User.EffectiveName()
 	})
 
 	// ロールメンション置換
@@ -173,17 +175,9 @@ func SanitizeMessageContent(s *discordgo.Session, guildID, content string) strin
 			return match
 		}
 		roleID := matches[1]
-		guild, err := s.State.Guild(guildID)
-		if err != nil {
-			guild, err = s.Guild(guildID)
-			if err != nil {
-				return match
-			}
-		}
-		for _, role := range guild.Roles {
-			if role.ID == roleID {
-				return "@" + role.Name
-			}
+		role, ok := client.Caches.Role(*guildID, snowflake.MustParse(roleID))
+		if ok {
+			return "@" + role.Name
 		}
 		return match
 	})
