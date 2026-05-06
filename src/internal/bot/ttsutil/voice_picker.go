@@ -9,7 +9,7 @@ import (
 	"unibot/internal/api/voicevox"
 	"unibot/internal/repository"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 )
 
 type SpeakerPage struct {
-	Options []discordgo.SelectMenuOption
+	Options []discord.StringSelectMenuOption
 }
 
 type speakerCache struct {
@@ -73,19 +73,19 @@ func BuildSpeakerPages(speakers []voicevox.Speaker, perPage int) []SpeakerPage {
 	}
 
 	pages := make([]SpeakerPage, 0)
-	current := SpeakerPage{Options: make([]discordgo.SelectMenuOption, 0, perPage)}
+	current := SpeakerPage{Options: make([]discord.StringSelectMenuOption, 0, perPage)}
 	flush := func() {
 		if len(current.Options) > 0 {
 			pages = append(pages, current)
-			current = SpeakerPage{Options: make([]discordgo.SelectMenuOption, 0, perPage)}
+			current = SpeakerPage{Options: make([]discord.StringSelectMenuOption, 0, perPage)}
 		}
 	}
 
 	for _, speaker := range speakers {
-		speakerOptions := make([]discordgo.SelectMenuOption, 0, len(speaker.Styles))
+		speakerOptions := make([]discord.StringSelectMenuOption, 0, len(speaker.Styles))
 		for _, style := range speaker.Styles {
 			label := fmt.Sprintf("%s / %s", speaker.Name, style.Name)
-			speakerOptions = append(speakerOptions, discordgo.SelectMenuOption{
+			speakerOptions = append(speakerOptions, discord.StringSelectMenuOption{
 				Label:       label,
 				Value:       fmt.Sprintf("%d", style.ID),
 				Description: fmt.Sprintf("ID: %d", style.ID),
@@ -124,10 +124,10 @@ func BuildSpeakerPages(speakers []voicevox.Speaker, perPage int) []SpeakerPage {
 	return pages
 }
 
-func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID string) (string, []discordgo.MessageComponent) {
+func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID string) (string, []discord.LayoutComponent) {
 	maxPage := len(pages)
 	if maxPage == 0 {
-		return "話者情報が取得できませんでした。", []discordgo.MessageComponent{}
+		return "話者情報が取得できませんでした。", []discord.LayoutComponent{}
 	}
 	if pageIndex < 0 {
 		pageIndex = 0
@@ -138,14 +138,13 @@ func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID stri
 
 	content := fmt.Sprintf("話者を選択してください。\n現在の話者ID: %s\nページ %d/%d", currentSpeakerID, pageIndex+1, maxPage)
 
-	components := []discordgo.MessageComponent{
-		discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.SelectMenu{
-					CustomID:    VoiceSelectCustomID,
-					Placeholder: "話者を選択してください",
-					Options:     pages[pageIndex].Options,
-				},
+	components := []discord.LayoutComponent{
+		discord.ActionRowComponent{
+			Components: []discord.InteractiveComponent{
+				discord.NewStringSelectMenu(
+					VoiceSelectCustomID,
+					"話者を選択してください",
+				).SetOptions(pages[pageIndex].Options...),
 			},
 		},
 	}
@@ -153,18 +152,18 @@ func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID stri
 	if maxPage > 1 {
 		prevID := fmt.Sprintf("%s:%d", VoicePageCustomIDPrefix, pageIndex-1)
 		nextID := fmt.Sprintf("%s:%d", VoicePageCustomIDPrefix, pageIndex+1)
-		components = append(components, discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.Button{
+		components = append(components, discord.ActionRowComponent{
+			Components: []discord.InteractiveComponent{
+				discord.ButtonComponent{
 					CustomID: prevID,
 					Label:    "前へ",
-					Style:    discordgo.SecondaryButton,
+					Style:    discord.ButtonStyleSecondary,
 					Disabled: pageIndex == 0,
 				},
-				discordgo.Button{
+				discord.ButtonComponent{
 					CustomID: nextID,
 					Label:    "次へ",
-					Style:    discordgo.SecondaryButton,
+					Style:    discord.ButtonStyleSecondary,
 					Disabled: pageIndex >= maxPage-1,
 				},
 			},
@@ -215,14 +214,4 @@ func IsSpeakerIDValid(ctx *internal.BotContext, speakerID string) bool {
 	}
 
 	return false
-}
-
-func GetInteractionUser(i *discordgo.InteractionCreate) (string, string, string) {
-	if i.Member != nil && i.Member.User != nil {
-		return i.Member.User.ID, i.Member.DisplayName(), i.Member.AvatarURL("")
-	}
-	if i.User != nil {
-		return i.User.ID, i.User.Username, i.User.AvatarURL("")
-	}
-	return "", "", ""
 }

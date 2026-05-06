@@ -15,7 +15,7 @@ func LoadTtsCommandContext() discord.SlashCommandCreate {
 			tts.LoadLeaveCommandContext(),
 			tts.LoadSkipCommandContext(),
 			//tts.LoadDictCommandContext(),
-			//tts.LoadSetCommandContext(),
+			tts.LoadSetCommandContext(),
 		},
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"unibot/internal/bot/command/admin/maintenance"
 	"unibot/internal/bot/command/general"
 	"unibot/internal/bot/command/general/tts"
+	"unibot/internal/bot/command/general/tts/ttsSet"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
@@ -23,10 +24,10 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 		r.SlashCommand("/join", tts.Join(ctxData))
 		r.SlashCommand("/leave", tts.Leave(ctxData))
 		r.SlashCommand("/skip", tts.Skip(ctxData))
-		/*r.Route("/set", func(r handler.Router) {
+		r.Route("/set", func(r handler.Router) {
 			r.SlashCommand("/speed", ttsSet.Speed(ctxData))
-			r.SlashCommand("/voice", ttsSet.Speed(ctxData))
-		})*/
+			r.SlashCommand("/voice", ttsSet.Voice(ctxData))
+		})
 	})
 	r.Route("/maintenance", func(r handler.Router) {
 		r.Use(AdminOnlyMiddleware(ctxData))
