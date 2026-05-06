@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"unibot/internal"
+	"unibot/internal/bot/voice"
 	"unibot/internal/model"
 	"unibot/internal/repository"
 
@@ -99,29 +100,22 @@ func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 			_ = repo.Update(ttsConnection)
 		}
 
-		/*
-			go func() {
-				// 読み上げ開始の準備
-				channel, ok := e.Client().Caches.Channel(*userVoiceState.ChannelID)
+		go func() {
+			// 読み上げ開始の準備
+			channel, ok := e.Client().Caches.Channel(*userVoiceState.ChannelID)
 
-				channelName := "不明なチャンネル"
-				if ok {
-					// disgo v2 では、名前を取得するために型アサーションが必要な場合があります。
-					// もしくは、GuildChannel インターフェースとして扱います。
-					if guildChannel, ok := channel.(discord.GuildChannel); ok {
-						channelName = guildChannel.Name()
-					}
-				}
+			channelName := "不明なチャンネル"
+			if ok {
+				channelName = channel.Name()
+			}
 
-				// ここは既存の voice パッケージ側も disgo.VoiceConn を受けるように修正が必要です
-				player := voice.GetManager().GetOrCreate(guildID.String(), userVoiceState.ChannelID.String(), conn, ctx)
+			player := voice.GetManager().GetOrCreate(guildID.String(), userVoiceState.ChannelID.String(), conn, ctx)
 
-				player.EnqueueText(voice.QueueItem{
-					Text:    fmt.Sprintf("%sに、読み上げを接続しました。", channelName),
-					Setting: repository.DefaultTTSPersonalSetting,
-				})
-				}()
-		*/
+			player.EnqueueText(voice.QueueItem{
+				Text:    fmt.Sprintf("%sに、読み上げを接続しました。", channelName),
+				Setting: repository.DefaultTTSPersonalSetting,
+			})
+		}()
 
 		// 成功レスポンス
 		responseEmbed := discord.Embed{

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"unibot/internal"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/voice"
 )
 
 type Manager struct {
@@ -12,36 +12,38 @@ type Manager struct {
 	mu      sync.Mutex
 }
 
-var manager *Manager
+var (
+	manager *Manager
+	once    sync.Once
+)
 
 func GetManager() *Manager {
-	if manager == nil {
+	once.Do(func() {
 		manager = &Manager{
 			players: make(map[string]*VoicePlayer),
 		}
-	}
+	})
 	return manager
 }
 
-// 既存の VoicePlayer を返す。なければ nil
 func (m *Manager) Get(guildID string) *VoicePlayer {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.players[guildID]
 }
 
-// 既存なら返す、なければ新規作成して返す
 func (m *Manager) GetOrCreate(
 	guildID string,
 	channelID string,
-	vc *discordgo.VoiceConnection,
+	vc voice.Conn,
 	ctx *internal.BotContext,
 ) *VoicePlayer {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if p, ok := m.players[guildID]; ok {
-		if vc != nil && p.GetVC() != vc {
+		// すでにプレイヤーが存在する場合、新しい接続があれば更新
+		if vc != nil {
 			p.SetVC(vc)
 			p.ChannelID = channelID
 		}
@@ -53,7 +55,6 @@ func (m *Manager) GetOrCreate(
 	return p
 }
 
-// ギルドの VoicePlayer を削除
 func (m *Manager) Delete(guildID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
