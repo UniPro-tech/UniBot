@@ -2,6 +2,7 @@ package general
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -13,18 +14,18 @@ import (
 	"time"
 	"unibot/internal"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
 const colorCodeImageName = "color.png"
 
-func LoadColorCodeCommandContext() *discordgo.ApplicationCommand {
-	return &discordgo.ApplicationCommand{
+func LoadColorCodeCommandContext() discord.SlashCommandCreate {
+	return discord.SlashCommandCreate{
 		Name:        "colorcode",
 		Description: "カラーコードの画像を表示します",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
+		Options: []discord.ApplicationCommandOption{
+			discord.ApplicationCommandOptionString{
 				Name:        "code",
 				Description: "#RRGGBB形式のカラーコードを指定します",
 				Required:    true,
@@ -33,139 +34,91 @@ func LoadColorCodeCommandContext() *discordgo.ApplicationCommand {
 	}
 }
 
-func ColorCode(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := ctx.Config
-	done := make(chan struct{})
-	go func() {
-		select {
-		case <-done:
-			return
-		case <-time.After(3 * time.Minute):
-			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "カラーコードの表示に失敗しました。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-					},
-				},
-			})
-			if err != nil {
-				log.Println("Failed to edit deferred interaction on timeout:", err)
+func ColorCode(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+		config := ctx.Config
+
+		var codeOption string
+		if opt, ok := data.Options["code"]; ok {
+			if opt.Type == discord.ApplicationCommandOptionTypeString {
+				if err := json.Unmarshal(opt.Value, &codeOption); err != nil {
+					log.Println(err)
+				}
 			}
 		}
-	}()
-	defer close(done)
 
-	codeOption := ""
-	options := i.ApplicationCommandData().Options
-	if len(options) > 0 {
-		codeOption = options[0].StringValue()
-	}
+		red, green, blue, hex, err := parseHexColor(codeOption)
+		if err != nil {
+			log.Print(err)
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEphemeral(true).WithEmbeds(discord.Embed{
+				Title:       "エラー",
+				Description: "無効なカラーコードです。例: `#FFAA00` または `FFAA00`",
+				Color:       config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    "Requested by " + e.User().Username,
+					IconURL: e.User().EffectiveAvatarURL(),
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}))
+			return err
+		}
 
-	red, green, blue, hex, err := parseHexColor(codeOption)
-	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
+		img := image.NewRGBA(image.Rect(0, 0, 512, 512))
+		draw.Draw(img, img.Bounds(), &image.Uniform{C: color.RGBA{R: red, G: green, B: blue, A: 255}}, image.Point{}, draw.Src)
+
+		var buf bytes.Buffer
+		if err := png.Encode(&buf, img); err != nil {
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEphemeral(true).WithEmbeds(discord.Embed{
+				Title:       "エラー",
+				Description: "画像の生成に失敗しました。",
+				Color:       config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    "Requested by " + e.User().Username,
+					IconURL: e.User().EffectiveAvatarURL(),
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}))
+			return err
+		}
+
+		responseEmbed := discord.Embed{
+			Title:       "Color Code",
+			Description: fmt.Sprintf("`%s`", hex),
+			Color:       int(red)<<16 | int(green)<<8 | int(blue),
+			Fields: []discord.EmbedField{
 				{
-					Title:       "エラー",
-					Description: "無効なカラーコードです。例: `#FFAA00` または `FFAA00`",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
+					Name:  "RGB",
+					Value: fmt.Sprintf("%d, %d, %d", red, green, blue),
+				},
+				{
+					Name:  "CMYK",
+					Value: formatCMYK(red, green, blue),
 				},
 			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
-
-	img := image.NewRGBA(image.Rect(0, 0, 512, 512))
-	draw.Draw(img, img.Bounds(), &image.Uniform{C: color.RGBA{R: red, G: green, B: blue, A: 255}}, image.Point{}, draw.Src)
-
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, img); err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "画像の生成に失敗しました。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
+			Image: &discord.EmbedResource{
+				URL: "attachment://" + colorCodeImageName,
 			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
-	}
+			Footer: &discord.EmbedFooter{
+				Text:    "Requested by " + e.User().Username,
+				IconURL: e.User().EffectiveAvatarURL(),
+			},
+			Timestamp: func() *time.Time {
+				t := time.Now()
+				return &t
+			}(),
+		}
 
-	user := i.User
-	if i.Member != nil {
-		user = i.Member.User
-	}
-
-	embed := &discordgo.MessageEmbed{
-		Title:       "Color Code",
-		Description: fmt.Sprintf("`%s`", hex),
-		Color:       int(red)<<16 | int(green)<<8 | int(blue),
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:  "RGB",
-				Value: fmt.Sprintf("%d, %d, %d", red, green, blue),
-			},
-			{
-				Name:  "CMYK",
-				Value: formatCMYK(red, green, blue),
-			},
-		},
-		Image: &discordgo.MessageEmbedImage{
-			URL: "attachment://" + colorCodeImageName,
-		},
-		Footer: &discordgo.MessageEmbedFooter{
-			Text:    "Requested by " + user.Username,
-			IconURL: user.AvatarURL(""),
-		},
-		Timestamp: time.Now().Format(time.RFC3339),
-	}
-
-	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Embeds: &[]*discordgo.MessageEmbed{embed},
-		Files: []*discordgo.File{
-			{
-				Name:   colorCodeImageName,
-				Reader: bytes.NewReader(buf.Bytes()),
-			},
-		},
-	})
-	if err != nil {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "エラー",
-					Description: "カラーコードを表示できませんでした。",
-					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + user.Username,
-						IconURL: user.AvatarURL(""),
-					},
-					Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
+		_, err = e.Client().Rest.CreateFollowupMessage(
+			e.ApplicationID(),
+			e.Token(),
+			discord.NewMessageCreate().WithEmbeds(responseEmbed).WithFiles(discord.NewFile(colorCodeImageName, fmt.Sprintf("Color code %s's Image", hex), bytes.NewReader(buf.Bytes()))))
+		return err
 	}
 }
 
