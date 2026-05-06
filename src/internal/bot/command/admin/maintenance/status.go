@@ -23,7 +23,8 @@ type StatusData struct {
 
 func LoadStatusCommandContext() discord.ApplicationCommandOptionSubCommandGroup {
 	return discord.ApplicationCommandOptionSubCommandGroup{
-		Name: "status",
+		Name:        "status",
+		Description: "Botのステータスを更新します。",
 		Options: []discord.ApplicationCommandOptionSubCommand{
 			{
 				Name:        "set",
