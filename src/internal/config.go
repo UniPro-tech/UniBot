@@ -149,7 +149,7 @@ func LoadConfig() *Config {
 	var bodyJson []GitHubContributorsResponse
 	err = json.Unmarshal(body, &bodyJson)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err, bodyJson)
 	}
 
 	contributors := []Contributors{}
