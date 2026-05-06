@@ -2,7 +2,6 @@ package general
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -38,14 +37,7 @@ func ColorCode(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 		config := ctx.Config
 
-		var codeOption string
-		if opt, ok := data.Options["code"]; ok {
-			if opt.Type == discord.ApplicationCommandOptionTypeString {
-				if err := json.Unmarshal(opt.Value, &codeOption); err != nil {
-					log.Println(err)
-				}
-			}
-		}
+		codeOption := data.String("code")
 
 		red, green, blue, hex, err := parseHexColor(codeOption)
 		if err != nil {
