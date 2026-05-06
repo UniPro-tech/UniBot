@@ -10,6 +10,17 @@ RUN apk update && apk add --no-cache \
     opus-dev \
     opusfile-dev
 
+RUN git clone https://github.com/disgoorg/godave.git
+
+ENV SHELL=/bin/sh
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+ENV CC=/usr/bin/gcc CXX=/usr/bin/g++
+ENV CXXFLAGS="-Wno-error=maybe-uninitialized"
+RUN apk add build-base cmake ninja zip unzip curl git pkgconfig perl nasm go
+RUN FORCE_BUILD=1 ./godave/scripts/libdave_install.sh v1.1.0
+ENV PKG_CONFIG_PATH=/root/.local/lib/pkgconfig
+RUN rm -r ./godave
+
 COPY . .
 
 WORKDIR /app/src
@@ -19,7 +30,7 @@ RUN --mount=type=cache,target=/go/pkg/mod/,sharing=locked \
 
 RUN ../scripts/_build.sh
 
-FROM alpine:3.23.3
+FROM alpine:3.23.4
 WORKDIR /root/
 
 RUN apk update && apk add --no-cache \
