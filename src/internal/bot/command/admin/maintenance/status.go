@@ -333,7 +333,7 @@ func SetBotStatus(client *bot.Client, data StatusData) error {
 }
 
 func ResetBotStatus(client *bot.Client) error {
-	serverCounts := client.Caches.GuildCache().Len()
+	serverCounts := client.Caches.GuildsLen()
 	return client.SetPresence(context.Background(), gateway.PresenceOpt(func(p *gateway.MessageDataPresenceUpdate) {
 		p.Activities = []discord.Activity{
 			{
