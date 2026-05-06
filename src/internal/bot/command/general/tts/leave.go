@@ -32,11 +32,11 @@ func Leave(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDa
 		}
 
 		// 2. 切断処理
-		conCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		// conn.Close はエラーを返さないので、そのまま呼び出す
-		conn.Close(conCtx)
+		defer func() {
+			closeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			conn.Close(closeCtx)
+		}()
 
 		// 3. プレイヤーマネージャーやDBの掃除
 		mgr := voice.GetManager()

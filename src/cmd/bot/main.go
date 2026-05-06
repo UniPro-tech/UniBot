@@ -73,16 +73,17 @@ func main() {
 		}),
 		bot.WithEventListenerFunc(func(e *events.MessageCreate) {
 			customHandlers.MessageCreate(ctxData, e)
-		}), /*
-			bot.WithEventListenerFunc[events.GuildVoiceStateUpdate](func(e events.GuildVoiceStateUpdate) {
-				customHandlers.VoiceStateUpdate(ctxData, &e)
-			}),*/
+		}),
+		bot.WithEventListenerFunc(func(e *events.GuildVoiceStateUpdate) {
+			customHandlers.VoiceStateUpdate(ctxData, e)
+		}),
 		// Cache
 		bot.WithCacheConfigOpts(
 			cache.WithCaches(cache.FlagVoiceStates),
 			cache.WithCaches(cache.FlagChannels),
 			cache.WithCaches(cache.FlagMessages),
 			cache.WithCaches(cache.FlagRoles),
+			cache.WithCaches(cache.FlagMembers),
 		),
 		// Handler
 		bot.WithEventListeners(r),

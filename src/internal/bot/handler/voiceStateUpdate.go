@@ -3,155 +3,154 @@ package handler
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 	"unibot/internal"
 	"unibot/internal/bot/voice"
 	"unibot/internal/repository"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/snowflake/v2"
 )
 
-func VoiceStateUpdate(ctx *internal.BotContext) func(s *discordgo.Session, vsu *discordgo.VoiceStateUpdate) {
-	return func(s *discordgo.Session, vsu *discordgo.VoiceStateUpdate) {
-		if s.VoiceConnections[vsu.GuildID] == nil {
+func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate) {
+	client := e.Client()
+	vsu := e.VoiceState
+	oldVsu := e.OldVoiceState
+
+	// Bot自身の接続状況を確認（disgoのVoiceManagerを使用している想定）
+	// disgoでは通常 client.VoiceManager().GetConnection(guildID) で取得します
+	conn := client.VoiceManager.GetConn(vsu.GuildID)
+	if conn == nil {
+		return
+	}
+
+	// Botの動作は無視
+	if e.Member.User.Bot {
+		return
+	}
+
+	// チャンネル内での状態変更（ミュートなど）は無視
+	if vsu.ChannelID != nil && oldVsu.ChannelID != nil && vsu.ChannelID == oldVsu.ChannelID {
+		return
+	}
+
+	botChannelID := getBotChannelID(e)
+	if botChannelID == "" {
+		return
+	}
+
+	changeType := "left"
+	if oldVsu.ChannelID == nil || *oldVsu.ChannelID != snowflake.MustParse(botChannelID) {
+		changeType = "joined"
+	} else if vsu.ChannelID != nil && oldVsu.ChannelID != nil {
+		changeType = "moved"
+	}
+
+	// --- 1. 参加処理 ---
+	if changeType == "joined" && vsu.ChannelID != nil && *vsu.ChannelID == snowflake.MustParse(botChannelID) {
+		channel, ok := client.Caches.Channel(*vsu.ChannelID)
+		if !ok {
 			return
 		}
 
-		if vsu.Member.User.Bot {
-			return
-		}
+		text := fmt.Sprintf("%sが %s に参加しました。", e.Member.EffectiveName(), channel.Name())
+		vp := voice.GetManager().GetOrCreate(e.Member.GuildID.String(), botChannelID, conn, ctx)
+		vp.EnqueueText(voice.QueueItem{
+			Text:    text,
+			Setting: repository.DefaultTTSPersonalSetting,
+		})
+		return
+	}
 
-		if vsu.BeforeUpdate != nil && vsu.ChannelID != "" && vsu.ChannelID == vsu.BeforeUpdate.ChannelID {
-			return
-		}
-
-		changeType := "left"
-		botChannelID := getBotChannelID(s, vsu.GuildID)
-
-		if vsu.BeforeUpdate == nil || vsu.BeforeUpdate.ChannelID != botChannelID {
-			changeType = "joined"
-		} else if vsu.BeforeUpdate != nil && vsu.ChannelID != "" && vsu.BeforeUpdate.ChannelID != "" {
-			changeType = "moved"
-		}
-
-		if changeType == "joined" && botChannelID == vsu.ChannelID {
-			channel, err := s.State.Channel(vsu.ChannelID)
-			if err != nil {
-				log.Printf("Error fetching channel: %v", err)
-				return
-			}
-			text := fmt.Sprintf("%sが %s に参加しました。", vsu.Member.DisplayName(), channel.Name)
-			vp := voice.GetManager().GetOrCreate(vsu.GuildID, botChannelID, s.VoiceConnections[vsu.GuildID], ctx)
-			vp.EnqueueText(voice.QueueItem{
-				Text:    text,
-				Setting: repository.DefaultTTSPersonalSetting,
-			})
-			return
-		}
-		if changeType == "left" && botChannelID == vsu.BeforeUpdate.ChannelID {
-			guild, err := s.State.Guild(vsu.GuildID)
-			voiceStates := guild.VoiceStates
-			var stillInChannel bool
-			for _, vs := range voiceStates {
-				user, err := s.User(vs.UserID)
-				if err != nil || user.Bot {
-					continue
-				}
-				if vs.ChannelID == botChannelID {
+	// --- 2. 退出処理 ---
+	if changeType == "left" && *oldVsu.ChannelID == snowflake.MustParse(botChannelID) {
+		// チャンネル内にまだ人間がいるかチェック
+		var stillInChannel bool
+		states := client.Caches.VoiceStates(conn.GuildID())
+		for state := range states {
+			if state.ChannelID != nil && *state.ChannelID == snowflake.MustParse(botChannelID) {
+				if member, ok := client.Caches.Member(vsu.GuildID, state.UserID); ok && !member.User.Bot {
 					stillInChannel = true
-					break
 				}
 			}
-			if !stillInChannel {
-				backCtx := context.Background()
-				s.VoiceConnections[vsu.GuildID].Disconnect(backCtx)
-				repo := repository.NewTTSConnectionRepository(ctx.DB)
-				data, err := repo.GetByGuildID(vsu.GuildID)
-				if err != nil {
-					log.Printf("Error fetching TTS connection data: %v", err)
-					return
-				}
-				mgr := voice.GetManager()
-				player := mgr.Get(vsu.GuildID)
+		}
 
-				if player != nil {
-					player.Close()
-					if vc := player.GetVC(); vc != nil {
-						vc.Disconnect(backCtx)
-					}
-					mgr.Delete(vsu.GuildID)
-				}
-				if data != nil {
-					channelId := data.ChannelID
-					err = repo.DeleteByGuildID(vsu.GuildID)
-					if err != nil {
-						log.Printf("Error deleting TTS connection data: %v", err)
-						return
-					}
-					s.ChannelMessageSendComplex(channelId,
-						&discordgo.MessageSend{
-							Embed: &discordgo.MessageEmbed{
-								Title:       "TTS接続解除",
-								Description: "ボイスチャンネルから誰もいなくなったため、TTSの接続を解除しました。",
-								Color:       ctx.Config.Colors.Success,
-								Timestamp:   time.Now().Format(time.RFC3339),
-							},
-						},
-					)
-				}
+		// 誰もいなくなった場合
+		if !stillInChannel {
+			defer func() {
+				closeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				conn.Close(closeCtx)
+			}()
+
+			repo := repository.NewTTSConnectionRepository(ctx.DB)
+			data, err := repo.GetByGuildID(vsu.GuildID.String())
+
+			mgr := voice.GetManager()
+			player := mgr.Get(vsu.GuildID.String())
+			if player != nil {
+				player.Close()
+				mgr.Delete(vsu.GuildID.String())
 			}
 
-			channel, err := s.State.Channel(vsu.BeforeUpdate.ChannelID)
-			if err != nil {
-				log.Printf("Error fetching channel: %v", err)
-				return
+			if err == nil && data != nil {
+				textChannelID := data.ChannelID
+				_ = repo.DeleteByGuildID(vsu.GuildID.String())
+
+				embed := discord.Embed{
+					Title:       "TTS接続解除",
+					Description: "ボイスチャンネルから誰もいなくなったため、TTSの接続を解除しました。",
+					Color:       ctx.Config.Colors.Success,
+					Timestamp: func() *time.Time {
+						t := time.Now()
+						return &t
+					}(),
+				}
+
+				_, _ = client.Rest.CreateMessage(snowflake.MustParse(textChannelID), discord.MessageCreate{
+					Embeds: []discord.Embed{embed},
+				})
 			}
-			text := fmt.Sprintf("%sが %s から退出しました。", vsu.Member.DisplayName(), channel.Name)
-			vp := voice.GetManager().GetOrCreate(
-				vsu.GuildID,
-				botChannelID,
-				s.VoiceConnections[vsu.GuildID],
-				ctx,
-			)
+			return
+		}
+
+		// 単なる一人の退出通知
+		channel, ok := client.Caches.Channel(*oldVsu.ChannelID)
+		if ok {
+			text := fmt.Sprintf("%sが %s から退出しました。", e.Member.EffectiveName(), channel.Name())
+			vp := voice.GetManager().GetOrCreate(vsu.GuildID.String(), botChannelID, conn, ctx)
 			vp.EnqueueText(voice.QueueItem{
 				Text:    text,
 				Setting: repository.DefaultTTSPersonalSetting,
 			})
+		}
+		return
+	}
+
+	// --- 3. 移動処理 ---
+	if changeType == "moved" && oldVsu.ChannelID != nil && *oldVsu.ChannelID == snowflake.MustParse(botChannelID) {
+		if vsu.ChannelID == nil {
 			return
 		}
-		if changeType == "moved" && botChannelID == vsu.BeforeUpdate.ChannelID {
-			channel, err := s.State.Channel(vsu.ChannelID)
-			if err != nil {
-				log.Printf("Error fetching channel: %v", err)
-				return
-			}
-			text := fmt.Sprintf("%sが %s に移動しました。", vsu.Member.DisplayName(), channel.Name)
-			vp := voice.GetManager().GetOrCreate(
-				vsu.GuildID,
-				botChannelID,
-				s.VoiceConnections[vsu.GuildID],
-				ctx,
-			)
+		channel, ok := client.Caches.Channel(*vsu.ChannelID)
+		if ok {
+			text := fmt.Sprintf("%sが %s に移動しました。", e.Member.EffectiveName(), channel.Name())
+			vp := voice.GetManager().GetOrCreate(vsu.GuildID.String(), botChannelID, conn, ctx)
 			vp.EnqueueText(voice.QueueItem{
 				Text:    text,
 				Setting: repository.DefaultTTSPersonalSetting,
 			})
-			return
 		}
+		return
 	}
 }
 
-func getBotChannelID(s *discordgo.Session, guildID string) string {
-	guild, err := s.State.Guild(guildID)
-	if err != nil {
+// getBotChannelID はBotが現在入っているVCのIDを返します
+func getBotChannelID(e *events.GuildVoiceStateUpdate) string {
+	vs, ok := e.Client().Caches.VoiceState(e.VoiceState.GuildID, e.Client().ID())
+	if !ok || vs.ChannelID == nil {
 		return ""
 	}
-
-	for _, vs := range guild.VoiceStates {
-		if vs.UserID == s.State.User.ID {
-			return vs.ChannelID
-		}
-	}
-	return ""
+	return vs.ChannelID.String()
 }
