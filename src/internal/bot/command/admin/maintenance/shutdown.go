@@ -28,7 +28,7 @@ func Shutdown(ctx *internal.BotContext) func(data discord.SlashCommandInteractio
 			Color:       config.Colors.Success,
 			Footer: &discord.EmbedFooter{
 				Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-				IconURL: *e.Member().Avatar,
+				IconURL: e.User().EffectiveAvatarURL(),
 			},
 			Timestamp: func() *time.Time {
 				t := time.Now()

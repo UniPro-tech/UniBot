@@ -78,7 +78,7 @@ func StatusResetHandler(ctx *internal.BotContext) func(data discord.SlashCommand
 				Color:       config.Colors.Error,
 				Footer: &discord.EmbedFooter{
 					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-					IconURL: *e.Member().Avatar,
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
 				Timestamp: func() *time.Time {
 					t := time.Now()
@@ -100,7 +100,7 @@ func StatusResetHandler(ctx *internal.BotContext) func(data discord.SlashCommand
 				Color:       config.Colors.Error,
 				Footer: &discord.EmbedFooter{
 					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-					IconURL: *e.Member().Avatar,
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
 				Timestamp: func() *time.Time {
 					t := time.Now()
@@ -117,7 +117,7 @@ func StatusResetHandler(ctx *internal.BotContext) func(data discord.SlashCommand
 			Color:       config.Colors.Success,
 			Footer: &discord.EmbedFooter{
 				Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-				IconURL: *e.Member().Avatar,
+				IconURL: e.User().EffectiveAvatarURL(),
 			},
 			Timestamp: func() *time.Time {
 				t := time.Now()
@@ -160,7 +160,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 				Color:       config.Colors.Error,
 				Footer: &discord.EmbedFooter{
 					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-					IconURL: *e.Member().Avatar,
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
 				Timestamp: func() *time.Time {
 					t := time.Now()
@@ -193,7 +193,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 			},
 			Footer: &discord.EmbedFooter{
 				Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-				IconURL: *e.Member().Avatar,
+				IconURL: e.User().EffectiveAvatarURL(),
 			},
 			Timestamp: func() *time.Time {
 				t := time.Now()
@@ -211,7 +211,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 				Color:       config.Colors.Error,
 				Footer: &discord.EmbedFooter{
 					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-					IconURL: *e.Member().Avatar,
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
 				Timestamp: func() *time.Time {
 					t := time.Now()
@@ -240,7 +240,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 					Color:       config.Colors.Error,
 					Footer: &discord.EmbedFooter{
 						Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-						IconURL: *e.Member().Avatar,
+						IconURL: e.User().EffectiveAvatarURL(),
 					},
 					Timestamp: func() *time.Time {
 						t := time.Now()
@@ -263,7 +263,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 					Color:       config.Colors.Error,
 					Footer: &discord.EmbedFooter{
 						Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-						IconURL: *e.Member().Avatar,
+						IconURL: e.User().EffectiveAvatarURL(),
 					},
 					Timestamp: func() *time.Time {
 						t := time.Now()
