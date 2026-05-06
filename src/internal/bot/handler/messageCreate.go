@@ -20,7 +20,7 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 		return
 	}
 
-	guild, isGuild := e.Guild()
+	_, isGuild := e.Guild()
 
 	// Ignore DM
 	if isGuild {
@@ -72,7 +72,7 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 		}
 
 		if e.Message.Content == "s" || e.Message.Content == "skip" {
-			player := voice.GetManager().Get(guild.ID.String())
+			player := voice.GetManager().Get(e.GuildID.String())
 			if player != nil {
 				player.SkipCurrent()
 			}

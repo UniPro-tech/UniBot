@@ -22,6 +22,7 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 	r.Route("/tts", func(r handler.Router) {
 		r.SlashCommand("/join", tts.Join(ctxData))
 		r.SlashCommand("/leave", tts.Leave(ctxData))
+		r.SlashCommand("/skip", tts.Skip(ctxData))
 		/*r.Route("/set", func(r handler.Router) {
 			r.SlashCommand("/speed", ttsSet.Speed(ctxData))
 			r.SlashCommand("/voice", ttsSet.Speed(ctxData))

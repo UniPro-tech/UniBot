@@ -13,7 +13,7 @@ func LoadTtsCommandContext() discord.SlashCommandCreate {
 		Options: []discord.ApplicationCommandOption{
 			tts.LoadJoinCommandContext(),
 			tts.LoadLeaveCommandContext(),
-			//tts.LoadSkipCommandContext(),
+			tts.LoadSkipCommandContext(),
 			//tts.LoadDictCommandContext(),
 			//tts.LoadSetCommandContext(),
 		},
