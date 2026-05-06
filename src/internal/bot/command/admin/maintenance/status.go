@@ -1,120 +1,183 @@
 package maintenance
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"time"
 	"unibot/internal"
 	"unibot/internal/model"
 	"unibot/internal/repository"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/gateway"
+	"github.com/disgoorg/disgo/handler"
 )
 
 type StatusData struct {
-	Text         string `json:"text"`
-	Type         string `json:"type"`
-	OnlineStatus string `json:"online_status"`
+	Text         string
+	Type         discord.ActivityType
+	OnlineStatus discord.OnlineStatus
 }
 
-func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	config := ctx.Config
-
-	done := make(chan struct{})
-	go func() {
-		select {
-		case <-done:
-			return
-		case <-time.After(3 * time.Minute):
-			_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "ステータスの取得に失敗しました。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
+func LoadStatusCommandContext() discord.ApplicationCommandOptionSubCommandGroup {
+	return discord.ApplicationCommandOptionSubCommandGroup{
+		Name: "status",
+		Options: []discord.ApplicationCommandOptionSubCommand{
+			{
+				Name:        "set",
+				Description: "Botのステータスを設定します",
+				Options: []discord.ApplicationCommandOption{
+					discord.ApplicationCommandOptionString{
+						Name:        "text",
+						Required:    true,
+						Description: "ステータスメッセージ",
+					},
+					discord.ApplicationCommandOptionInt{
+						Name:        "status",
+						Description: "ステータス種類",
+						Required:    true,
+						Choices: []discord.ApplicationCommandOptionChoiceInt{
+							{Name: "playing", Value: int(discordgo.ActivityTypeGame)},
+							{Name: "streaming", Value: int(discordgo.ActivityTypeStreaming)},
+							{Name: "listening", Value: int(discordgo.ActivityTypeListening)},
+							{Name: "watching", Value: int(discordgo.ActivityTypeWatching)},
+							{Name: "competing", Value: int(discordgo.ActivityTypeCompeting)},
+							{Name: "custom", Value: int(discordgo.ActivityTypeCustom)},
 						},
-						Timestamp: time.Now().Format(time.RFC3339),
+					},
+					discord.ApplicationCommandOptionString{
+						Name:        "type",
+						Description: "オンライン状態",
+						Required:    true,
+						Choices: []discord.ApplicationCommandOptionChoiceString{
+							{Name: "online", Value: "online"},
+							{Name: "idle", Value: "idle"},
+							{Name: "dnd", Value: "dnd"},
+							{Name: "invisible", Value: "invisible"},
+						},
 					},
 				},
-			})
-			if err != nil {
-				log.Println("Failed to edit deferred interaction on timeout:", err)
-			}
-		}
-	}()
-	defer close(done)
-
-	options := i.ApplicationCommandData().Options[0].Options
-	if len(options) == 0 {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-							Title:       "エラー",
-							Description: "サブコマンドが指定されていません。",
-							Color:       config.Colors.Error,
-							Footer: &discordgo.MessageEmbedFooter{
-								Text:    "Requested by " + i.Member.DisplayName(),
-								IconURL: i.Member.AvatarURL(""),
-							},
-							Timestamp: time.Now().Format(time.RFC3339),
-					},
-				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			})
-		return
+			}, {
+				Name:        "reset",
+				Description: "Botのステータスをリセットします",
+			},
+		},
 	}
+}
 
-	subCommand := options[0]
-	switch subCommand.Name {
-	case "set":
-		var statusText, onlineStatus string
-		var statusType discordgo.ActivityType
-		for _, option := range subCommand.Options {
+func StatusResetHandler(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+		config := ctx.Config
+		err := ResetBotStatus(e.Client())
+		if err != nil {
+			responseEmbed := discord.Embed{
+				Title:       "エラー",
+				Description: "ステータスのリセットに失敗しました。",
+				Color:       config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: *e.Member().Avatar,
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed))
+			return err
+		}
+
+		// DB Reset
+		database := ctx.DB
+		repo := repository.NewBotSystemSettingRepository(database)
+		err = repo.Delete("status")
+		if err != nil {
+			responseEmbed := discord.Embed{
+				Title:       "エラー",
+				Description: "ステータス設定の削除に失敗しました。",
+				Color:       config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: *e.Member().Avatar,
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed))
+			return err
+		}
+
+		responseEmbed := discord.Embed{
+			Title:       "ステータスリセット",
+			Description: "Botのステータスをデフォルトにリセットしました。",
+			Color:       config.Colors.Success,
+			Footer: &discord.EmbedFooter{
+				Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+				IconURL: *e.Member().Avatar,
+			},
+			Timestamp: func() *time.Time {
+				t := time.Now()
+				return &t
+			}(),
+		}
+		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed))
+		return err
+	}
+}
+
+func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+		config := ctx.Config
+		var statusText string
+		var onlineStatus discord.OnlineStatus
+		var statusType discord.ActivityType
+		for _, option := range data.Options {
 			switch option.Name {
 			case "text":
-				if option.Type == discordgo.ApplicationCommandOptionString {
-					statusText = option.StringValue()
+				if option.Type == discord.ApplicationCommandOptionTypeString {
+					statusText = string(option.Value)
 				}
 			case "status":
-				if option.Type == discordgo.ApplicationCommandOptionInteger {
-					statusType = discordgo.ActivityType(option.IntValue())
+				if option.Type == discord.ApplicationCommandOptionTypeInt {
+					statusType = discord.ActivityType(option.Int())
 				}
 			case "type":
-				if option.Type == discordgo.ApplicationCommandOptionString {
-					onlineStatus = option.StringValue()
+				if option.Type == discord.ApplicationCommandOptionTypeString {
+					onlineStatus = discord.OnlineStatus(option.Value)
 				}
 			}
 		}
 
-		err := SetBotStatus(s, StatusData{Text: statusText, Type: activityTypeToString(statusType), OnlineStatus: onlineStatus})
+		err := SetBotStatus(e.Client(), StatusData{Text: statusText, Type: statusType, OnlineStatus: onlineStatus})
 		if err != nil {
-			log.Fatalf("Failed to set status: %v", err)
-			embed := &discordgo.MessageEmbed{
+			responseEmbed := discord.Embed{
 				Title:       "エラー",
-				Description: "ステータスの設定に失敗しました。",
+				Description: "ステータスのリセットに失敗しました。",
 				Color:       config.Colors.Error,
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    "Requested by " + i.Member.DisplayName(),
-					IconURL: i.Member.AvatarURL(""),
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: *e.Member().Avatar,
 				},
-				Timestamp: time.Now().Format(time.RFC3339),
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
 			}
-			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-			return
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed))
+			return err
 		}
 
 		statusTypeStr := activityTypeToString(statusType)
 
-		responseEmbed := &discordgo.MessageEmbed{
+		responseEmbed := discord.Embed{
 			Title:       "ステータス更新",
 			Description: "Botのステータスを更新しました。",
 			Color:       config.Colors.Success,
-			Fields: []*discordgo.MessageEmbedField{
+			Fields: []discord.EmbedField{
 				{
 					Name:  "ステータスメッセージ",
 					Value: statusText,
@@ -125,35 +188,38 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 				},
 				{
 					Name:  "オンライン状態",
-					Value: onlineStatus,
+					Value: string(onlineStatus),
 				},
 			},
-			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Requested by " + i.Member.DisplayName(),
-				IconURL: i.Member.AvatarURL(""),
+			Footer: &discord.EmbedFooter{
+				Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+				IconURL: *e.Member().Avatar,
 			},
-			Timestamp: time.Now().Format(time.RFC3339),
+			Timestamp: func() *time.Time {
+				t := time.Now()
+				return &t
+			}(),
 		}
 
 		database := ctx.DB
 		repo := repository.NewBotSystemSettingRepository(database)
 		listSettings, err := repo.List()
 		if err != nil {
-			log.Printf("Failed to list settings: %v", err)
-			errorEmbed := &discordgo.MessageEmbed{
+			errorEmbed := discord.Embed{
 				Title:       "エラー",
 				Description: "設定の取得に失敗しました。",
 				Color:       config.Colors.Error,
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    "Requested by " + i.Member.DisplayName(),
-					IconURL: i.Member.AvatarURL(""),
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: *e.Member().Avatar,
 				},
-				Timestamp: time.Now().Format(time.RFC3339),
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
 			}
-			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{errorEmbed},
-			})
-			return
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(errorEmbed))
+			return err
 		}
 
 		// list settings の中に status というキーがあれば更新、なければ新規作成
@@ -165,141 +231,68 @@ func Status(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.Interac
 			}
 		}
 		if statusSetting != nil {
-			statusSetting.Value.Set(StatusData{Text: statusText, Type: statusTypeStr, OnlineStatus: onlineStatus})
+			statusSetting.Value.Set(StatusData{Text: statusText, Type: statusType, OnlineStatus: onlineStatus})
 			err = repo.Update(statusSetting)
 			if err != nil {
-				log.Printf("Failed to update status setting: %v", err)
-				errorEmbed := &discordgo.MessageEmbed{
+				errorEmbed := discord.Embed{
 					Title:       "エラー",
-					Description: "ステータス設定の更新に失敗しました。",
+					Description: "設定の更新に失敗しました。",
 					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
+					Footer: &discord.EmbedFooter{
+						Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+						IconURL: *e.Member().Avatar,
 					},
-					Timestamp: time.Now().Format(time.RFC3339),
+					Timestamp: func() *time.Time {
+						t := time.Now()
+						return &t
+					}(),
 				}
-				s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-					Embeds: &[]*discordgo.MessageEmbed{errorEmbed},
-				})
-				return
+				_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(errorEmbed))
+				return err
 			}
 		} else {
 			newSetting := &model.BotSystemSetting{
 				ID: "status",
 			}
-			newSetting.Value.Set(StatusData{Text: statusText, Type: statusTypeStr, OnlineStatus: onlineStatus})
+			newSetting.Value.Set(StatusData{Text: statusText, Type: statusType, OnlineStatus: onlineStatus})
 			err = repo.Create(newSetting)
 			if err != nil {
-				log.Printf("Failed to create status setting: %v", err)
-				errorEmbed := &discordgo.MessageEmbed{
+				errorEmbed := discord.Embed{
 					Title:       "エラー",
-					Description: "ステータス設定の作成に失敗しました。",
+					Description: "設定の更新に失敗しました。",
 					Color:       config.Colors.Error,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Requested by " + i.Member.DisplayName(),
-						IconURL: i.Member.AvatarURL(""),
+					Footer: &discord.EmbedFooter{
+						Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+						IconURL: *e.Member().Avatar,
 					},
-					Timestamp: time.Now().Format(time.RFC3339),
+					Timestamp: func() *time.Time {
+						t := time.Now()
+						return &t
+					}(),
 				}
-				s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-					Embeds: &[]*discordgo.MessageEmbed{errorEmbed},
-				})
-				return
+				_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(errorEmbed))
+				return err
 			}
 		}
 
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{responseEmbed},
-		})
-	case "reset":
-		err := ResetBotStatus(s)
-		if err != nil {
-			log.Fatalf("Failed to reset status: %v", err)
-			embed := &discordgo.MessageEmbed{
-				Title:       "エラー",
-				Description: "ステータスのリセットに失敗しました。",
-				Color:       config.Colors.Error,
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    "Requested by " + i.Member.DisplayName(),
-					IconURL: i.Member.AvatarURL(""),
-				},
-				Timestamp: time.Now().Format(time.RFC3339),
-			}
-			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-			return
-		}
-
-		// DB Reset
-		database := ctx.DB
-		repo := repository.NewBotSystemSettingRepository(database)
-		err = repo.Delete("status")
-		if err != nil {
-			log.Printf("Failed to delete status setting: %v", err)
-			embed := &discordgo.MessageEmbed{
-				Title:       "エラー",
-				Description: "ステータス設定の削除に失敗しました。",
-				Color:       config.Colors.Error,
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    "Requested by " + i.Member.DisplayName(),
-					IconURL: i.Member.AvatarURL(""),
-				},
-				Timestamp: time.Now().Format(time.RFC3339),
-			}
-			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-			return
-		}
-
-		embed := &discordgo.MessageEmbed{
-			Title:       "ステータスリセット",
-			Description: "Botのステータスをデフォルトにリセットしました。",
-			Color:       config.Colors.Success,
-			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Requested by " + i.Member.DisplayName(),
-				IconURL: i.Member.AvatarURL(""),
-			},
-			Timestamp: time.Now().Format(time.RFC3339),
-		}
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{embed},
-		})
-	default:
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-						Title:       "エラー",
-						Description: "不明なサブコマンドです。",
-						Color:       config.Colors.Error,
-						Footer: &discordgo.MessageEmbedFooter{
-							Text:    "Requested by " + i.Member.DisplayName(),
-							IconURL: i.Member.AvatarURL(""),
-						},
-						Timestamp: time.Now().Format(time.RFC3339),
-				},
-			},
-			Flags: discordgo.MessageFlagsEphemeral,
-		})
-		return
+		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed))
+		return err
 	}
 }
 
-func activityTypeToString(activityType discordgo.ActivityType) string {
+func activityTypeToString(activityType discord.ActivityType) string {
 	switch activityType {
-	case discordgo.ActivityTypeGame:
+	case discord.ActivityTypeGame:
 		return "playing"
-	case discordgo.ActivityTypeStreaming:
+	case discord.ActivityTypeStreaming:
 		return "streaming"
-	case discordgo.ActivityTypeListening:
+	case discord.ActivityTypeListening:
 		return "listening"
-	case discordgo.ActivityTypeWatching:
+	case discord.ActivityTypeWatching:
 		return "watching"
-	case discordgo.ActivityTypeCompeting:
+	case discord.ActivityTypeCompeting:
 		return "competing"
-	case discordgo.ActivityTypeCustom:
+	case discord.ActivityTypeCustom:
 		return "custom"
 	default:
 		return "unknown"
@@ -325,29 +318,29 @@ func stringToActivityType(typeStr string) discordgo.ActivityType {
 	}
 }
 
-func SetBotStatus(s *discordgo.Session, data StatusData) error {
-	log.Print("Updating Bot Status", data)
-	return s.UpdateStatusComplex(discordgo.UpdateStatusData{
-		Activities: []*discordgo.Activity{
-			{
+func SetBotStatus(client *bot.Client, data StatusData) error {
+	return client.SetPresence(context.Background(), gateway.PresenceOpt(func(p *gateway.MessageDataPresenceUpdate) {
+		p.Activities = []discord.Activity{
+			discord.Activity{
+				Type: data.Type,
 				Name: data.Text,
-				Type: stringToActivityType(data.Type),
 			},
-		},
-		Status: data.OnlineStatus,
-	})
+		}
+		p.Status = data.OnlineStatus
+		p.AFK = false
+	}))
 }
 
-func ResetBotStatus(s *discordgo.Session) error {
-	serverCounts := s.State.Guilds
-	defaultStatus := &discordgo.UpdateStatusData{
-		Activities: []*discordgo.Activity{
+func ResetBotStatus(client *bot.Client) error {
+	serverCounts := client.Caches.GuildCache().Len()
+	return client.SetPresence(context.Background(), gateway.PresenceOpt(func(p *gateway.MessageDataPresenceUpdate) {
+		p.Activities = []discord.Activity{
 			{
-				Name: "Serving " + fmt.Sprintf("%d", len(serverCounts)) + " servers | /help",
-				Type: discordgo.ActivityTypeGame,
+				Type: discord.ActivityTypeGame,
+				Name: fmt.Sprintf("Serving %d servers | /help", serverCounts),
 			},
-		},
-		Status: "online",
-	}
-	return s.UpdateStatusComplex(*defaultStatus)
+		}
+		p.Status = discord.OnlineStatusOnline
+		p.AFK = false
+	}))
 }
