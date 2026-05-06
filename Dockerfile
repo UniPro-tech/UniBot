@@ -43,6 +43,7 @@ RUN apk update && apk add --no-cache \
 ENV PKG_CONFIG_PATH=/root/.local/lib/pkgconfig
 ENV LD_LIBRARY_PATH=/root/.local/lib
 COPY --from=builder /root/.local/ /root/.local/
+RUN chmod -R 755 /root/.local
 
 COPY --from=builder /app/src/main .
 RUN chmod 777 ./main
