@@ -108,6 +108,7 @@ func main() {
 	if _, err := client.Rest.SetGlobalCommands(client.ApplicationID, generalCommands); err != nil {
 	}
 	if _, err := client.Rest.SetGuildCommands(client.ApplicationID, snowflake.MustParse(ctxData.Config.AdminGuildID), adminCommands); err != nil {
+		log.Fatal(err)
 	}
 
 	// 終了待機
