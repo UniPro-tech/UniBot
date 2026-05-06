@@ -59,11 +59,8 @@ func main() {
 		bot.WithGatewayConfigOpts(
 			// Intents
 			gateway.WithIntents(
-				gateway.IntentGuilds,
-				gateway.IntentGuildVoiceStates,
-				gateway.IntentGuildMembers,
+				gateway.IntentsNonPrivileged,
 				gateway.IntentMessageContent,
-				gateway.IntentGuildMessages,
 			),
 		),
 		// DAVE
@@ -89,6 +86,9 @@ func main() {
 		// Cache
 		bot.WithCacheConfigOpts(
 			cache.WithCaches(cache.FlagVoiceStates),
+			cache.WithCaches(cache.FlagChannels),
+			cache.WithCaches(cache.FlagMessages),
+			cache.WithCaches(cache.FlagRoles),
 		),
 		// Handler
 		bot.WithEventListeners(r),
