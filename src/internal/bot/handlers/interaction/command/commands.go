@@ -1,8 +1,8 @@
 package command
 
 import (
-	"unibot/internal/bot/command/admin"
-	"unibot/internal/bot/command/general"
+	"unibot/internal/bot/handlers/interaction/command/admin"
+	"unibot/internal/bot/handlers/interaction/command/general"
 
 	"github.com/disgoorg/disgo/discord"
 )

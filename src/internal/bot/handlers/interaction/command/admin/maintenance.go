@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"unibot/internal/bot/command/admin/maintenance"
+	"unibot/internal/bot/handlers/interaction/command/admin/maintenance"
 
 	"github.com/disgoorg/disgo/discord"
 )

@@ -1,4 +1,4 @@
-package handler
+package event_handlers
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"unibot/internal"
-	"unibot/internal/bot/command/admin/maintenance"
+	"unibot/internal/bot/handlers/interaction/command/admin/maintenance"
 	"unibot/internal/model"
 	"unibot/internal/repository"
 

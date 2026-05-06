@@ -1,14 +1,14 @@
-package command
+package interaction_handler
 
 import (
 	"slices"
 	"time"
 	"unibot/internal"
-	"unibot/internal/bot/command/admin/maintenance"
-	"unibot/internal/bot/command/general"
-	"unibot/internal/bot/command/general/tts"
-	"unibot/internal/bot/command/general/tts/dict"
-	"unibot/internal/bot/command/general/tts/ttsSet"
+	"unibot/internal/bot/handlers/interaction/command/admin/maintenance"
+	"unibot/internal/bot/handlers/interaction/command/general"
+	"unibot/internal/bot/handlers/interaction/command/general/tts"
+	"unibot/internal/bot/handlers/interaction/command/general/tts/dict"
+	"unibot/internal/bot/handlers/interaction/command/general/tts/ttsSet"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"

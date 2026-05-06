@@ -1,7 +1,7 @@
 package tts
 
 import (
-	"unibot/internal/bot/command/general/tts/dict"
+	"unibot/internal/bot/handlers/interaction/command/general/tts/dict"
 
 	"github.com/disgoorg/disgo/discord"
 )

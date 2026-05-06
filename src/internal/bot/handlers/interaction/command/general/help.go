@@ -3,7 +3,7 @@ package general
 import (
 	"time"
 	"unibot/internal"
-	"unibot/internal/bot/command/general/help"
+	"unibot/internal/bot/handlers/interaction/command/general/help"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"

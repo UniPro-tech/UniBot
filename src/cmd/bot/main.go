@@ -21,8 +21,9 @@ import (
 
 	"unibot/internal"
 	"unibot/internal/api/voicevox"
-	"unibot/internal/bot/command"
-	customHandlers "unibot/internal/bot/handler"
+	customHandlers "unibot/internal/bot/handlers/event"
+	interaction_handler "unibot/internal/bot/handlers/interaction"
+	"unibot/internal/bot/handlers/interaction/command"
 	"unibot/internal/db"
 )
 
@@ -51,7 +52,7 @@ func main() {
 
 	r := handler.New()
 
-	command.RegistHandler(r, ctxData)
+	interaction_handler.RegistHandler(r, ctxData)
 
 	// disgo クライアントの構築
 	client, err := disgo.New(token,
