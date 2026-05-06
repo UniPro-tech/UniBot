@@ -14,6 +14,8 @@ import (
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/gateway"
 	"github.com/disgoorg/disgo/handler"
+	"github.com/disgoorg/disgo/voice"
+	"github.com/disgoorg/godave/golibdave"
 	"github.com/disgoorg/snowflake/v2"
 	"gorm.io/gorm/logger"
 
@@ -64,9 +66,19 @@ func main() {
 				gateway.IntentGuildMessages,
 			),
 		),
+		// DAVE
+		bot.WithVoiceManagerConfigOpts(
+			voice.WithDaveSessionCreateFunc(golibdave.NewSession),
+		),
 		// Event Listener
 		bot.WithEventListenerFunc(func(e *events.Ready) {
 			customHandlers.Ready(ctxData, e)
+		}),
+		bot.WithEventListenerFunc(func(e *events.VoiceServerUpdate) {
+			log.Println("VoiceServerUpdate")
+		}),
+		bot.WithEventListenerFunc(func(e *events.GuildVoiceStateUpdate) {
+			log.Println("VoiceStateUpdate")
 		}), /*
 			bot.WithEventListenerFunc[events.MessageCreate](func(e events.MessageCreate) {
 				customHandlers.MessageCreate(ctxData, &e)
