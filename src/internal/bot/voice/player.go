@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
-	"os"
 	"os/exec"
 	"sync"
-	"time"
 	"unibot/internal"
 	"unibot/internal/model"
 
@@ -35,9 +33,14 @@ type VoicePlayer struct {
 	currentOpusChan chan []byte
 	currentCtx      context.Context
 	currentCancel   context.CancelFunc
+	// エンコーダ
+	encoder *opus.Encoder
 }
 
 func NewVoicePlayer(guildID string, channelID string, vc voice.Conn, ctx *internal.BotContext) *VoicePlayer {
+	// エンコーダを作成
+	enc, _ := opus.NewEncoder(48000, 2, opus.AppAudio)
+
 	p := &VoicePlayer{
 		GuildID:         guildID,
 		ChannelID:       channelID,
@@ -47,6 +50,7 @@ func NewVoicePlayer(guildID string, channelID string, vc voice.Conn, ctx *intern
 		Skip:            make(chan struct{}),
 		currentOpusChan: make(chan []byte, 10),
 		playing:         false,
+		encoder:         enc,
 	}
 
 	go p.worker(ctx)
@@ -94,19 +98,20 @@ func (p *VoicePlayer) Close() {
 
 // これが true の時だけ Disgo は ProvideOpusFrame を呼びに来る
 func (p *VoicePlayer) CanProvide() bool {
-	p.vcMu.Lock()
-	defer p.vcMu.Unlock()
+	p.vcMu.RLock() // Lock() ではなく RLock() に変更
+	defer p.vcMu.RUnlock()
 
 	// 再生フラグが立っていない時は供給しない
 	if !p.playing {
 		return false
 	}
 
-	// 接続状態をチェック
-	vc := p.GetVC()
-	// Disgoの内部で接続が完全に確立（UDP/DAVE完了）しているかを確認
-	// 接続がnil、または有効でない場合はfalseを返してDisgoの送信ループを待機させる
-	return vc != nil && vc.ChannelID() != nil
+	vc := p.VC
+	if vc == nil || vc.Gateway().Status() != voice.StatusReady {
+		return false
+	}
+
+	return true
 }
 
 func (p *VoicePlayer) SetVC(vc voice.Conn) {
@@ -120,30 +125,28 @@ func (p *VoicePlayer) SetVC(vc voice.Conn) {
 
 func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 	for item := range p.TextQueue {
-		p.currentCtx, p.currentCancel = context.WithCancel(context.Background())
+		// コンテキストの生成と代入をロックで保護
+		cCtx, cCancel := context.WithCancel(context.Background())
+		p.vcMu.Lock()
+		p.currentCtx = cCtx
+		p.currentCancel = cCancel
+		p.vcMu.Unlock()
 
-		// 1. 合成
-		audio, err := ctx.VoiceVox.Synthesize(p.currentCtx, item.Text, item.Setting.SpeakerID, float64(item.Setting.SpeakerSpeed)/100.0)
+		// 1. 合成 (cCtx を渡すことで、合成中のスキップにも対応可能)
+		audio, err := ctx.VoiceVox.Synthesize(cCtx, item.Text, item.Setting.SpeakerID, float64(item.Setting.SpeakerSpeed)/100.0)
 		if err != nil {
-			p.currentCancel()
-			continue
-		}
-
-		vc := p.GetVC()
-		if vc == nil {
-			p.currentCancel()
+			// エラーまたはスキップ(キャンセル)された場合は次へ
 			continue
 		}
 
 		// 2. 接続の生存確認
-		if vc.ChannelID() == nil {
-			p.currentCancel()
+		vc := p.GetVC()
+		if vc == nil || vc.ChannelID() == nil {
 			continue
 		}
 
 		// 3. Providerをセットする直前に、Speak状態にして少し待つ
 		_ = vc.SetSpeaking(context.Background(), voice.SpeakingFlagMicrophone)
-		time.Sleep(200 * time.Millisecond) // UDPソケットが安定するための「祈り」の時間
 
 		p.vcMu.Lock()
 		p.initFrames = 0 // カウンタをリセット
@@ -154,16 +157,18 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 		vc.SetOpusFrameProvider(p)
 
 		// 4. 再生
-		p.streamAudio(p.currentCtx, audio)
+		p.streamAudio(cCtx, audio) // 保護されたローカル変数 cCtx を使う
 
 		// 5. 終了
 		p.vcMu.Lock()
 		p.playing = false
+		p.currentCancel = nil // 使い終わったら安全のためにクリア
 		p.vcMu.Unlock()
 
 		vc.SetOpusFrameProvider(nil)
 		_ = vc.SetSpeaking(context.Background(), voice.SpeakingFlagNone)
-		p.currentCancel()
+		cCancel() // リソースリークを防ぐため確実にキャンセルを呼ぶ
+
 		select {
 		case <-p.Stop:
 			return
@@ -173,23 +178,46 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 }
 
 func (p *VoicePlayer) streamAudio(ctx context.Context, wav []byte) {
-	tmp, _ := os.CreateTemp("", "tts-*.wav")
-	defer os.Remove(tmp.Name())
-	tmp.Write(wav)
-	tmp.Close()
+	// 1. ffmpeg
+	cmd := exec.Command("ffmpeg",
+		"-loglevel", "quiet",
+		"-i", "pipe:0", // ファイルではなく標準入力から
+		"-f", "s16le",
+		"-ar", "48000",
+		"-ac", "2",
+		"pipe:1",
+	)
 
-	cmd := exec.Command("ffmpeg", "-loglevel", "quiet", "-i", tmp.Name(), "-f", "s16le", "-ar", "48000", "-ac", "2", "pipe:1")
-	stdout, _ := cmd.StdoutPipe()
+	stdin, _ := cmd.StdinPipe()   // 書き込み用パイプ
+	stdout, _ := cmd.StdoutPipe() // 読み取り用パイプ
+
 	if err := cmd.Start(); err != nil {
 		return
 	}
+
+	// メモリ上の wav を FFmpeg に書き込むゴルーチン
+	go func() {
+		defer stdin.Close()
+		stdin.Write(wav)
+	}()
+
 	defer cmd.Process.Kill()
 
-	enc, _ := opus.NewEncoder(48000, 2, opus.AppAudio)
+	// 2. エンコーダの事前生成 (NewVoicePlayerで作って再利用するのが理想)
 	pcm := make([]int16, 960*2)
 	byteBuf := make([]byte, len(pcm)*2)
 
 	for {
+		// 1. まずスキップや終了をチェック
+		select {
+		case <-ctx.Done():
+			return
+		case <-p.Skip:
+			return
+		default:
+			// チェックを抜けたら次へ
+		}
+
 		_, err := io.ReadFull(stdout, byteBuf)
 		if err != nil {
 			break
@@ -200,19 +228,19 @@ func (p *VoicePlayer) streamAudio(ctx context.Context, wav []byte) {
 		}
 
 		opusBuf := make([]byte, 4000)
-		n, _ := enc.Encode(pcm, opusBuf)
+		n, _ := p.encoder.Encode(pcm, opusBuf)
 
+		// 2. 送信。ここでも Skip を同時に待つ
 		select {
 		case <-ctx.Done():
 			return
 		case <-p.Skip:
 			return
 		case p.currentOpusChan <- opusBuf[:n]:
-			// Providerが消費するまでここで待機（実質的にタイミング制御になる）
+			// 送信完了
 		}
 	}
-	// ffmpeg の読み取りが終わった後、5フレーム分(約100ms)の無音を送って、
-	// 最後の一言がバッファで切られないように押し出す
+	// 押し出し用の無音フレーム
 	silenceFrame := []byte{0xF8, 0xFF, 0xFE} // Opus の標準的な無音フレーム
 	for i := 0; i < 5; i++ {
 		select {
@@ -231,6 +259,14 @@ func (p *VoicePlayer) EnqueueText(item QueueItem) {
 }
 
 func (p *VoicePlayer) SkipCurrent() {
+	p.vcMu.RLock()
+	cancel := p.currentCancel
+	p.vcMu.RUnlock()
+
+	if cancel != nil {
+		cancel()
+	}
+
 	select {
 	case p.Skip <- struct{}{}:
 	default:

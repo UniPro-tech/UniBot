@@ -72,6 +72,11 @@ func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 		// ボイスチャンネル接続
 		// disgo の VoiceManager を使用する
 		conn := e.Client().VoiceManager.CreateConn(guildID)
+
+		// DB処理
+		repo := repository.NewTTSConnectionRepository(ctx.DB)
+		ttsConnection, _ := repo.GetByGuildID(guildID.String())
+
 		go func() {
 			conCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 			defer cancel()
@@ -83,24 +88,7 @@ func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 				return
 			}
 			log.Println("Voice connection established with DAVE")
-		}()
 
-		// DB処理
-		repo := repository.NewTTSConnectionRepository(ctx.DB)
-		ttsConnection, _ := repo.GetByGuildID(guildID.String())
-
-		if ttsConnection == nil {
-			ttsConnection = &model.TTSConnection{
-				GuildID:   guildID.String(),
-				ChannelID: e.Channel().ID().String(),
-			}
-			_ = repo.Create(ttsConnection)
-		} else {
-			ttsConnection.ChannelID = e.Channel().ID().String()
-			_ = repo.Update(ttsConnection)
-		}
-
-		go func() {
 			// 読み上げ開始の準備
 			channel, ok := e.Client().Caches.Channel(*userVoiceState.ChannelID)
 
@@ -115,6 +103,17 @@ func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 				Text:    fmt.Sprintf("%sに、読み上げを接続しました。", channelName),
 				Setting: repository.DefaultTTSPersonalSetting,
 			})
+
+			if ttsConnection == nil {
+				ttsConnection = &model.TTSConnection{
+					GuildID:   guildID.String(),
+					ChannelID: e.Channel().ID().String(),
+				}
+				_ = repo.Create(ttsConnection)
+			} else {
+				ttsConnection.ChannelID = e.Channel().ID().String()
+				_ = repo.Update(ttsConnection)
+			}
 		}()
 
 		// 成功レスポンス
