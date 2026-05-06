@@ -321,7 +321,7 @@ func stringToActivityType(typeStr string) discordgo.ActivityType {
 func SetBotStatus(client *bot.Client, data StatusData) error {
 	return client.SetPresence(context.Background(), gateway.PresenceOpt(func(p *gateway.MessageDataPresenceUpdate) {
 		p.Activities = []discord.Activity{
-			discord.Activity{
+			{
 				Type: data.Type,
 				Name: data.Text,
 			},
