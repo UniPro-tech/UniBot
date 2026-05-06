@@ -13,13 +13,14 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/gateway"
+	"github.com/disgoorg/disgo/handler"
 	"github.com/disgoorg/snowflake/v2"
 	"gorm.io/gorm/logger"
 
 	"unibot/internal"
 	"unibot/internal/api/voicevox"
 	"unibot/internal/bot/command"
-	"unibot/internal/bot/handler"
+	customHandlers "unibot/internal/bot/handler"
 	"unibot/internal/db"
 )
 
@@ -46,36 +47,50 @@ func main() {
 		log.Fatal(err)
 	}
 
+	r := handler.New()
+
+	command.RegistHandler(r, ctxData)
+
 	// disgo クライアントの構築
 	client, err := disgo.New(token,
+		//bot.WithDefaultGateway(),
 		bot.WithGatewayConfigOpts(
-			gateway.WithIntents(gateway.IntentGuilds|gateway.IntentGuildVoiceStates),
+			// Intents
+			gateway.WithIntents(
+				gateway.IntentGuilds,
+				gateway.IntentGuildVoiceStates,
+				gateway.IntentGuildMembers,
+				gateway.IntentMessageContent,
+				gateway.IntentGuildMessages,
+			),
 		),
+		// Event Listener
+		bot.WithEventListenerFunc(func(e *events.Ready) {
+			customHandlers.Ready(ctxData, e)
+		}), /*
+			bot.WithEventListenerFunc[events.MessageCreate](func(e events.MessageCreate) {
+				customHandlers.MessageCreate(ctxData, &e)
+			}),
+			bot.WithEventListenerFunc[events.GuildVoiceStateUpdate](func(e events.GuildVoiceStateUpdate) {
+				customHandlers.VoiceStateUpdate(ctxData, &e)
+			}),*/
+		// Cache
 		bot.WithCacheConfigOpts(
 			cache.WithCaches(cache.FlagVoiceStates),
 		),
-		bot.WithEventListenerFunc[events.Ready](func(e events.Ready) {
-			handler.Ready(ctxData, &e)
-		}),
-		bot.WithEventListenerFunc[events.MessageCreate](func(e events.MessageCreate) {
-			handler.MessageCreate(ctxData, &e)
-		}),
-		bot.WithEventListenerFunc[events.ApplicationCommandInteractionCreate](func(e events.ApplicationCommandInteractionCreate) {
-			handler.InteractionCreate(ctxData)(&e)
-		}),
-		bot.WithEventListenerFunc[events.GuildVoiceStateUpdate](func(e events.GuildVoiceStateUpdate) {
-			handler.VoiceStateUpdate(ctxData, &e)
-		}),
+		// Handler
+		bot.WithEventListeners(r),
 	)
 	if err != nil {
 		log.Fatal("error while building disgo instance: ", err)
 	}
 
+	defer client.Close(context.TODO())
+
 	// 接続開始
 	if err = client.OpenGateway(context.TODO()); err != nil {
 		log.Fatal("error while connecting to gateway: ", err)
 	}
-	defer client.Close(context.TODO())
 
 	log.Println("Bot is running...")
 
@@ -91,10 +106,8 @@ func main() {
 	}
 
 	if _, err := client.Rest.SetGlobalCommands(client.ApplicationID, generalCommands); err != nil {
-		log.Fatalf("error while registering commands: %v", err)
 	}
 	if _, err := client.Rest.SetGuildCommands(client.ApplicationID, snowflake.MustParse(ctxData.Config.AdminGuildID), adminCommands); err != nil {
-		log.Fatalf("error while registering commands: %v", err)
 	}
 
 	// 終了待機
