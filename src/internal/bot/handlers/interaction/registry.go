@@ -124,7 +124,6 @@ func DeferReplyMiddleware(ctx *internal.BotContext, ephemeral bool, update bool)
 			}
 		} else {
 			return func(e *handler.InteractionEvent) error {
-				e.DeferCreateMessage(ephemeral)
 				e.DeferUpdateMessage()
 				return next(e)
 			}

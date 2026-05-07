@@ -213,7 +213,7 @@ func HandleTTSSetVoicePage(ctx *internal.BotContext) func(data discord.ButtonInt
 		currentSpeakerID := ttsutil.GetCurrentSpeakerID(ctx, memberID)
 		content, components := ttsutil.BuildVoiceMessage(pageIndex, pages, currentSpeakerID)
 
-		_, err = e.UpdateInteractionResponse(discord.NewMessageUpdate().WithEmbeds(discord.Embed{
+		_, err = e.CreateFollowupMessage(discord.NewMessageCreate().WithEmbeds(discord.Embed{
 			Title:       "話者を選択してください",
 			Description: content,
 			Color:       ctx.Config.Colors.Primary,
