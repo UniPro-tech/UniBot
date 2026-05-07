@@ -44,7 +44,8 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 	})
 	// action row
 	// select menu
-	r.SelectMenuComponent("tts_dict_remove", messageComponent.HandleTTSDictRemove(ctxData))
+	r.SelectMenuComponent("/tts_dict_remove", messageComponent.HandleTTSDictRemove(ctxData))
+	r.SelectMenuComponent("/tts_set_voice_select", messageComponent.HandleTTSSetVoice(ctxData))
 }
 
 func IsOwner(member discord.Member) bool {
