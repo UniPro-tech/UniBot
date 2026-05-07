@@ -14,8 +14,8 @@ import (
 
 const (
 	SpeakerPageSize         = 20
-	VoiceSelectCustomID     = "tts_set_voice_select"
-	VoicePageCustomIDPrefix = "tts_set_voice_page"
+	VoiceSelectCustomID     = "/tts_set_voice_select"
+	VoicePageCustomIDPrefix = "/tts_set_voice_page"
 	speakerSelectMax        = 25
 	speakerCacheTTL         = 5 * time.Minute
 )
@@ -150,8 +150,8 @@ func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID stri
 	}
 
 	if maxPage > 1 {
-		prevID := fmt.Sprintf("%s:%d", VoicePageCustomIDPrefix, pageIndex-1)
-		nextID := fmt.Sprintf("%s:%d", VoicePageCustomIDPrefix, pageIndex+1)
+		prevID := fmt.Sprintf("%s/%d", VoicePageCustomIDPrefix, pageIndex-1)
+		nextID := fmt.Sprintf("%s/%d", VoicePageCustomIDPrefix, pageIndex+1)
 		components = append(components, discord.ActionRowComponent{
 			Components: []discord.InteractiveComponent{
 				discord.ButtonComponent{

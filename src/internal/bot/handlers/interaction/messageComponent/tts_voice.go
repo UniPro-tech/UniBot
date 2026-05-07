@@ -3,6 +3,7 @@ package messageComponent
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 	"unibot/internal"
 	"unibot/internal/bot/ttsutil"
@@ -151,115 +152,80 @@ func HandleTTSSetVoice(ctx *internal.BotContext) func(data discord.SelectMenuInt
 }
 
 // HandleTTSSetVoicePage は話者選択のページ送りを処理します
-/* TODO: ページ送りを実装
-func HandleTTSSetVoicePage(ctx *internal.BotContext, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	customID := i.MessageComponentData().CustomID
-	parts := strings.SplitN(customID, ":", 2)
-	if len(parts) != 2 {
-		return
-	}
-
-	pageIndex, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return
-	}
-
-	speakers, err := ttsutil.FetchSpeakers(ctx)
-	if err != nil {
-		log.Println("Failed to fetch speakers:", err)
-		if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "話者情報の取得に失敗しました。",
-						Color:       ctx.Config.Colors.Error,
-						Footer: &discord.EmbedFooter{
-							Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-							IconURL: e.User().EffectiveAvatarURL(),
-						},
-						Timestamp: func() *time.Time {
-							t := time.Now()
-							return &t
-						}(),
-					},
+func HandleTTSSetVoicePage(ctx *internal.BotContext) func(data discord.ButtonInteractionData, e *handler.ComponentEvent) error {
+	return func(_ discord.ButtonInteractionData, e *handler.ComponentEvent) error {
+		pageIndexString := e.Vars["pageIndex"]
+		pageIndex, err := strconv.Atoi(pageIndexString)
+		if err != nil {
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
+				Title:       "エラー",
+				Description: "無効なページ番号です。",
+				Color:       ctx.Config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		}); err != nil {
-			log.Println("Failed to respond interaction:", err)
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}).WithFlags(discord.MessageFlagEphemeral))
+			return err
 		}
-		return
-	}
 
-	pages := ttsutil.BuildSpeakerPages(speakers, ttsutil.SpeakerPageSize)
-	if len(pages) == 0 {
-		if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "話者情報が取得できませんでした。",
-						Color:       ctx.Config.Colors.Error,
-						Footer: &discord.EmbedFooter{
-							Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-							IconURL: e.User().EffectiveAvatarURL(),
-						},
-						Timestamp: func() *time.Time {
-							t := time.Now()
-							return &t
-						}(),
-					},
+		speakers, err := ttsutil.FetchSpeakers(ctx)
+		if err != nil {
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
+				Title:       "エラー",
+				Description: "話者情報の取得に失敗しました。",
+				Color:       ctx.Config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		}); err != nil {
-			log.Println("Failed to respond interaction:", err)
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}).WithFlags(discord.MessageFlagEphemeral))
+			return err
 		}
-		return
-	}
 
-	memberID, _, _ := ttsutil.GetInteractionUser(i)
-	if memberID == "" {
-		log.Println("HandleTTSSetVoicePage: missing user information on interaction")
-		if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "エラー",
-						Description: "ユーザー情報の取得に失敗しました。",
-						Color:       ctx.Config.Colors.Error,
-						Footer: &discord.EmbedFooter{
-							Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-							IconURL: e.User().EffectiveAvatarURL(),
-						},
-						Timestamp: func() *time.Time {
-							t := time.Now()
-							return &t
-						}(),
-					},
+		pages := ttsutil.BuildSpeakerPages(speakers, ttsutil.SpeakerPageSize)
+		if len(pages) == 0 {
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
+				Title:       "エラー",
+				Description: "話者情報が取得できませんでした。",
+				Color:       ctx.Config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		}); err != nil {
-			log.Println("Failed to respond interaction:", err)
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}).WithFlags(discord.MessageFlagEphemeral))
+			return err
 		}
-		return
-	}
-	currentSpeakerID := ttsutil.GetCurrentSpeakerID(ctx, memberID)
-	content, components := ttsutil.BuildVoiceMessage(pageIndex, pages, currentSpeakerID)
 
-	if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseUpdateMessage,
-		Data: &discordgo.InteractionResponseData{
-			Content:    content,
-			Components: components,
-		},
-	}); err != nil {
-		log.Println("Failed to respond interaction:", err)
+		memberID := e.Member().User.ID.String()
+		currentSpeakerID := ttsutil.GetCurrentSpeakerID(ctx, memberID)
+		content, components := ttsutil.BuildVoiceMessage(pageIndex, pages, currentSpeakerID)
+
+		err = e.UpdateMessage(discord.NewMessageUpdate().WithEmbeds(discord.Embed{
+			Title:       "話者を選択してください",
+			Description: content,
+			Color:       ctx.Config.Colors.Primary,
+			Footer: &discord.EmbedFooter{
+				Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+				IconURL: e.User().EffectiveAvatarURL(),
+			},
+			Timestamp: func() *time.Time {
+				t := time.Now()
+				return &t
+			}(),
+		}).WithComponents(components...))
+		return err
 	}
 }
-*/

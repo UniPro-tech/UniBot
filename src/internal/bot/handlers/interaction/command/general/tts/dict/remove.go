@@ -94,7 +94,7 @@ func Remove(ctx *internal.BotContext) func(data discord.SlashCommandInteractionD
 			discord.ActionRowComponent{
 				Components: []discord.InteractiveComponent{
 					discord.StringSelectMenuComponent{
-						CustomID:    "tts_dict_remove",
+						CustomID:    "/tts_dict_remove",
 						Placeholder: "削除する単語を選んでください",
 						Options:     options,
 					},
