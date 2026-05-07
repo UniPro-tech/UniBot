@@ -31,7 +31,7 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 	}
 
 	// チャンネル内での状態変更（ミュートなど）は無視
-	if vsu.ChannelID != nil && oldVsu.ChannelID != nil && vsu.ChannelID == oldVsu.ChannelID {
+	if vsu.ChannelID != nil && oldVsu.ChannelID != nil && *vsu.ChannelID == *oldVsu.ChannelID {
 		return
 	}
 
