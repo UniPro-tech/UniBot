@@ -68,13 +68,27 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 		// チャンネル内にまだ人間がいるかチェック
 		var stillInChannel bool
 		states := client.Caches.VoiceStates(conn.GuildID())
-		for state := range states {
+		states(func(state discord.VoiceState) bool {
+			// 1. Bot自身はカウントしない
+			if state.UserID == client.ID() {
+				return true
+			}
+
+			// 2. 「今まさに退出/移動したユーザー」本人もカウントしない
+			if state.UserID == e.Member.User.ID {
+				return true
+			}
+
+			// 3. そのユーザーが現在「Botと同じチャンネル」にいるか判定
 			if state.ChannelID != nil && *state.ChannelID == snowflake.MustParse(botChannelID) {
+				// 4. そのユーザーがBotでないことを確認
 				if member, ok := client.Caches.Member(vsu.GuildID, state.UserID); ok && !member.User.Bot {
 					stillInChannel = true
+					return false
 				}
 			}
-		}
+			return true
+		})
 
 		// 誰もいなくなった場合
 		if !stillInChannel {
