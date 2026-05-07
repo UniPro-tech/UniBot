@@ -20,10 +20,8 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 		return
 	}
 
-	_, isGuild := e.Guild()
-
 	// Ignore DM
-	if isGuild {
+	if e.GuildID == nil {
 		return
 	}
 
@@ -160,12 +158,25 @@ func SanitizeMessageContent(client *bot.Client, guildID *snowflake.ID, content s
 		if len(matches) < 2 {
 			return match
 		}
-		userID := matches[1]
-		user, ok := client.Caches.Member(*guildID, snowflake.MustParse(userID))
-		if !ok {
+		userIDStr := matches[1]
+		uID, err := snowflake.Parse(userIDStr)
+		if err != nil {
 			return match
 		}
-		return "@" + user.User.EffectiveName()
+
+		// 1. まずキャッシュを探す
+		if member, ok := client.Caches.Member(*guildID, uID); ok {
+			return "@" + member.EffectiveName()
+		}
+
+		// 2. キャッシュにない場合、REST APIで取得すると重いので
+		// 一旦そのままにするか、Userキャッシュだけでも探す
+		if user, ok := client.Caches.Member(*guildID, uID); ok {
+			return "@" + user.EffectiveName()
+		}
+
+		// 3. どうしても名前が取れない場合は「不明なユーザー」等にする
+		return "@不明なユーザー"
 	})
 
 	// ロールメンション置換
