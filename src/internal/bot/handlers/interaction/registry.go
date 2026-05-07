@@ -9,6 +9,7 @@ import (
 	"unibot/internal/bot/handlers/interaction/command/general/tts"
 	"unibot/internal/bot/handlers/interaction/command/general/tts/dict"
 	"unibot/internal/bot/handlers/interaction/command/general/tts/ttsSet"
+	"unibot/internal/bot/messageComponent"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
@@ -41,6 +42,9 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 		r.SlashCommand("/status/reset", maintenance.StatusResetHandler(ctxData))
 		r.SlashCommand("/shutdown", maintenance.Shutdown(ctxData))
 	})
+	// action row
+	// select menu
+	r.SelectMenuComponent("tts_dict_remove", messageComponent.HandleTTSDictRemove(ctxData))
 }
 
 func IsOwner(member discord.Member) bool {
