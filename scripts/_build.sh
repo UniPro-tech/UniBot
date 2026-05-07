@@ -6,6 +6,8 @@ if [[ "$*" == *"--dev"* ]]; then
   export CONFIG_ADMIN_GUILD_ID="your_guild_id_here"
   export CONFIG_ADMIN_ROLE_ID="your_role_id_here"
   export PG_DSN="your_postgres_dsn_here"
+  export GITHUB_OAUTH_ID="your-client-id-here"
+  export GITHUB_OAUTH_SECRET="your-client-secret-here"
 
   go run -ldflags "\
 -X unibot/internal.GitCommit=$COMMIT \

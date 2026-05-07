@@ -136,7 +136,12 @@ func LoadConfig() *Config {
 	}
 
 	// GitHub APIからコントリビューターを取得する
-	res, err := http.Get("https://api.github.com/repos/" + GitHubRepoEnv + "/contributors")
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", "https://api.github.com/repos/"+GitHubRepoEnv+"/contributors", nil)
+	if os.Getenv("GITHUB_OAUTH_ID") != "" && os.Getenv("GITHUB_OAUTH_SECRET") != "" {
+		req.SetBasicAuth(os.Getenv("GITHUB_OAUTH_ID"), os.Getenv("GITHUB_OAUTH_SECRET"))
+	}
+	res, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
