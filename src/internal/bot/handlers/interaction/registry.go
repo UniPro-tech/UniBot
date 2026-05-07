@@ -17,26 +17,49 @@ import (
 )
 
 func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
-	r.Use(DeferReplyMiddleware(ctxData, false))
-	r.SlashCommand("/ping", general.Ping(ctxData))
-	r.SlashCommand("/about", general.About(ctxData))
-	r.SlashCommand("/help", general.Help(ctxData))
-	r.SlashCommand("/colorcode", general.ColorCode(ctxData))
+	r.Route("/ping", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, false, false))
+		r.SlashCommand("/", general.Ping(ctxData))
+	})
+	r.Route("/about", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, false, false))
+		r.SlashCommand("/", general.About(ctxData))
+	})
+	r.Route("/help", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, false, false))
+		r.SlashCommand("/", general.Help(ctxData))
+	})
+	r.Route("/colorcode", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, false, false))
+		r.SlashCommand("/", general.ColorCode(ctxData))
+	})
 	r.Route("/tts", func(r handler.Router) {
-		r.SlashCommand("/join", tts.Join(ctxData))
-		r.SlashCommand("/leave", tts.Leave(ctxData))
-		r.SlashCommand("/skip", tts.Skip(ctxData))
+		r.Route("/join", func(r handler.Router) {
+			r.Use(DeferReplyMiddleware(ctxData, false, false))
+			r.SlashCommand("/", tts.Join(ctxData))
+		})
+		r.Route("/leave", func(r handler.Router) {
+			r.Use(DeferReplyMiddleware(ctxData, false, false))
+			r.SlashCommand("/", tts.Leave(ctxData))
+		})
+		r.Route("/skip", func(r handler.Router) {
+			r.Use(DeferReplyMiddleware(ctxData, false, false))
+			r.SlashCommand("/", tts.Skip(ctxData))
+		})
 		r.Route("/set", func(r handler.Router) {
+			r.Use(DeferReplyMiddleware(ctxData, true, false))
 			r.SlashCommand("/speed", ttsSet.Speed(ctxData))
 			r.SlashCommand("/voice", ttsSet.Voice(ctxData))
 		})
 		r.Route("/dict", func(r handler.Router) {
+			r.Use(DeferReplyMiddleware(ctxData, true, false))
 			r.SlashCommand("/add", dict.Add(ctxData))
 			r.SlashCommand("/list", dict.List(ctxData))
 			r.SlashCommand("/remove", dict.Remove(ctxData))
 		})
 	})
 	r.Route("/maintenance", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, true, false))
 		r.Use(AdminOnlyMiddleware(ctxData))
 		r.SlashCommand("/status/set", maintenance.StatusSetHandler(ctxData))
 		r.SlashCommand("/status/reset", maintenance.StatusResetHandler(ctxData))
@@ -44,10 +67,19 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 	})
 	// action row
 	// select menu
-	r.SelectMenuComponent("/tts_dict_remove", messageComponent.HandleTTSDictRemove(ctxData))
-	r.SelectMenuComponent("/tts_set_voice_select", messageComponent.HandleTTSSetVoice(ctxData))
+	r.Route("/tts_dict_remove", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, true, true))
+		r.SelectMenuComponent("/", messageComponent.HandleTTSDictRemove(ctxData))
+	})
+	r.Route("/tts_set_voice_select", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, true, true))
+		r.SelectMenuComponent("/", messageComponent.HandleTTSSetVoice(ctxData))
+	})
 	// button
-	r.ButtonComponent("/tts_set_voice_page/{pageIndex}", messageComponent.HandleTTSSetVoicePage(ctxData))
+	r.Route("/tts_set_voice_page/{pageIndex}", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, true, true))
+		r.ButtonComponent("/", messageComponent.HandleTTSSetVoicePage(ctxData))
+	})
 }
 
 func IsOwner(member discord.Member) bool {
@@ -83,11 +115,19 @@ func AdminOnlyMiddleware(ctx *internal.BotContext) func(next handler.Handler) ha
 	}
 }
 
-func DeferReplyMiddleware(ctx *internal.BotContext, ephemeral bool) func(next handler.Handler) handler.Handler {
+func DeferReplyMiddleware(ctx *internal.BotContext, ephemeral bool, update bool) func(next handler.Handler) handler.Handler {
 	return func(next handler.Handler) handler.Handler {
-		return func(e *handler.InteractionEvent) error {
-			e.DeferCreateMessage(ephemeral)
-			return next(e)
+		if !update {
+			return func(e *handler.InteractionEvent) error {
+				e.DeferCreateMessage(ephemeral)
+				return next(e)
+			}
+		} else {
+			return func(e *handler.InteractionEvent) error {
+				e.DeferCreateMessage(ephemeral)
+				e.DeferUpdateMessage()
+				return next(e)
+			}
 		}
 	}
 }
