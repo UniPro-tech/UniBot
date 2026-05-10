@@ -3,6 +3,7 @@ package event_handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 	"unibot/internal"
 	"unibot/internal/bot/voice"
@@ -69,13 +70,19 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 		var stillInChannel bool
 		states := client.Caches.VoiceStates(conn.GuildID())
 		states(func(state discord.VoiceState) bool {
+			if state.ChannelID == nil {
+				log.Print("Debug: StateChan is nil")
+				return true
+			}
+			log.Printf("Debug: %s, %s, %s", state.UserID.String(), client.ID().String(), state.ChannelID.String())
+
 			// 1. Bot自身はカウントしない
-			if state.UserID == client.ID() {
+			if state.UserID.String() == client.ID().String() {
 				return true
 			}
 
 			// 2. 「今まさに退出/移動したユーザー」本人もカウントしない
-			if state.UserID == e.Member.User.ID {
+			if state.UserID.String() == e.Member.User.ID.String() {
 				return true
 			}
 
