@@ -80,7 +80,7 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 			}
 
 			// 3. そのユーザーが現在「Botと同じチャンネル」にいるか判定
-			if state.ChannelID != nil && *state.ChannelID == snowflake.MustParse(botChannelID) {
+			if state.ChannelID != nil && state.ChannelID.String() == botChannelID {
 				// 4. そのユーザーがBotでないことを確認
 				if member, ok := client.Caches.Member(vsu.GuildID, state.UserID); ok && !member.User.Bot {
 					stillInChannel = true

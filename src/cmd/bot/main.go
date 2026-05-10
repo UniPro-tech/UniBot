@@ -85,6 +85,7 @@ func main() {
 			cache.WithCaches(cache.FlagMessages),
 			cache.WithCaches(cache.FlagRoles),
 			cache.WithCaches(cache.FlagMembers),
+			cache.WithCaches(cache.FlagGuilds),
 		),
 		// Handler
 		bot.WithEventListeners(r),
