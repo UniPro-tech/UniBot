@@ -20,7 +20,6 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 	oldVsu := e.OldVoiceState
 
 	// Bot自身の接続状況を確認（disgoのVoiceManagerを使用している想定）
-	// disgoでは通常 client.VoiceManager().GetConnection(guildID) で取得します
 	conn := client.VoiceManager.GetConn(vsu.GuildID)
 	if conn == nil {
 		return
