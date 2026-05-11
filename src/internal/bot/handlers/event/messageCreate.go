@@ -118,6 +118,7 @@ var (
 	customEmojiRegex    = regexp.MustCompile(`<a?:[^:]+:\d+>`) // <:name:id> or <a:name:id>
 	unicodeEmojiRegex   = regexp.MustCompile(`[\p{So}\p{Sk}]`) // Unicode絵文字
 	urlRegex            = regexp.MustCompile(`https?://[^\s]+`)
+	spoilerRegex        = regexp.MustCompile(`\|\|.*?\|\|`)
 )
 
 // メッセージ内容をサニタイズする関数
@@ -201,6 +202,9 @@ func SanitizeMessageContent(client *bot.Client, guildID *snowflake.ID, content s
 
 	// URL置換
 	content = urlRegex.ReplaceAllString(content, "、(リンク省略)、")
+
+	// スポイラー置換
+	content = spoilerRegex.ReplaceAllString(content, "、(スポイラー)、")
 
 	return content
 }

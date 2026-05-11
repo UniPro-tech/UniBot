@@ -174,13 +174,11 @@ func cacheKeyFor(db *gorm.DB, guildID string) cacheKey {
 		return cacheKey{guildID: guildID}
 	}
 
-	if db != nil {
-		sqlDB, err := db.DB()
-		if err == nil && sqlDB != nil {
-			return cacheKey{
-				dbPtr:   reflect.ValueOf(sqlDB).Pointer(),
-				guildID: guildID,
-			}
+	sqlDB, err := db.DB()
+	if err == nil && sqlDB != nil {
+		return cacheKey{
+			dbPtr:   reflect.ValueOf(sqlDB).Pointer(),
+			guildID: guildID,
 		}
 	}
 
