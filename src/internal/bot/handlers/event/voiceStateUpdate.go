@@ -3,7 +3,6 @@ package event_handlers
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 	"unibot/internal"
 	"unibot/internal/bot/voice"
@@ -73,7 +72,6 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 			if state.ChannelID == nil {
 				return true
 			}
-			log.Printf("Debug: %s, %s, %s", state.UserID.String(), client.ID().String(), state.ChannelID.String())
 
 			// 1. Bot自身はカウントしない
 			if state.UserID.String() == client.ID().String() {
