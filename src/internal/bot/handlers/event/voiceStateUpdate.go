@@ -70,7 +70,6 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 		states := client.Caches.VoiceStates(conn.GuildID())
 		states(func(state discord.VoiceState) bool {
 			if state.ChannelID == nil {
-				log.Print("Debug: StateChan is nil")
 				return true
 			}
 			log.Printf("Debug: %s, %s, %s", state.UserID.String(), client.ID().String(), state.ChannelID.String())
@@ -87,8 +86,11 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 
 			// 3. そのユーザーが現在「Botと同じチャンネル」にいるか判定
 			if state.ChannelID != nil && state.ChannelID.String() == botChannelID {
+				log.Print("Debug: botchanID matched for user ", state.UserID.String())
 				// 4. そのユーザーがBotでないことを確認
-				if member, ok := client.Caches.Member(vsu.GuildID, state.UserID); ok && !member.User.Bot {
+				member, ok := client.Caches.Member(vsu.GuildID, state.UserID)
+				log.Printf("Debug: member cache lookup for user %s, found: %v", state.UserID.String(), ok)
+				if ok && !member.User.Bot {
 					stillInChannel = true
 					return false
 				}
