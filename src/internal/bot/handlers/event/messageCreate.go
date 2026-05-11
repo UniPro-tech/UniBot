@@ -195,7 +195,7 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 				desc := fmt.Sprintf("%sが%dつ", data.ExtentionData.Yomi, data.NumberOfAttachement)
 				attachmentDescriptions = append(attachmentDescriptions, desc)
 			}
-			content += "、" + strings.Join(attachmentDescriptions, "、") + "が添付されています。"
+			content += "、" + strings.Join(attachmentDescriptions, "、") + "添付されています。"
 		}
 
 		vcConn := e.Client().VoiceManager.GetConn(*e.GuildID)
