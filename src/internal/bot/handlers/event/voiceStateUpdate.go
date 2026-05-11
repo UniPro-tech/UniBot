@@ -9,6 +9,7 @@ import (
 	"unibot/internal/bot/voice"
 	"unibot/internal/repository"
 
+	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/snowflake/v2"
@@ -64,7 +65,7 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 	}
 
 	// --- 2. 退出処理 ---
-	if changeType == "left" && *oldVsu.ChannelID == snowflake.MustParse(botChannelID) {
+	if (changeType == "left" || changeType == "moved") && *oldVsu.ChannelID == snowflake.MustParse(botChannelID) {
 		// チャンネル内にまだ人間がいるかチェック
 		var stillInChannel bool
 		states := client.Caches.VoiceStates(conn.GuildID())
@@ -86,10 +87,8 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 
 			// 3. そのユーザーが現在「Botと同じチャンネル」にいるか判定
 			if state.ChannelID != nil && state.ChannelID.String() == botChannelID {
-				log.Print("Debug: botchanID matched for user ", state.UserID.String())
 				// 4. そのユーザーがBotでないことを確認
-				member, ok := client.Caches.Member(vsu.GuildID, state.UserID)
-				log.Printf("Debug: member cache lookup for user %s, found: %v", state.UserID.String(), ok)
+				member, ok := getSafeMember(client, conn.GuildID(), state.UserID)
 				if ok && !member.User.Bot {
 					stillInChannel = true
 					return false
@@ -175,4 +174,17 @@ func getBotChannelID(e *events.GuildVoiceStateUpdate) string {
 		return ""
 	}
 	return vs.ChannelID.String()
+}
+
+func getSafeMember(client *bot.Client, guildID, userID snowflake.ID) (*discord.Member, bool) {
+	memberRaw, ok := client.Caches.Member(guildID, userID)
+	member := &memberRaw
+	var err error
+	if !ok {
+		member, err = client.Rest.GetMember(guildID, userID)
+		if err != nil {
+			return nil, false
+		}
+	}
+	return member, ok
 }
