@@ -41,8 +41,10 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 	}
 
 	changeType := "left"
-	if oldVsu.ChannelID == nil || *oldVsu.ChannelID != snowflake.MustParse(botChannelID) {
-		changeType = "joined"
+	if vsu.ChannelID != nil && *vsu.ChannelID == snowflake.MustParse(botChannelID) {
+		if oldVsu.ChannelID == nil || *oldVsu.ChannelID != *vsu.ChannelID {
+			changeType = "joined"
+		}
 	} else if vsu.ChannelID != nil && oldVsu.ChannelID != nil {
 		changeType = "moved"
 	}
@@ -67,7 +69,7 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 	if (changeType == "left" || changeType == "moved") && *oldVsu.ChannelID == snowflake.MustParse(botChannelID) {
 		// チャンネル内にまだ人間がいるかチェック
 		var stillInChannel bool
-		states := client.Caches.VoiceStates(conn.GuildID())
+		states := e.Client().Caches.VoiceStates(conn.GuildID())
 		states(func(state discord.VoiceState) bool {
 			if state.ChannelID == nil {
 				return true
@@ -176,13 +178,12 @@ func getBotChannelID(e *events.GuildVoiceStateUpdate) string {
 
 func getSafeMember(client *bot.Client, guildID, userID snowflake.ID) (*discord.Member, bool) {
 	memberRaw, ok := client.Caches.Member(guildID, userID)
-	member := &memberRaw
-	var err error
 	if !ok {
-		member, err = client.Rest.GetMember(guildID, userID)
+		member, err := client.Rest.GetMember(guildID, userID)
 		if err != nil {
 			return nil, false
 		}
+		return member, true
 	}
-	return member, ok
+	return &memberRaw, true
 }
