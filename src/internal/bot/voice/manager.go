@@ -13,17 +13,18 @@ type Manager struct {
 }
 
 var (
-	manager *Manager
-	once    sync.Once
+	managerInstance *Manager
+	managerOnce     sync.Once
 )
 
+// GetManager は sync.Once を用いて安全にシングルトンインスタンスを返します
 func GetManager() *Manager {
-	once.Do(func() {
-		manager = &Manager{
+	managerOnce.Do(func() {
+		managerInstance = &Manager{
 			players: make(map[string]*VoicePlayer),
 		}
 	})
-	return manager
+	return managerInstance
 }
 
 func (m *Manager) Get(guildID string) *VoicePlayer {
@@ -42,7 +43,6 @@ func (m *Manager) GetOrCreate(
 	defer m.mu.Unlock()
 
 	if p, ok := m.players[guildID]; ok {
-		// すでにプレイヤーが存在する場合、新しい接続があれば更新
 		if vc != nil {
 			p.SetVC(vc)
 			p.ChannelID = channelID

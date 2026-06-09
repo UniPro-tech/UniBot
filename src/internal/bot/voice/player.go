@@ -6,6 +6,7 @@ import (
 	"io"
 	"os/exec"
 	"sync"
+	"time"
 	"unibot/internal"
 	"unibot/internal/model"
 
@@ -19,153 +20,144 @@ type QueueItem struct {
 }
 
 type VoicePlayer struct {
-	GuildID    string
-	ChannelID  string
-	VC         voice.Conn
-	playing    bool
-	initFrames int
-	vcMu       sync.RWMutex
-	TextQueue  chan QueueItem
-	Stop       chan struct{}
+	GuildID   string
+	ChannelID string
+	VC        voice.Conn
 
-	// Skip チャネルは不要になったため削除
+	TextQueue chan QueueItem
+	Stop      chan struct{}
 
-	currentOpusChan chan []byte
-	currentCtx      context.Context
-	currentCancel   context.CancelFunc
-	encoder         *opus.Encoder
+	opusChan chan []byte
+	encoder  *opus.Encoder
+
+	vcMu sync.RWMutex
+
+	cancelMu sync.Mutex
+	cancelFn context.CancelFunc
+
+	closeOnce sync.Once
 }
 
 func NewVoicePlayer(guildID string, channelID string, vc voice.Conn, ctx *internal.BotContext) *VoicePlayer {
 	enc, _ := opus.NewEncoder(48000, 2, opus.AppAudio)
 
 	p := &VoicePlayer{
-		GuildID:         guildID,
-		ChannelID:       channelID,
-		VC:              vc,
-		TextQueue:       make(chan QueueItem, 50),
-		Stop:            make(chan struct{}),
-		currentOpusChan: make(chan []byte, 10),
-		playing:         false,
-		encoder:         enc,
+		GuildID:   guildID,
+		ChannelID: channelID,
+		VC:        vc,
+		TextQueue: make(chan QueueItem, 50),
+		Stop:      make(chan struct{}),
+		opusChan:  make(chan []byte, 10), // バッファを持たせてffmpegのブロックを防ぐ
+		encoder:   enc,
+	}
+
+	// プロバイダーは一度セットしたら外さない (nilを返せばDisgo側が無音として扱う)
+	if vc != nil {
+		vc.SetOpusFrameProvider(p)
 	}
 
 	go p.worker(ctx)
 	return p
 }
 
+// 20ms毎にDisgoから呼ばれる超高頻度関数。Mutexロックを排除して高速化。
 func (p *VoicePlayer) ProvideOpusFrame() ([]byte, error) {
-	p.vcMu.Lock()
-	defer p.vcMu.Unlock()
-
-	if !p.playing {
-		return nil, nil
-	}
-
-	if p.initFrames < 5 {
-		p.initFrames++
-		return nil, nil
-	}
-
 	select {
-	case frame := <-p.currentOpusChan:
+	case frame := <-p.opusChan:
 		return frame, nil
 	default:
-		return nil, nil
+		return nil, nil // フレームがない時はnilを返すことでDisgoが送信を待機する
 	}
 }
 
 func (p *VoicePlayer) Close() {
-	p.vcMu.Lock()
-	defer p.vcMu.Unlock()
-
-	select {
-	case <-p.Stop:
-	default:
-		close(p.Stop)
-		close(p.TextQueue)
-	}
+	p.closeOnce.Do(func() {
+		close(p.Stop) // Stopのみ閉じることで、EnqueueText側でのpanicを防ぐ
+	})
 }
 
 func (p *VoicePlayer) CanProvide() bool {
 	p.vcMu.RLock()
 	defer p.vcMu.RUnlock()
 
-	if !p.playing {
-		return false
-	}
-
 	vc := p.VC
 	if vc == nil || vc.Gateway().Status() != voice.StatusReady {
 		return false
 	}
-
 	return true
 }
 
 func (p *VoicePlayer) SetVC(vc voice.Conn) {
 	p.vcMu.Lock()
+	defer p.vcMu.Unlock()
 	p.VC = vc
 	if vc != nil {
 		vc.SetOpusFrameProvider(p)
 	}
-	p.vcMu.Unlock()
 }
 
 func (p *VoicePlayer) worker(ctx *internal.BotContext) {
-	for item := range p.TextQueue {
-		cCtx, cCancel := context.WithCancel(context.Background())
-		p.vcMu.Lock()
-		p.currentCtx = cCtx
-		p.currentCancel = cCancel
-		p.vcMu.Unlock()
-
-		audio, err := ctx.VoiceVox.Synthesize(cCtx, item.Text, item.Setting.SpeakerID, float64(item.Setting.SpeakerSpeed)/100.0)
-		if err != nil {
-			continue
-		}
-
-		vc := p.GetVC()
-		if vc == nil || vc.ChannelID() == nil {
-			continue
-		}
-
-		_ = vc.SetSpeaking(context.Background(), voice.SpeakingFlagMicrophone)
-
-		p.vcMu.Lock()
-		p.initFrames = 0
-		p.playing = true
-		p.vcMu.Unlock()
-
-		vc.SetOpusFrameProvider(p)
-
-		p.streamAudio(cCtx, audio)
-
-		// 終了処理
-		p.vcMu.Lock()
-		p.playing = false
-		p.currentCancel = nil
-		p.vcMu.Unlock()
-
-		vc.SetOpusFrameProvider(nil)
-		_ = vc.SetSpeaking(context.Background(), voice.SpeakingFlagNone)
-		cCancel()
-
-		// ★重要: スキップ等で残ってしまった古いフレームを破棄して次の音声に混ざらないようにする
-		for len(p.currentOpusChan) > 0 {
-			<-p.currentOpusChan
-		}
-
+	for {
 		select {
 		case <-p.Stop:
 			return
+		case item := <-p.TextQueue:
+			cCtx, cCancel := context.WithCancel(context.Background())
+
+			p.cancelMu.Lock()
+			p.cancelFn = cCancel
+			p.cancelMu.Unlock()
+
+			audio, err := ctx.VoiceVox.Synthesize(cCtx, item.Text, item.Setting.SpeakerID, float64(item.Setting.SpeakerSpeed)/100.0)
+			if err != nil {
+				continue
+			}
+
+			vc := p.GetVC()
+			if vc == nil || vc.ChannelID() == nil {
+				continue
+			}
+
+			_ = vc.SetSpeaking(context.Background(), voice.SpeakingFlagMicrophone)
+
+			p.streamAudio(cCtx, audio)
+
+			// ffmpegの処理が終わってもチャネルにはバッファが残っているため、
+			// 全てDiscordに送信し終わるまで待機する (これがないと語尾がプツッと切断される)
+		WaitLoop:
+			for len(p.opusChan) > 0 {
+				select {
+				case <-cCtx.Done(): // スキップされた場合は直ちに抜ける
+					break WaitLoop
+				default:
+					time.Sleep(10 * time.Millisecond)
+				}
+			}
+
+			_ = vc.SetSpeaking(context.Background(), voice.SpeakingFlagNone)
+			cCancel()
+
+			p.cancelMu.Lock()
+			p.cancelFn = nil
+			p.cancelMu.Unlock()
+
+			// スキップ等で残ってしまった古いフレームを完全にクリアし、次の音声への混入を防ぐ
+			p.clearOpusChan()
+		}
+	}
+}
+
+func (p *VoicePlayer) clearOpusChan() {
+	for {
+		select {
+		case <-p.opusChan:
 		default:
+			return
 		}
 	}
 }
 
 func (p *VoicePlayer) streamAudio(ctx context.Context, wav []byte) {
-	// ★重要: CommandContext に変更。Contextがキャンセルされた瞬間、FFmpegも即Killされる
 	cmd := exec.CommandContext(ctx, "ffmpeg",
 		"-loglevel", "quiet",
 		"-i", "pipe:0",
@@ -182,7 +174,6 @@ func (p *VoicePlayer) streamAudio(ctx context.Context, wav []byte) {
 		return
 	}
 
-	// ★重要: ゾンビプロセス対策のため必ず Wait を呼ぶ (Process.Kill は CommandContext が自動でやってくれるため Wait だけで良い)
 	defer cmd.Wait()
 
 	go func() {
@@ -194,50 +185,60 @@ func (p *VoicePlayer) streamAudio(ctx context.Context, wav []byte) {
 	byteBuf := make([]byte, len(pcm)*2)
 
 	for {
-		// ctx キャンセルにより ffmpeg が Kill されると、stdout が閉じられ ReadFull は即座に err を返す
 		_, err := io.ReadFull(stdout, byteBuf)
 		if err != nil {
 			break
 		}
 
-		for i := 0; i < len(pcm); i++ {
+		for i := range pcm {
 			pcm[i] = int16(binary.LittleEndian.Uint16(byteBuf[i*2:]))
 		}
 
 		opusBuf := make([]byte, 4000)
-		n, _ := p.encoder.Encode(pcm, opusBuf)
+		n, err := p.encoder.Encode(pcm, opusBuf)
+		if err != nil {
+			continue
+		}
 
 		select {
 		case <-ctx.Done():
 			return
-		case p.currentOpusChan <- opusBuf[:n]:
+		case p.opusChan <- opusBuf[:n]:
 		}
 	}
 
+	// 終了時のポップノイズ対策
 	silenceFrame := []byte{0xF8, 0xFF, 0xFE}
 	for i := 0; i < 5; i++ {
 		select {
 		case <-ctx.Done():
 			return
-		case p.currentOpusChan <- silenceFrame:
+		case p.opusChan <- silenceFrame:
 		}
 	}
 }
 
 func (p *VoicePlayer) EnqueueText(item QueueItem) {
+	// クローズ済みの場合はキューに入れない
+	select {
+	case <-p.Stop:
+		return
+	default:
+	}
+
 	select {
 	case p.TextQueue <- item:
 	default:
+		// キューが上限(50)に達している場合は破棄（またはエラーハンドリング）
 	}
 }
 
 func (p *VoicePlayer) SkipCurrent() {
-	p.vcMu.RLock()
-	cancel := p.currentCancel
-	p.vcMu.RUnlock()
+	p.cancelMu.Lock()
+	cancel := p.cancelFn
+	p.cancelMu.Unlock()
 
 	if cancel != nil {
-		// これを呼ぶだけで、Synthesizeの停止・streamAudioの停止・ffmpegの強制終了が連鎖的に全て行われます
 		cancel()
 	}
 }
