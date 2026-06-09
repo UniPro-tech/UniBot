@@ -19,19 +19,14 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 	vsu := e.VoiceState
 	oldVsu := e.OldVoiceState
 
-	// Bot自身の接続状況を確認（disgoのVoiceManagerを使用している想定）
-	conn := client.VoiceManager.GetConn(vsu.GuildID)
-	if conn == nil {
-		return
-	}
-
 	// Botの動作は無視
 	if e.Member.User.Bot {
 		return
 	}
 
-	// チャンネル内での状態変更（ミュートなど）は無視
-	if vsu.ChannelID != nil && oldVsu.ChannelID != nil && *vsu.ChannelID == *oldVsu.ChannelID {
+	// Bot自身がVCに接続しているか確認
+	conn := client.VoiceManager.GetConn(vsu.GuildID)
+	if conn == nil {
 		return
 	}
 
@@ -39,19 +34,40 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 	if botChannelID == "" {
 		return
 	}
+	botChannelSnowflake := snowflake.MustParse(botChannelID)
 
-	changeType := "left"
-	if vsu.ChannelID != nil && *vsu.ChannelID == snowflake.MustParse(botChannelID) {
-		if oldVsu.ChannelID == nil || *oldVsu.ChannelID != *vsu.ChannelID {
-			changeType = "joined"
+	// oldVsu や各 ChannelID を安全に取得（キャッシュ未存在時のnilパニック対策）
+	var oldChannelID *snowflake.ID
+	oldChannelID = oldVsu.ChannelID
+	var newChannelID *snowflake.ID
+	newChannelID = vsu.ChannelID
+
+	// 同一チャンネル内での状態変更（マイクミュート、画面共有など）は完全に無視
+	if newChannelID != nil && oldChannelID != nil && *newChannelID == *oldChannelID {
+		return
+	}
+
+	// 状態変化のタイプを正確に判定
+	changeType := "ignored"
+	if newChannelID != nil && *newChannelID == botChannelSnowflake {
+		// BotのいるVCに入ってきた（新規入室、または他VCからの移動）
+		changeType = "joined"
+	} else if oldChannelID != nil && *oldChannelID == botChannelSnowflake {
+		// BotのいるVCから出ていった
+		if newChannelID == nil {
+			changeType = "left"
+		} else {
+			changeType = "moved" // 他のVCへ移動した
 		}
-	} else if vsu.ChannelID != nil && oldVsu.ChannelID != nil {
-		changeType = "moved"
+	}
+
+	if changeType == "ignored" {
+		return
 	}
 
 	// --- 1. 参加処理 ---
-	if changeType == "joined" && vsu.ChannelID != nil && *vsu.ChannelID == snowflake.MustParse(botChannelID) {
-		channel, ok := client.Caches.Channel(*vsu.ChannelID)
+	if changeType == "joined" && newChannelID != nil {
+		channel, ok := client.Caches.Channel(*newChannelID)
 		if !ok {
 			return
 		}
@@ -65,8 +81,8 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 		return
 	}
 
-	// --- 2. 退出処理 ---
-	if (changeType == "left" || changeType == "moved") && *oldVsu.ChannelID == snowflake.MustParse(botChannelID) {
+	// --- 2. 退出・移動処理 ---
+	if changeType == "left" || changeType == "moved" {
 		// チャンネル内にまだ人間がいるかチェック
 		var stillInChannel bool
 		states := e.Client().Caches.VoiceStates(conn.GuildID())
@@ -74,20 +90,13 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 			if state.ChannelID == nil {
 				return true
 			}
-
-			// 1. Bot自身はカウントしない
 			if state.UserID.String() == client.ID().String() {
 				return true
 			}
-
-			// 2. 「今まさに退出/移動したユーザー」本人もカウントしない
 			if state.UserID.String() == e.Member.User.ID.String() {
 				return true
 			}
-
-			// 3. そのユーザーが現在「Botと同じチャンネル」にいるか判定
-			if state.ChannelID != nil && state.ChannelID.String() == botChannelID {
-				// 4. そのユーザーがBotでないことを確認
+			if state.ChannelID.String() == botChannelID {
 				member, ok := getSafeMember(client, conn.GuildID(), state.UserID)
 				if ok && !member.User.Bot {
 					stillInChannel = true
@@ -97,7 +106,7 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 			return true
 		})
 
-		// 誰もいなくなった場合
+		// 誰もいなくなった場合（Botの切断処理）
 		if !stillInChannel {
 			defer func() {
 				closeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -136,38 +145,35 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 			return
 		}
 
-		// 単なる一人の退出通知
-		channel, ok := client.Caches.Channel(*oldVsu.ChannelID)
-		if ok {
-			text := fmt.Sprintf("%sが %s から退出しました。", e.Member.EffectiveName(), channel.Name())
-			vp := voice.GetManager().GetOrCreate(vsu.GuildID.String(), botChannelID, conn, ctx)
-			vp.EnqueueText(voice.QueueItem{
-				Text:    text,
-				Setting: repository.DefaultTTSPersonalSetting,
-			})
-		}
-		return
-	}
+		// 単なる一人の退出、または移動通知
+		if oldChannelID != nil {
+			channel, ok := client.Caches.Channel(*oldChannelID)
+			if ok {
+				var text string
+				if changeType == "moved" && newChannelID != nil {
+					// 移動先のチャンネル名を取得して「〇〇に移動しました」にする
+					toChannel, ok := client.Caches.Channel(*newChannelID)
+					if ok {
+						text = fmt.Sprintf("%sが %s に移動しました。", e.Member.EffectiveName(), toChannel.Name())
+					} else {
+						text = fmt.Sprintf("%sが別のチャンネルに移動しました。", e.Member.EffectiveName())
+					}
+				} else {
+					text = fmt.Sprintf("%sが %s から退出しました。", e.Member.EffectiveName(), channel.Name())
+				}
 
-	// --- 3. 移動処理 ---
-	if changeType == "moved" && oldVsu.ChannelID != nil && *oldVsu.ChannelID == snowflake.MustParse(botChannelID) {
-		if vsu.ChannelID == nil {
-			return
-		}
-		channel, ok := client.Caches.Channel(*vsu.ChannelID)
-		if ok {
-			text := fmt.Sprintf("%sが %s に移動しました。", e.Member.EffectiveName(), channel.Name())
-			vp := voice.GetManager().GetOrCreate(vsu.GuildID.String(), botChannelID, conn, ctx)
-			vp.EnqueueText(voice.QueueItem{
-				Text:    text,
-				Setting: repository.DefaultTTSPersonalSetting,
-			})
+				vp := voice.GetManager().GetOrCreate(vsu.GuildID.String(), botChannelID, conn, ctx)
+				vp.EnqueueText(voice.QueueItem{
+					Text:    text,
+					Setting: repository.DefaultTTSPersonalSetting,
+				})
+			}
 		}
 		return
 	}
 }
 
-// getBotChannelID はBotが現在入っているVCのIDを返します
+// getBotChannelID と getSafeMember は既存のままでOK
 func getBotChannelID(e *events.GuildVoiceStateUpdate) string {
 	vs, ok := e.Client().Caches.VoiceState(e.VoiceState.GuildID, e.Client().ID())
 	if !ok || vs.ChannelID == nil {

@@ -90,6 +90,11 @@ func (p *VoicePlayer) CanProvide() bool {
 func (p *VoicePlayer) SetVC(vc voice.Conn) {
 	p.vcMu.Lock()
 	defer p.vcMu.Unlock()
+
+	if p.VC == vc {
+		return
+	}
+
 	p.VC = vc
 	if vc != nil {
 		vc.SetOpusFrameProvider(p)
