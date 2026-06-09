@@ -4,7 +4,6 @@ metadata:
   name: unibot-sub
   namespace: argocd
 spec:
-  namespace: argocd
   applicationRefs:
     - namePattern: "unibot-sub"
       images:
