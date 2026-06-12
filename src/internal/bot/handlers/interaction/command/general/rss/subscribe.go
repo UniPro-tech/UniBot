@@ -1,7 +1,9 @@
 package rss
 
 import (
+	"encoding/base64"
 	"fmt"
+	"sort"
 	"time"
 	"unibot/internal"
 	"unibot/internal/model"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
+	"github.com/mmcdole/gofeed"
 )
 
 func LoadSubscribeCommandContext() discord.ApplicationCommandOption {
@@ -67,6 +70,43 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 			}
 		}
 
+		// 初回Fetch
+		fp := gofeed.NewParser()
+		feed, err := fp.ParseURL(url)
+		if err != nil {
+			responseEmbed := discord.Embed{
+				Title:       "RSS購読",
+				Description: "RSSフィードの取得に失敗しました。",
+				Color:       config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+			return err
+		}
+
+		if feed.Title != "" && title == nil {
+			title = &feed.Title
+		}
+		// 新しい日時がindex:0
+		sort.Slice(feed.Items, func(i, j int) bool {
+			prev := feed.Items[i]
+			next := feed.Items[j]
+			if prev.PublishedParsed != nil && next.PublishedParsed != nil {
+				prevNano := prev.PublishedParsed.UnixNano()
+				nextNano := next.PublishedParsed.UnixNano()
+				return prevNano >= nextNano
+			}
+			return false
+		})
+		hash := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", feed.Items[0].Title, feed.Items[0].Description)))
+
 		db := ctx.DB
 		guildRepo := repository.NewGuildRepository(db)
 		if _, err := guildRepo.GetOrCreate(guildID.String()); err != nil {
@@ -74,10 +114,11 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 		}
 		rssRepo := repository.NewRSSSettingRepository(db)
 		if err := rssRepo.Create(&model.RSSSetting{
-			GuildID:   guildID.String(),
-			ChannelID: e.Channel().ID().String(),
-			URL:       url,
-			Title:     title,
+			GuildID:                      guildID.String(),
+			ChannelID:                    e.Channel().ID().String(),
+			URL:                          url,
+			Title:                        title,
+			LastItemTitleDescriptionHash: &hash,
 		}); err != nil {
 			return err
 		}
@@ -102,7 +143,7 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 				return &t
 			}(),
 		}
-		_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(false))
+		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(false))
 		return err
 	}
 }

@@ -99,6 +99,7 @@ func Ready(db *gorm.DB, e *events.Ready) {
 			if feedTitle == nil {
 				feedTitle = &feed.Title
 			}
+			// 新しい日時がindex:0
 			sort.Slice(feed.Items, func(i, j int) bool {
 				prev := feed.Items[i]
 				next := feed.Items[j]
@@ -111,11 +112,18 @@ func Ready(db *gorm.DB, e *events.Ready) {
 			})
 			var targetItems []*gofeed.Item
 			for _, item := range feed.Items {
-				hash := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", item.Title, item.Description)))
+				hash := base64.StdEncoding.EncodeToString(fmt.Appendf(nil, "%s:%s", item.Title, item.Description))
 				if hash == *rssSetting.LastItemTitleDescriptionHash {
 					targetItems = append(targetItems, item)
 				}
 			}
+			hash := base64.StdEncoding.EncodeToString(fmt.Appendf(nil, "%s:%s", feed.Items[0].Title, feed.Items[0].Description))
+			rssSetting.LastItemTitleDescriptionHash = &hash
+			err = repo.Update(rssSetting)
+			if err != nil {
+				log.Print("Update Record Failed", err)
+			}
+			// 古い日時がindex:0
 			slices.Reverse(targetItems)
 			channelID := snowflake.MustParse(rssSetting.ChannelID)
 			client := e.Client()
