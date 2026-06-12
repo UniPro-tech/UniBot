@@ -15,7 +15,7 @@ WORKDIR /app/src
 RUN --mount=type=cache,target=/go/pkg/mod/,sharing=locked \
     go mod download -x
 
-RUN ../scripts/_build.sh
+RUN ../scripts/_build.sh --rss-cron
 
 FROM alpine:3.24.0
 WORKDIR /root/
