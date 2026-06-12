@@ -24,7 +24,14 @@ RUN apk update && apk add --no-cache \
     ca-certificates
 
 COPY --from=builder /app/src/main .
-RUN chmod 777 ./main
+
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+WORKDIR /home/appuser
+
+RUN mv /root/main /home/appuser/main && chown appuser:appuser ./main && chmod 755 ./main
+
+USER appuser
 
 CMD ["/root/main"]
 

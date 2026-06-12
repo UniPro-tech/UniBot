@@ -46,7 +46,7 @@ COPY --from=builder /root/.local/ /root/.local/
 RUN chmod -R 755 /root/.local
 
 COPY --from=builder /app/src/main .
-RUN chmod 777 ./main
+RUN chmod 755 ./main
 
 CMD ["/root/main"]
 
