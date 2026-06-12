@@ -65,6 +65,9 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 		r.SlashCommand("/status/reset", maintenance.StatusResetHandler(ctxData))
 		r.SlashCommand("/shutdown", maintenance.Shutdown(ctxData))
 	})
+	r.Route("/rss", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, true, false))
+	})
 	// action row
 	// select menu
 	r.Route("/tts_dict_remove", func(r handler.Router) {

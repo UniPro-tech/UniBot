@@ -1,6 +1,6 @@
 # check=error=true
 # syntax=docker/dockerfile:1
-FROM golang:1.26.2-alpine3.22 AS builder
+FROM golang:1.26.4-alpine3.24 AS builder
 WORKDIR /app
 
 RUN apk update && apk add --no-cache \
@@ -16,7 +16,7 @@ ENV SHELL=/bin/sh
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
 ENV CC=/usr/bin/gcc CXX=/usr/bin/g++
 ENV CXXFLAGS="-Wno-error=maybe-uninitialized"
-RUN apk add build-base cmake ninja zip unzip curl git pkgconfig perl nasm go
+RUN apk add build-base cmake ninja zip pkgconfig perl nasm
 RUN FORCE_BUILD=1 ./godave/scripts/libdave_install.sh v1.1.0
 ENV PKG_CONFIG_PATH=/root/.local/lib/pkgconfig
 RUN rm -r ./godave
@@ -30,7 +30,7 @@ RUN --mount=type=cache,target=/go/pkg/mod/,sharing=locked \
 
 RUN ../scripts/_build.sh
 
-FROM alpine:3.23.4
+FROM alpine:3.24.0
 WORKDIR /root/
 
 RUN apk update && apk add --no-cache \
