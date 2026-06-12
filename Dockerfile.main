@@ -16,7 +16,7 @@ ENV SHELL=/bin/sh
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
 ENV CC=/usr/bin/gcc CXX=/usr/bin/g++
 ENV CXXFLAGS="-Wno-error=maybe-uninitialized"
-RUN apk add build-base cmake ninja zip pkgconfig perl nasm
+RUN apk add --no-cache build-base cmake ninja zip pkgconfig perl nasm
 RUN FORCE_BUILD=1 ./godave/scripts/libdave_install.sh v1.1.0
 ENV PKG_CONFIG_PATH=/root/.local/lib/pkgconfig
 RUN rm -r ./godave
