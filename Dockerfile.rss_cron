@@ -21,11 +21,8 @@ FROM alpine:3.24.0
 WORKDIR /root/
 
 RUN apk update && apk add --no-cache \
-    opus \
-    opus-dev \
-    opusfile \
-    opusfile-dev \
-    ffmpeg
+    # rss_cronには音声機能が不要なため、最小限のランタイムのみ
+    ca-certificates
 
 ENV PKG_CONFIG_PATH=/root/.local/lib/pkgconfig
 ENV LD_LIBRARY_PATH=/root/.local/lib/
