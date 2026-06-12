@@ -80,79 +80,88 @@ func Ready(db *gorm.DB, e *events.Ready) {
 	rssSubscribeList, err := repo.List()
 	if err != nil {
 		log.Fatal("An error occured:", err)
-	} else {
-		for _, rssSetting := range rssSubscribeList {
-			// fetch
-			url := rssSetting.URL
-			fp := gofeed.NewParser()
-			feed, err := fp.ParseURL(url)
-			if err != nil {
-				rssSetting.IsFailed = true
-				err := repo.Update(rssSetting)
-				if err != nil {
-					log.Print("Update Record Failed", err)
-					return
-				}
-				continue
-			}
-			feedTitle := rssSetting.Title
-			if feedTitle == nil {
-				feedTitle = &feed.Title
-			}
-			// 新しい日時がindex:0
-			sort.Slice(feed.Items, func(i, j int) bool {
-				prev := feed.Items[i]
-				next := feed.Items[j]
-				if prev.PublishedParsed != nil && next.PublishedParsed != nil {
-					prevNano := prev.PublishedParsed.UnixNano()
-					nextNano := next.PublishedParsed.UnixNano()
-					return prevNano >= nextNano
-				}
-				return false
-			})
-			var targetItems []*gofeed.Item
-			for _, item := range feed.Items {
-				hash := base64.StdEncoding.EncodeToString(fmt.Appendf(nil, "%s:%s", item.Title, item.Description))
-				if hash == *rssSetting.LastItemTitleDescriptionHash {
-					targetItems = append(targetItems, item)
-				}
-			}
-			hash := base64.StdEncoding.EncodeToString(fmt.Appendf(nil, "%s:%s", feed.Items[0].Title, feed.Items[0].Description))
-			rssSetting.LastItemTitleDescriptionHash = &hash
-			err = repo.Update(rssSetting)
-			if err != nil {
+		return
+	}
+	for _, rssSetting := range rssSubscribeList {
+		url := rssSetting.URL
+		fp := gofeed.NewParser()
+		feed, err := fp.ParseURL(url)
+		if err != nil {
+			rssSetting.IsFailed = true
+			if err := repo.Update(rssSetting); err != nil {
 				log.Print("Update Record Failed", err)
 			}
-			// 古い日時がindex:0
-			slices.Reverse(targetItems)
-			channelID := snowflake.MustParse(rssSetting.ChannelID)
-			client := e.Client()
-			for _, item := range targetItems {
-				itemTitle := item.Title
-				if itemTitle == "" {
-					itemTitle = "(タイトルなし)"
-				}
-				itemDescription := item.Description
-				if itemDescription == "" {
-					if item.Content == "" {
-						itemDescription = "説明なし"
-					} else {
-						itemDescription = item.Content
-					}
-				}
-				itemLink := item.Link
-				if itemLink == "" {
-					itemLink = "リンクなし"
-				}
-				message := fmt.Sprintf(`# %s に新しい記事が追加されました！
-				## %s
-				%s
-				URL: %s`, *feedTitle, itemTitle, itemDescription, itemLink)
-				_, err := client.Rest.CreateMessage(channelID, discord.NewMessageCreate().WithContent(message))
-				if err != nil {
-					log.Print("Message create error:", err)
+			continue
+		}
+
+		feedTitle := rssSetting.Title
+		if feedTitle == nil {
+			feedTitle = &feed.Title
+		}
+
+		// 新しい日時がindex:0
+		sort.Slice(feed.Items, func(i, j int) bool {
+			prev := feed.Items[i]
+			next := feed.Items[j]
+			if prev.PublishedParsed != nil && next.PublishedParsed != nil {
+				return prev.PublishedParsed.UnixNano() >= next.PublishedParsed.UnixNano()
+			}
+			return false
+		})
+
+		// 保存済みハッシュより新しい記事を収集する
+		// - LastItemTitleDescriptionHash が nil（初回）なら全件対象
+		// - 一致するハッシュが見つかった時点で break（それ以降は既読）
+		var targetItems []*gofeed.Item
+		for _, item := range feed.Items {
+			hash := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", item.Title, item.Description)))
+			if rssSetting.LastItemTitleDescriptionHash != nil && hash == *rssSetting.LastItemTitleDescriptionHash {
+				break // ここから先は既読
+			}
+			targetItems = append(targetItems, item)
+		}
+
+		if len(targetItems) == 0 {
+			continue
+		}
+
+		// 古い→新しい順に送信
+		slices.Reverse(targetItems)
+		channelID := snowflake.MustParse(rssSetting.ChannelID)
+		client := e.Client()
+		for _, item := range targetItems {
+			itemTitle := item.Title
+			if itemTitle == "" {
+				itemTitle = "(タイトルなし)"
+			}
+			itemDescription := item.Description
+			if itemDescription == "" {
+				if item.Content != "" {
+					itemDescription = item.Content
+				} else {
+					itemDescription = "(説明なし)"
 				}
 			}
+			itemLink := item.Link
+			if itemLink == "" {
+				itemLink = "リンクなし"
+			}
+			message := fmt.Sprintf(
+				"# %s に新しい記事が追加されました！\n## %s\n%s\nURL: %s",
+				*feedTitle, itemTitle, itemDescription, itemLink,
+			)
+			_, err := client.Rest.CreateMessage(channelID, discord.NewMessageCreate().WithContent(message))
+			if err != nil {
+				log.Print("Message create error:", err)
+			}
+		}
+
+		// 送信完了後に最新ハッシュを保存（feed.Items[0] = 最新記事）
+		newestHash := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", feed.Items[0].Title, feed.Items[0].Description)))
+		rssSetting.LastItemTitleDescriptionHash = &newestHash
+		rssSetting.IsFailed = false
+		if err := repo.Update(rssSetting); err != nil {
+			log.Print("Update Record Failed", err)
 		}
 	}
 }
