@@ -67,6 +67,7 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 	})
 	r.Route("/rss", func(r handler.Router) {
 		r.Use(DeferReplyMiddleware(ctxData, true, false))
+		r.SlashCommand("/subscribe", rss.Subscribe(ctxData))
 	})
 	// action row
 	// select menu
