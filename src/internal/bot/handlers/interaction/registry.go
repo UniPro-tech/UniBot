@@ -6,6 +6,7 @@ import (
 	"unibot/internal"
 	"unibot/internal/bot/handlers/interaction/command/admin/maintenance"
 	"unibot/internal/bot/handlers/interaction/command/general"
+	"unibot/internal/bot/handlers/interaction/command/general/rss"
 	"unibot/internal/bot/handlers/interaction/command/general/tts"
 	"unibot/internal/bot/handlers/interaction/command/general/tts/dict"
 	"unibot/internal/bot/handlers/interaction/command/general/tts/ttsSet"
