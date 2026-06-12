@@ -69,13 +69,18 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 
 		db := ctx.DB
 		guildRepo := repository.NewGuildRepository(db)
-		guildRepo.GetOrCreate(guildID.String())
+		if _, err := guildRepo.GetOrCreate(guildID.String()); err != nil {
+			return err
+		}
 		rssRepo := repository.NewRSSSettingRepository(db)
-		rssRepo.Create(&model.RSSSetting{
+		if err := rssRepo.Create(&model.RSSSetting{
 			GuildID: guildID.String(),
+			ChannelID: e.Channel().ID().String(),
 			URL:     url,
 			Title:   title,
-		})
+		}); err != nil {
+			return err
+		}
 
 		// 成功レスポンス
 		responseEmbed := discord.Embed{
