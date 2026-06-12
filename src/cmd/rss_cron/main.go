@@ -93,6 +93,7 @@ func Ready(db *gorm.DB, e *events.Ready) {
 					log.Print("Update Record Failed", err)
 					return
 				}
+				continue
 			}
 			feedTitle := rssSetting.Title
 			if feedTitle == nil {
