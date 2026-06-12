@@ -74,19 +74,25 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 		}
 		rssRepo := repository.NewRSSSettingRepository(db)
 		if err := rssRepo.Create(&model.RSSSetting{
-			GuildID: guildID.String(),
+			GuildID:   guildID.String(),
 			ChannelID: e.Channel().ID().String(),
-			URL:     url,
-			Title:   title,
+			URL:       url,
+			Title:     title,
 		}); err != nil {
 			return err
 		}
 
 		// 成功レスポンス
 		responseEmbed := discord.Embed{
-			Title:       "TTSボイスチャンネル接続",
-			Description: "ボイスチャンネルに参加しました。",
-			Color:       config.Colors.Success,
+			Title:       "RSS購読",
+			Description: "RSS購読設定が完了しました。",
+			Fields: []discord.EmbedField{
+				{
+					Name:  "URL",
+					Value: url,
+				},
+			},
+			Color: config.Colors.Success,
 			Footer: &discord.EmbedFooter{
 				Text:    fmt.Sprintf("Requested by %s", e.User().Username),
 				IconURL: e.User().EffectiveAvatarURL(),
