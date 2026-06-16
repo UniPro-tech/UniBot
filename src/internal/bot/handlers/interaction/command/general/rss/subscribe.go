@@ -138,7 +138,7 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 				return &t
 			}(),
 		}
-		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(false))
+		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
 		return err
 	}
 }
