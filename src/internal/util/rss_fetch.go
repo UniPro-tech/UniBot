@@ -59,6 +59,7 @@ func FetchFeed(feedURL string) (*gofeed.Feed, error) {
 			)
 		},
 	}
+	defer transport.CloseIdleConnections()
 
 	client := &http.Client{
 		Timeout:   10 * time.Second,
