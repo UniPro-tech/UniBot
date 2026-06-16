@@ -10,6 +10,7 @@ import (
 	"sort"
 	"unibot/internal/db"
 	"unibot/internal/repository"
+	"unibot/internal/util"
 
 	"github.com/mmcdole/gofeed"
 
@@ -84,8 +85,7 @@ func Ready(db *gorm.DB, e *events.Ready) {
 	}
 	for _, rssSetting := range rssSubscribeList {
 		url := rssSetting.URL
-		fp := gofeed.NewParser()
-		feed, err := fp.ParseURL(url)
+		feed, err := util.FetchFeed(url)
 		if err != nil {
 			rssSetting.IsFailed = true
 			if err := repo.Update(rssSetting); err != nil {
