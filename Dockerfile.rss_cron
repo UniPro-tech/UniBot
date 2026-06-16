@@ -33,7 +33,7 @@ RUN mv /root/main /home/appuser/main && chown appuser:appuser ./main && chmod 75
 
 USER appuser
 
-CMD ["/root/main"]
+CMD ["/home/appuser/main"]
 
 # OCI Metadata
 
