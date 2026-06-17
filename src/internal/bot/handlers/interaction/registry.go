@@ -6,6 +6,7 @@ import (
 	"unibot/internal"
 	"unibot/internal/bot/handlers/interaction/command/admin/maintenance"
 	"unibot/internal/bot/handlers/interaction/command/general"
+	"unibot/internal/bot/handlers/interaction/command/general/rss"
 	"unibot/internal/bot/handlers/interaction/command/general/tts"
 	"unibot/internal/bot/handlers/interaction/command/general/tts/dict"
 	"unibot/internal/bot/handlers/interaction/command/general/tts/ttsSet"
@@ -64,6 +65,10 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 		r.SlashCommand("/status/set", maintenance.StatusSetHandler(ctxData))
 		r.SlashCommand("/status/reset", maintenance.StatusResetHandler(ctxData))
 		r.SlashCommand("/shutdown", maintenance.Shutdown(ctxData))
+	})
+	r.Route("/rss", func(r handler.Router) {
+		r.Use(DeferReplyMiddleware(ctxData, true, false))
+		r.SlashCommand("/subscribe", rss.Subscribe(ctxData))
 	})
 	// action row
 	// select menu

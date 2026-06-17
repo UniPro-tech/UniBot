@@ -3,7 +3,8 @@ name: Docker Build and Push
 on:
   push:
     tags:
-      - "v*"
+      - "bot/v*"
+      - "rss-cron/v*"
 
 concurrency:
   group: docker-build-push
@@ -24,10 +25,24 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
-      - name: Extract tag name
+      - name: Extract tag info
         run: |
-          tagname=${GITHUB_REF#refs/*/}
-          echo "TAG_NAME=${tagname#v}" >> $GITHUB_ENV
+          TAG="${GITHUB_REF#refs/tags/}"
+
+          if [[ "$TAG" == bot/v* ]]; then
+            echo "IMAGE_NAME=unibot" >> "$GITHUB_ENV"
+            echo "DOCKERFILE=Dockerfile.main" >> "$GITHUB_ENV"
+            echo "TAG_NAME=${TAG#bot/v}" >> "$GITHUB_ENV"
+
+          elif [[ "$TAG" == rss-cron/v* ]]; then
+            echo "IMAGE_NAME=unibot-rss-cron" >> "$GITHUB_ENV"
+            echo "DOCKERFILE=Dockerfile.rss_cron" >> "$GITHUB_ENV"
+            echo "TAG_NAME=${TAG#rss-cron/v}" >> "$GITHUB_ENV"
+
+          else
+            echo "Unsupported tag: $TAG"
+            exit 1
+          fi
 
       - name: Login to Harbor Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
@@ -40,12 +55,12 @@ jobs:
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
-          images: registry.uniproject.jp/infra/unibot
+          images: registry.uniproject.jp/infra/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{version}},value=${{ env.TAG_NAME }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG_NAME }}
+            type=semver,pattern={{major}},value=${{ env.TAG_NAME }}
             type=sha,prefix=sha-,suffix=,format=short
 
       - name: Install Cosign
@@ -58,13 +73,13 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         with:
-          file: ./Dockerfile
+          file: ./${{ env.DOCKERFILE }}
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=registry.uniproject.jp/infra/unibot:buildcache
-          cache-to: type=registry,ref=registry.uniproject.jp/infra/unibot:buildcache,mode=max
+          cache-from: type=registry,ref=registry.uniproject.jp/infra/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=registry.uniproject.jp/infra/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
       - name: Sign Docker images with GitHub OIDC (cosign keyless)
         env:

@@ -1,0 +1,46 @@
+# check=error=true
+# syntax=docker/dockerfile:1
+FROM golang:1.26.4-alpine3.24 AS builder
+WORKDIR /app
+
+RUN apk update && apk add --no-cache \
+    curl git file unzip \
+    python3 make g++ \
+    pkgconf
+
+COPY . .
+
+WORKDIR /app/src
+
+RUN --mount=type=cache,target=/go/pkg/mod/,sharing=locked \
+    go mod download -x
+
+RUN ../scripts/_build.sh --rss-cron
+
+FROM alpine:3.24.0
+WORKDIR /root/
+
+RUN apk update && apk add --no-cache \
+    ca-certificates
+
+COPY --from=builder /app/src/main .
+
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+WORKDIR /home/appuser
+
+RUN mv /root/main /home/appuser/main && chown appuser:appuser ./main && chmod 755 ./main
+
+USER appuser
+
+CMD ["/home/appuser/main"]
+
+# OCI Metadata
+
+LABEL org.opencontainers.image.authors="Yuito Akatsuki <yuito@yuito-it.jp>"
+LABEL org.opencontainers.image.url="https://github.com/UniPro-tech/UniBot"
+LABEL org.opencontainers.image.source="https://github.com/UniPro-tech/UniBot"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.title="UniBot"
+LABEL org.opencontainers.image.description="A multifunctional Discord bot for community management, entertainment, and productivity."
+LABEL org.opencontainers.image.vendor="All-Japan Digital Creative Club UniProject <info@uniproject.jp>"

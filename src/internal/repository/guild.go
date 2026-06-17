@@ -37,6 +37,22 @@ func (r *GuildRepository) Get(DiscordID string) (*model.Guild, error) {
 	return &guild, err
 }
 
+// なければ挿入する
+func (r *GuildRepository) GetOrCreate(DiscordID string) (*model.Guild, error) {
+	exist, err := r.Get(DiscordID)
+	if err != nil {
+		return exist, err
+	}
+	if exist == nil {
+		err = r.Create(DiscordID)
+		if err != nil {
+			return nil, err
+		}
+		exist, err = r.Get(DiscordID)
+	}
+	return exist, err
+}
+
 // 全てのギルドを取得する関数
 func (r *GuildRepository) List() ([]*model.Guild, error) {
 	var guilds []*model.Guild
