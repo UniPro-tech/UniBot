@@ -16,6 +16,6 @@ spec:
           env:
             - name: TZ
               value: Asia/Tokyo
-          restartPolicy: OnFailure
+      restartPolicy: OnFailure
       imagePullSecrets:
         - name: internal-harbor
