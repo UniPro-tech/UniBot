@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - deployment.yaml
   - registry.yaml
+  - cronjob.yaml
 labels:
   - includeSelectors: true
     pairs:

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: CronJob
+metadata:
+  name: rss
+spec:
+  schedule: "* * * * *"
+  template:
+    spec:
+      containers:
+        - name: rss-cron
+          image: registry.uniproject.jp/infra/rss-cron:1.0.0
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: unibot-env
+          env:
+            - name: TZ
+              value: Asia/Tokyo
+      imagePullSecrets:
+        - name: internal-harbor
