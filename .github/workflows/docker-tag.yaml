@@ -6,10 +6,6 @@ on:
       - "bot/v*"
       - "rss-cron/v*"
 
-concurrency:
-  group: docker-build-push
-  cancel-in-progress: true
-
 permissions:
   contents: read
   id-token: write
