@@ -13,7 +13,7 @@ spec:
             - name: internal-harbor
           containers:
             - name: rss-cron
-              image: registry.uniproject.jp/infra/rss-cron:1.0.0
+              image: registry.uniproject.jp/infra/unibot-rss-cron:1.0.0
               imagePullPolicy: Always
               envFrom:
                 - secretRef:
