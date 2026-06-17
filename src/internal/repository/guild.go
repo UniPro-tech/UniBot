@@ -37,7 +37,7 @@ func (r *GuildRepository) Get(DiscordID string) (*model.Guild, error) {
 	return &guild, err
 }
 
-// なければ挿入する関する
+// なければ挿入する
 func (r *GuildRepository) GetOrCreate(DiscordID string) (*model.Guild, error) {
 	exist, err := r.Get(DiscordID)
 	if err != nil {
