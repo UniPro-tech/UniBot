@@ -4,7 +4,7 @@ metadata:
   name: rss
 spec:
   schedule: "* * * * *"
-  template:
+  jobTemplate:
     spec:
       containers:
         - name: rss-cron
