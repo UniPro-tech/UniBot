@@ -4,6 +4,9 @@ metadata:
   name: rss
 spec:
   schedule: "* * * * *"
+  concurrencyPolicy: Forbit
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 1
   jobTemplate:
     spec:
       template:
