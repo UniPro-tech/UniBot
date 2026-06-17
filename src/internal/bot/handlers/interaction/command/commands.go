@@ -13,6 +13,7 @@ var GeneralCommands = []discord.ApplicationCommandCreate{
 	general.LoadColorCodeCommandContext(),
 	general.LoadHelpCommandContext(),
 	general.LoadTtsCommandContext(),
+	general.LoadRssCommandContext(),
 }
 
 var AdminCommands = []discord.ApplicationCommandCreate{
