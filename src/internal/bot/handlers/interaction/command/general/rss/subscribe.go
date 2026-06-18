@@ -3,6 +3,9 @@ package rss
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
+	"net/http"
+	"slices"
 	"sort"
 	"time"
 	"unibot/internal"
@@ -104,6 +107,46 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 			}()
 		}
 
+		var feedImage *discord.Icon
+		feedImageURL := feed.Image.URL
+		if feedImageURL != "" {
+			resp, err := util.HttpGet(feedImageURL)
+			if err != nil {
+				return errorSubscribeResponse(config, e, client)
+			}
+			imageBytes, err := io.ReadAll(resp.Body)
+			if err == nil {
+				mimeType := http.DetectContentType(imageBytes)
+				registeredMIME := []string{
+					"image/jpeg",
+					"image/png",
+					"image/webp",
+					"image/avif",
+					"image/gif",
+				}
+				if slices.Contains(registeredMIME, mimeType) {
+					feedImage = discord.NewIconRaw(discord.IconType(mimeType), imageBytes)
+				}
+			}
+		}
+
+		var webhookCreateOptions discord.WebhookCreate
+		if title != nil {
+			webhookCreateOptions = discord.WebhookCreate{
+				Name:   fmt.Sprintf("RSS - %s", *title),
+				Avatar: feedImage,
+			}
+		} else {
+			webhookCreateOptions = discord.WebhookCreate{
+				Name:   "RSSフィード",
+				Avatar: feedImage,
+			}
+		}
+		webhookURL, err := client.Rest.CreateWebhook(e.Channel().ID(), webhookCreateOptions)
+		if err != nil {
+			return errorSubscribeResponse(config, e, client)
+		}
+
 		db := ctx.DB
 		guildRepo := repository.NewGuildRepository(db)
 		if _, err := guildRepo.GetOrCreate(guildID.String()); err != nil {
@@ -113,6 +156,7 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 		if err := rssRepo.Create(&model.RSSSetting{
 			GuildID:                      guildID.String(),
 			ChannelID:                    e.Channel().ID().String(),
+			WebhookURL:                   webhookURL.URL(),
 			URL:                          url,
 			Title:                        title,
 			LastItemTitleDescriptionHash: hash,
