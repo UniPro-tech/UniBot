@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
 )
 
-func HttpGet(feedURL string) (*io.ReadCloser, error) {
+func HttpGet(feedURL string) (*http.Response, error) {
 	parsedURL, err := url.Parse(feedURL)
 	if err != nil {
 		return nil, err
@@ -75,7 +74,7 @@ func HttpGet(feedURL string) (*io.ReadCloser, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	return &resp.Body, nil
+	return resp, nil
 }
 
 func validateURL(u *url.URL) error {

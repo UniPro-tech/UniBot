@@ -12,14 +12,14 @@ const (
 )
 
 func FetchFeed(feedURL string) (*gofeed.Feed, error) {
-	body, err := HttpGet(feedURL)
-	if err != nil || body == nil {
+	resp, err := HttpGet(feedURL)
+	if err != nil || resp == nil {
 		return nil, err
 	}
 	parser := gofeed.NewParser()
 
 	feed, err := parser.Parse(
-		io.LimitReader(*body, MaxFeedSize),
+		io.LimitReader(resp.Body, MaxFeedSize),
 	)
 	if err != nil {
 		return nil, err
