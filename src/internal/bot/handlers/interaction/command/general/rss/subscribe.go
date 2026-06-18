@@ -10,6 +10,7 @@ import (
 	"unibot/internal/repository"
 	"unibot/internal/util"
 
+	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -35,6 +36,7 @@ func LoadSubscribeCommandContext() discord.ApplicationCommandOption {
 
 func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+		client := e.Client()
 		config := ctx.Config
 
 		if e.Channel().Type() == discord.ChannelTypeDM || e.Channel().Type() == discord.ChannelTypeGroupDM {
@@ -51,7 +53,7 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 					return &t
 				}(),
 			}
-			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+			_, err := client.Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
 			return err
 		}
 
@@ -72,7 +74,7 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 
 		feed, err := util.FetchFeed(url)
 		if err != nil {
-			return errorSubscribeResponse(config, e)
+			return errorSubscribeResponse(config, e, client)
 		}
 
 		if feed.Title != "" && title == nil {
@@ -138,12 +140,12 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 				return &t
 			}(),
 		}
-		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+		_, err = client.Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
 		return err
 	}
 }
 
-func errorSubscribeResponse(config *internal.Config, e *handler.CommandEvent) error {
+func errorSubscribeResponse(config *internal.Config, e *handler.CommandEvent, client *bot.Client) error {
 	responseEmbed := discord.Embed{
 		Title:       "RSS購読",
 		Description: "RSSフィードの取得に失敗しました。",
@@ -157,6 +159,6 @@ func errorSubscribeResponse(config *internal.Config, e *handler.CommandEvent) er
 			return &t
 		}(),
 	}
-	_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+	_, err := client.Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
 	return err
 }
