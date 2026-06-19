@@ -108,13 +108,17 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 		}
 
 		var feedImage *discord.Icon
-		feedImageURL := feed.Image.URL
+		var feedImageURL string
+		if feed.Image != nil {
+			feedImageURL = feed.Image.URL
+		}
 		if feedImageURL != "" {
 			resp, err := util.HttpGet(feedImageURL)
 			if err != nil {
 				return errorSubscribeResponse(config, e, client)
 			}
-			imageBytes, err := io.ReadAll(resp.Body)
+			defer resp.Body.Close()
+			imageBytes, err := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
 			if err == nil {
 				mimeType := http.DetectContentType(imageBytes)
 				registeredMIME := []string{

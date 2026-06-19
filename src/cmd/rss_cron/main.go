@@ -82,9 +82,14 @@ func Ready(db *gorm.DB) {
 
 		// 古い→新しい順に送信
 		slices.Reverse(targetItems)
-		client, err := webhook.NewWithURL(rssSetting.URL)
+		client, err := webhook.NewWithURL(rssSetting.WebhookURL)
 		if err != nil {
 			log.Print("Message create error:", err)
+			rssSetting.IsFailed = true
+			if err := repo.Update(rssSetting); err != nil {
+				log.Print("Update Record Failed", err)
+			}
+			continue
 		}
 		for _, item := range targetItems {
 			itemTitle := item.Title
