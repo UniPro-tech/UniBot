@@ -113,24 +113,25 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 			feedImageURL = feed.Image.URL
 		}
 		if feedImageURL != "" {
-			resp, err := util.HttpGet(feedImageURL)
-			if err != nil {
-				return errorSubscribeResponse(config, e, client)
+			feedImageURL = "https://upload.wikimedia.org/wikipedia/commons/e/e8/Generic_Feed-icon.png"
+		}
+		resp, err := util.HttpGet(feedImageURL)
+		if err != nil {
+			return errorSubscribeResponse(config, e, client)
+		}
+		defer resp.Body.Close()
+		imageBytes, err := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
+		if err == nil {
+			mimeType := http.DetectContentType(imageBytes)
+			registeredMIME := []string{
+				"image/jpeg",
+				"image/png",
+				"image/webp",
+				"image/avif",
+				"image/gif",
 			}
-			defer resp.Body.Close()
-			imageBytes, err := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
-			if err == nil {
-				mimeType := http.DetectContentType(imageBytes)
-				registeredMIME := []string{
-					"image/jpeg",
-					"image/png",
-					"image/webp",
-					"image/avif",
-					"image/gif",
-				}
-				if slices.Contains(registeredMIME, mimeType) {
-					feedImage = discord.NewIconRaw(discord.IconType(mimeType), imageBytes)
-				}
+			if slices.Contains(registeredMIME, mimeType) {
+				feedImage = discord.NewIconRaw(discord.IconType(mimeType), imageBytes)
 			}
 		}
 
