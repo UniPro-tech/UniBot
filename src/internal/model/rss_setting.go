@@ -1,7 +1,7 @@
 package model
 
 type RSSSetting struct {
-	ID                           string  `gorm:"primaryKey;size:255"`
+	ID                           string  `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	URL                          string  `gorm:"not null"`
 	ChannelID                    string  `gorm:"not null"`
 	WebhookURL                   string  `gorm:"not null"`
