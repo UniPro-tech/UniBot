@@ -96,21 +96,25 @@ func Ready(db *gorm.DB) {
 			if itemTitle == "" {
 				itemTitle = "(タイトルなし)"
 			}
-			itemDescription := item.Description
-			if itemDescription == "" {
-				if item.Content != "" {
-					itemDescription = item.Content
-				} else {
-					itemDescription = "(説明なし)"
-				}
-			}
 			itemLink := item.Link
 			if itemLink == "" {
 				itemLink = "リンクなし"
 			}
+			var itemAuthor string
+			if len(item.Authors) > 0 {
+				for index, author := range item.Authors {
+					var separate string
+					if index != 0 {
+						separate = ","
+					}
+					itemAuthor = itemAuthor + separate + author.Name
+				}
+			}
+			itemPublished := item.PublishedParsed
+
 			message := fmt.Sprintf(
-				"# %s に新しい記事が追加されました！\n## %s\n%s\nURL: %s",
-				*feedTitle, itemTitle, itemDescription, itemLink,
+				"# %s に新しい記事が追加されました！\n## %s\n-# by %s at <t:%d:S>\nURL: %s",
+				*feedTitle, itemTitle, itemAuthor, itemPublished.UTC().Unix(), itemLink,
 			)
 			_, err := client.CreateContent(message)
 			if err != nil {
