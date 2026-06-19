@@ -113,7 +113,7 @@ func Ready(db *gorm.DB) {
 			itemPublished := item.PublishedParsed
 
 			message := fmt.Sprintf(
-				"# %s に新しい記事が追加されました！\n## %s\n-# by %s at <t:%d:S>\nURL: %s",
+				"%s に新しい記事が追加されました: **%s**\n-# by %s at <t:%d:S>\nURL: %s",
 				*feedTitle, itemTitle, itemAuthor, itemPublished.UTC().Unix(), itemLink,
 			)
 			_, err := client.CreateContent(message)
