@@ -4,7 +4,7 @@ type RSSSetting struct {
 	ID                           string  `gorm:"primaryKey;size:255"`
 	URL                          string  `gorm:"not null"`
 	ChannelID                    string  `gorm:"not null"`
-	WebhookURL                   string  `gorm:"null"`
+	WebhookURL                   string  `gorm:"not null"`
 	Title                        *string `gorm:"null"`
 	IsFailed                     bool    `gorm:"default:false"`
 	LastItemTitleDescriptionHash *string `gorm:"null"`
