@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
 	"log"
-	"os"
 	"slices"
 	"sort"
 	"unibot/internal/db"
@@ -14,68 +12,25 @@ import (
 
 	"github.com/mmcdole/gofeed"
 
-	"github.com/disgoorg/disgo"
-	"github.com/disgoorg/disgo/bot"
-	"github.com/disgoorg/disgo/cache"
-	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
-	"github.com/disgoorg/disgo/gateway"
-	"github.com/disgoorg/snowflake/v2"
+	"github.com/disgoorg/disgo/webhook"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 func main() {
-	token := os.Getenv("DISCORD_TOKEN")
-	if token == "" {
-		log.Fatal("DISCORD_TOKEN is not set")
-	}
-
 	dbConnection, err := db.NewDB()
 	if err != nil {
 		log.Fatal(err)
 	}
 	dbConnection.Logger = dbConnection.Logger.LogMode(logger.Info)
 
-	client, err := disgo.New(token,
-		//bot.WithDefaultGateway(),
-		bot.WithGatewayConfigOpts(
-			// Intents
-			gateway.WithIntents(
-				gateway.IntentsNonPrivileged,
-			),
-		),
-		// Cache
-		bot.WithCacheConfigOpts(
-			cache.WithCaches(cache.FlagVoiceStates),
-			cache.WithCaches(cache.FlagChannels),
-			cache.WithCaches(cache.FlagMessages),
-			cache.WithCaches(cache.FlagRoles),
-			cache.WithCaches(cache.FlagMembers),
-			cache.WithCaches(cache.FlagGuilds),
-		),
-		// Event Handler
-		bot.WithEventListenerFunc(func(e *events.Ready) {
-			Ready(dbConnection, e)
-		}),
-	)
-	if err != nil {
-		log.Fatal("error while building disgo instance: ", err)
-	}
-
-	defer client.Close(context.TODO())
-
-	// 接続開始
-	if err = client.OpenGateway(context.TODO()); err != nil {
-		log.Fatal("error while connecting to gateway: ", err)
-	}
-
 	log.Println("Bot is running...")
+
+	Ready(dbConnection)
 }
 
-func Ready(db *gorm.DB, e *events.Ready) {
+func Ready(db *gorm.DB) {
 	log.Println("Bot is ready 🚀")
-	log.Printf("Logged in as: %v#%v", e.User.Username, e.User.Discriminator)
 
 	repo := repository.NewRSSSettingRepository(db)
 	rssSubscribeList, err := repo.List()
@@ -127,8 +82,15 @@ func Ready(db *gorm.DB, e *events.Ready) {
 
 		// 古い→新しい順に送信
 		slices.Reverse(targetItems)
-		channelID := snowflake.MustParse(rssSetting.ChannelID)
-		client := e.Client()
+		client, err := webhook.NewWithURL(rssSetting.WebhookURL)
+		if err != nil {
+			log.Print("Message create error:", err)
+			rssSetting.IsFailed = true
+			if err := repo.Update(rssSetting); err != nil {
+				log.Print("Update Record Failed", err)
+			}
+			continue
+		}
 		for _, item := range targetItems {
 			itemTitle := item.Title
 			if itemTitle == "" {
@@ -150,7 +112,7 @@ func Ready(db *gorm.DB, e *events.Ready) {
 				"# %s に新しい記事が追加されました！\n## %s\n%s\nURL: %s",
 				*feedTitle, itemTitle, itemDescription, itemLink,
 			)
-			_, err := client.Rest.CreateMessage(channelID, discord.NewMessageCreate().WithContent(message))
+			_, err := client.CreateContent(message)
 			if err != nil {
 				log.Print("Message create error:", err)
 			}

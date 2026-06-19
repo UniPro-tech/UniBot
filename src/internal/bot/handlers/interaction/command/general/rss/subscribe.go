@@ -3,6 +3,9 @@ package rss
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
+	"net/http"
+	"slices"
 	"sort"
 	"time"
 	"unibot/internal"
@@ -10,6 +13,7 @@ import (
 	"unibot/internal/repository"
 	"unibot/internal/util"
 
+	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -35,6 +39,7 @@ func LoadSubscribeCommandContext() discord.ApplicationCommandOption {
 
 func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+		client := e.Client()
 		config := ctx.Config
 
 		if e.Channel().Type() == discord.ChannelTypeDM || e.Channel().Type() == discord.ChannelTypeGroupDM {
@@ -51,7 +56,7 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 					return &t
 				}(),
 			}
-			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+			_, err := client.Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
 			return err
 		}
 
@@ -72,7 +77,7 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 
 		feed, err := util.FetchFeed(url)
 		if err != nil {
-			return errorSubscribeResponse(config, e)
+			return errorSubscribeResponse(config, e, client)
 		}
 
 		if feed.Title != "" && title == nil {
@@ -102,6 +107,50 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 			}()
 		}
 
+		var feedImage *discord.Icon
+		var feedImageURL string
+		if feed.Image != nil {
+			feedImageURL = feed.Image.URL
+		}
+		if feedImageURL != "" {
+			resp, err := util.HttpGet(feedImageURL)
+			if err != nil {
+				return errorSubscribeResponse(config, e, client)
+			}
+			defer resp.Body.Close()
+			imageBytes, err := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
+			if err == nil {
+				mimeType := http.DetectContentType(imageBytes)
+				registeredMIME := []string{
+					"image/jpeg",
+					"image/png",
+					"image/webp",
+					"image/avif",
+					"image/gif",
+				}
+				if slices.Contains(registeredMIME, mimeType) {
+					feedImage = discord.NewIconRaw(discord.IconType(mimeType), imageBytes)
+				}
+			}
+		}
+
+		var webhookCreateOptions discord.WebhookCreate
+		if title != nil {
+			webhookCreateOptions = discord.WebhookCreate{
+				Name:   fmt.Sprintf("RSS - %s", *title),
+				Avatar: feedImage,
+			}
+		} else {
+			webhookCreateOptions = discord.WebhookCreate{
+				Name:   "RSSフィード",
+				Avatar: feedImage,
+			}
+		}
+		webhookURL, err := client.Rest.CreateWebhook(e.Channel().ID(), webhookCreateOptions)
+		if err != nil {
+			return errorSubscribeResponse(config, e, client)
+		}
+
 		db := ctx.DB
 		guildRepo := repository.NewGuildRepository(db)
 		if _, err := guildRepo.GetOrCreate(guildID.String()); err != nil {
@@ -111,10 +160,12 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 		if err := rssRepo.Create(&model.RSSSetting{
 			GuildID:                      guildID.String(),
 			ChannelID:                    e.Channel().ID().String(),
+			WebhookURL:                   webhookURL.URL(),
 			URL:                          url,
 			Title:                        title,
 			LastItemTitleDescriptionHash: hash,
 		}); err != nil {
+			err := client.Rest.DeleteWebhook(webhookURL.ID())
 			return err
 		}
 
@@ -138,12 +189,12 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 				return &t
 			}(),
 		}
-		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+		_, err = client.Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
 		return err
 	}
 }
 
-func errorSubscribeResponse(config *internal.Config, e *handler.CommandEvent) error {
+func errorSubscribeResponse(config *internal.Config, e *handler.CommandEvent, client *bot.Client) error {
 	responseEmbed := discord.Embed{
 		Title:       "RSS購読",
 		Description: "RSSフィードの取得に失敗しました。",
@@ -157,6 +208,6 @@ func errorSubscribeResponse(config *internal.Config, e *handler.CommandEvent) er
 			return &t
 		}(),
 	}
-	_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+	_, err := client.Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
 	return err
 }

@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: rss
 spec:
-  schedule: "* * * * *"
+  schedule: "*/10 * * * *"
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
   successfulJobsHistoryLimit: 1
