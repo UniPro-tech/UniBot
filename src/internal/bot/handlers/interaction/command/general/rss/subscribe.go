@@ -165,6 +165,7 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 			Title:                        title,
 			LastItemTitleDescriptionHash: hash,
 		}); err != nil {
+			err := client.Rest.DeleteWebhook(webhookURL.ID())
 			return err
 		}
 
