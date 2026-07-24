@@ -21,10 +21,14 @@ table "tts_dictionary" {
     null    = false
     default = sql("CURRENT_TIMESTAMP")
   }
+  primary_key {
+    columns = [column.guild_id, column.word]
+  }
   index "idx_tts_dictionary_word" {
     columns = [column.word]
   }
-  primary_key {
-    columns = [column.guild_id, column.word]
+  foreign_key "fk_tts_dictionary_member_id" {
+    columns     = [column.user_id, column.guild_id]
+    ref_columns = [table.members.column.user_id, table.members.column.guild_id]
   }
 }

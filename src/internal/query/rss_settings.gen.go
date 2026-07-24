@@ -34,6 +34,7 @@ func newRssSetting(db *gorm.DB, opts ...gen.DOOption) rssSetting {
 	_rssSetting.URL = field.NewString(tableName, "url")
 	_rssSetting.LastRun = field.NewTime(tableName, "last_run")
 	_rssSetting.CreatedAt = field.NewTime(tableName, "created_at")
+	_rssSetting.GuildID = field.NewInt64(tableName, "guild_id")
 
 	_rssSetting.fillFieldMap()
 
@@ -50,6 +51,7 @@ type rssSetting struct {
 	URL       field.String
 	LastRun   field.Time
 	CreatedAt field.Time
+	GuildID   field.Int64
 
 	fieldMap map[string]field.Expr
 }
@@ -72,6 +74,7 @@ func (r *rssSetting) updateTableName(table string) *rssSetting {
 	r.URL = field.NewString(table, "url")
 	r.LastRun = field.NewTime(table, "last_run")
 	r.CreatedAt = field.NewTime(table, "created_at")
+	r.GuildID = field.NewInt64(table, "guild_id")
 
 	r.fillFieldMap()
 
@@ -88,13 +91,14 @@ func (r *rssSetting) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *rssSetting) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 6)
+	r.fieldMap = make(map[string]field.Expr, 7)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["user_id"] = r.UserID
 	r.fieldMap["channel_id"] = r.ChannelID
 	r.fieldMap["url"] = r.URL
 	r.fieldMap["last_run"] = r.LastRun
 	r.fieldMap["created_at"] = r.CreatedAt
+	r.fieldMap["guild_id"] = r.GuildID
 }
 
 func (r rssSetting) clone(db *gorm.DB) rssSetting {

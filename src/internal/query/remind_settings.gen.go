@@ -36,6 +36,7 @@ func newRemindSetting(db *gorm.DB, opts ...gen.DOOption) remindSetting {
 	_remindSetting.NextRun = field.NewTime(tableName, "next_run")
 	_remindSetting.CronExpr = field.NewString(tableName, "cron_expr")
 	_remindSetting.CreatedAt = field.NewTime(tableName, "created_at")
+	_remindSetting.GuildID = field.NewInt64(tableName, "guild_id")
 
 	_remindSetting.fillFieldMap()
 
@@ -54,6 +55,7 @@ type remindSetting struct {
 	NextRun   field.Time
 	CronExpr  field.String
 	CreatedAt field.Time
+	GuildID   field.Int64
 
 	fieldMap map[string]field.Expr
 }
@@ -78,6 +80,7 @@ func (r *remindSetting) updateTableName(table string) *remindSetting {
 	r.NextRun = field.NewTime(table, "next_run")
 	r.CronExpr = field.NewString(table, "cron_expr")
 	r.CreatedAt = field.NewTime(table, "created_at")
+	r.GuildID = field.NewInt64(table, "guild_id")
 
 	r.fillFieldMap()
 
@@ -94,7 +97,7 @@ func (r *remindSetting) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 }
 
 func (r *remindSetting) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 8)
+	r.fieldMap = make(map[string]field.Expr, 9)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["user_id"] = r.UserID
 	r.fieldMap["channel_id"] = r.ChannelID
@@ -103,6 +106,7 @@ func (r *remindSetting) fillFieldMap() {
 	r.fieldMap["next_run"] = r.NextRun
 	r.fieldMap["cron_expr"] = r.CronExpr
 	r.fieldMap["created_at"] = r.CreatedAt
+	r.fieldMap["guild_id"] = r.GuildID
 }
 
 func (r remindSetting) clone(db *gorm.DB) remindSetting {

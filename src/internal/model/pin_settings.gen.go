@@ -11,6 +11,7 @@ type PinSetting struct {
 	ChannelID int64  `gorm:"column:channel_id;primaryKey" json:"channel_id"`
 	UserID    int64  `gorm:"column:user_id;not null" json:"user_id"`
 	Content   string `gorm:"column:content;not null" json:"content"`
+	GuildID   int64  `gorm:"column:guild_id;not null" json:"guild_id"`
 }
 
 // TableName PinSetting's table name

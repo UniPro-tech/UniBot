@@ -21,7 +21,7 @@ table "tts_member_preference" {
   primary_key {
     columns = [column.user_id, column.guild_id]
   }
-  foreign_key "fk_member_id" {
+  foreign_key "fk_tts_pref_member_id" {
     columns     = [column.user_id, column.guild_id]
     ref_columns = [table.members.column.user_id, table.members.column.guild_id]
     on_update   = CASCADE

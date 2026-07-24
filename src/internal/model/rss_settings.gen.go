@@ -18,6 +18,7 @@ type RssSetting struct {
 	URL       string     `gorm:"column:url;not null" json:"url"`
 	LastRun   *time.Time `gorm:"column:last_run" json:"last_run"`
 	CreatedAt time.Time  `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	GuildID   int64      `gorm:"column:guild_id;not null" json:"guild_id"`
 }
 
 // TableName RssSetting's table name

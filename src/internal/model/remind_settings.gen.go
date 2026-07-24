@@ -20,6 +20,7 @@ type RemindSetting struct {
 	NextRun   time.Time  `gorm:"column:next_run;not null" json:"next_run"`
 	CronExpr  *string    `gorm:"column:cron_expr" json:"cron_expr"`
 	CreatedAt *time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	GuildID   int64      `gorm:"column:guild_id;not null" json:"guild_id"`
 }
 
 // TableName RemindSetting's table name
