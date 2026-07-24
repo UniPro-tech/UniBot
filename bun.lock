@@ -7,33 +7,33 @@
       "dependencies": {
         "@breejs/later": "^4.2.0",
         "@discordjs/opus": "^0.10.0",
-        "@discordjs/rest": "^2.6.0",
-        "@discordjs/voice": "^0.19.0",
+        "@discordjs/rest": "^2.6.3",
+        "@discordjs/voice": "^0.19.2",
         "@hokify/agenda": "^6.3.0",
-        "@nakanoaas/uuid58": "^1.0.5",
-        "@prisma/client": "^6.19.1",
-        "@snazzah/davey": "^0.1.9",
+        "@nakanoaas/uuid58": "^1.2.1",
+        "@prisma/client": "^6.19.3",
+        "@snazzah/davey": "^0.1.12",
         "@types/breejs__later": "^4.1.5",
-        "@types/node": "^25.0.0",
-        "@unipro-tech/node-logger": "^1.0.0",
-        "axios": "^1.13.2",
+        "@types/node": "^26.0.0",
+        "@unipro-tech/node-logger": "^1.0.2",
+        "axios": "^1.18.1",
         "child_process": "^1.0.2",
-        "cronstrue": "^3.9.0",
-        "discord-api-types": "^0.38.37",
-        "discord.js": "^14.25.1",
-        "dotenv": "^17.2.3",
-        "fast-xml-parser": "^5.3.3",
+        "cronstrue": "^3.24.0",
+        "discord-api-types": "^0.38.50",
+        "discord.js": "^14.27.0",
+        "dotenv": "^17.4.2",
+        "fast-xml-parser": "^5.10.1",
         "install": "^0.13.0",
-        "nanoid": "^5.1.6",
-        "node-cron": "^4.2.1",
+        "nanoid": "^5.1.16",
+        "node-cron": "^4.6.0",
         "rss-parser": "^3.13.0",
         "sodium": "^3.0.2",
         "voicevox.js": "^0.8.1",
       },
       "devDependencies": {
-        "@types/node": "^24",
+        "@types/node": "^26.0.0",
         "@types/node-cron": "^3.0.11",
-        "prisma": "^6.19.1",
+        "prisma": "^6.19.3",
         "tsconfig-paths": "^4.2.0",
         "typescript": "^5.9.3",
       },
@@ -270,7 +270,7 @@
 
     "@types/breejs__later": ["@types/breejs__later@4.1.5", "https://npm.flatt.tech/@types/breejs__later/-/breejs__later-4.1.5.tgz", {}, "sha512-O7VIO7sktsIwmLUyEeUnLMJ+QD2pv0yBGI2EMbVmwC1GOOTWJAaneL82ZyIwRgpEjJ9ciUHP8LuuuU55uj5ZjA=="],
 
-    "@types/node": ["@types/node@24.13.3", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q=="],
+    "@types/node": ["@types/node@26.1.1", "", { "dependencies": { "undici-types": "~8.3.0" } }, "sha512-nxAkRSVkN1Y0JC1W8ky/fTfkGsMmcrRsbx+3XoZE+rMOX71kLYTV7fLXpqud1GpbpP5TuffXFqfX7fH2GgZREw=="],
 
     "@types/node-cron": ["@types/node-cron@3.0.11", "https://npm.flatt.tech/@types/node-cron/-/node-cron-3.0.11.tgz", {}, "sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg=="],
 
@@ -644,7 +644,7 @@
 
     "undici": ["undici@6.28.0", "", {}, "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA=="],
 
-    "undici-types": ["undici-types@7.18.2", "", {}, "sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w=="],
+    "undici-types": ["undici-types@8.3.0", "", {}, "sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ=="],
 
     "util-deprecate": ["util-deprecate@1.0.2", "https://npm.flatt.tech/util-deprecate/-/util-deprecate-1.0.2.tgz", {}, "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="],
 
