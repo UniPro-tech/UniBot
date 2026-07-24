@@ -25,6 +25,7 @@ var (
 	RssSetting          *rssSetting
 	SystemPreference    *systemPreference
 	TtsConnection       *ttsConnection
+	TtsDictionary       *ttsDictionary
 	TtsMemberPreference *ttsMemberPreference
 	TtsUserPreference   *ttsUserPreference
 	User                *user
@@ -40,6 +41,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	RssSetting = &Q.RssSetting
 	SystemPreference = &Q.SystemPreference
 	TtsConnection = &Q.TtsConnection
+	TtsDictionary = &Q.TtsDictionary
 	TtsMemberPreference = &Q.TtsMemberPreference
 	TtsUserPreference = &Q.TtsUserPreference
 	User = &Q.User
@@ -56,6 +58,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		RssSetting:          newRssSetting(db, opts...),
 		SystemPreference:    newSystemPreference(db, opts...),
 		TtsConnection:       newTtsConnection(db, opts...),
+		TtsDictionary:       newTtsDictionary(db, opts...),
 		TtsMemberPreference: newTtsMemberPreference(db, opts...),
 		TtsUserPreference:   newTtsUserPreference(db, opts...),
 		User:                newUser(db, opts...),
@@ -73,6 +76,7 @@ type Query struct {
 	RssSetting          rssSetting
 	SystemPreference    systemPreference
 	TtsConnection       ttsConnection
+	TtsDictionary       ttsDictionary
 	TtsMemberPreference ttsMemberPreference
 	TtsUserPreference   ttsUserPreference
 	User                user
@@ -93,6 +97,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		RssSetting:          q.RssSetting.clone(db),
 		SystemPreference:    q.SystemPreference.clone(db),
 		TtsConnection:       q.TtsConnection.clone(db),
+		TtsDictionary:       q.TtsDictionary.clone(db),
 		TtsMemberPreference: q.TtsMemberPreference.clone(db),
 		TtsUserPreference:   q.TtsUserPreference.clone(db),
 		User:                q.User.clone(db),
@@ -118,6 +123,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		RssSetting:          q.RssSetting.replaceDB(db),
 		SystemPreference:    q.SystemPreference.replaceDB(db),
 		TtsConnection:       q.TtsConnection.replaceDB(db),
+		TtsDictionary:       q.TtsDictionary.replaceDB(db),
 		TtsMemberPreference: q.TtsMemberPreference.replaceDB(db),
 		TtsUserPreference:   q.TtsUserPreference.replaceDB(db),
 		User:                q.User.replaceDB(db),
@@ -133,6 +139,7 @@ type queryCtx struct {
 	RssSetting          IRssSettingDo
 	SystemPreference    ISystemPreferenceDo
 	TtsConnection       ITtsConnectionDo
+	TtsDictionary       ITtsDictionaryDo
 	TtsMemberPreference ITtsMemberPreferenceDo
 	TtsUserPreference   ITtsUserPreferenceDo
 	User                IUserDo
@@ -148,6 +155,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		RssSetting:          q.RssSetting.WithContext(ctx),
 		SystemPreference:    q.SystemPreference.WithContext(ctx),
 		TtsConnection:       q.TtsConnection.WithContext(ctx),
+		TtsDictionary:       q.TtsDictionary.WithContext(ctx),
 		TtsMemberPreference: q.TtsMemberPreference.WithContext(ctx),
 		TtsUserPreference:   q.TtsUserPreference.WithContext(ctx),
 		User:                q.User.WithContext(ctx),
