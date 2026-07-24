@@ -27,10 +27,12 @@ table "remind_settings" {
   }
   column "cron_expr" {
     type = varchar(100)
+    null = true
   }
   column "created_at" {
     type    = timestamptz
     default = sql("CURRENT_TIMESTAMP")
+    null    = true
   }
   primary_key {
     columns = [column.id]
