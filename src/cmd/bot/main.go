@@ -25,6 +25,7 @@ import (
 	interaction_handler "unibot/internal/bot/handlers/interaction"
 	"unibot/internal/bot/handlers/interaction/command"
 	"unibot/internal/db"
+	"unibot/internal/query"
 )
 
 func main() {
@@ -46,6 +47,8 @@ func main() {
 	}
 
 	r := handler.New()
+
+	query.SetDefault(dbConnection)
 
 	interaction_handler.RegistHandler(r, ctxData)
 
