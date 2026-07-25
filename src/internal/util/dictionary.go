@@ -1,14 +1,6 @@
 package util
 
-import (
-	"log"
-	"strings"
-
-	"unibot/internal/model"
-
-	"gorm.io/gorm"
-)
-
+/*
 // 辞書を適用する関数
 func ApplyDictionary(db *gorm.DB, guildID, content string) string {
 	entries, err := GetDictionaryCache().Get(db, guildID)
@@ -90,3 +82,4 @@ Outer:
 	}
 	return -1
 }
+*/

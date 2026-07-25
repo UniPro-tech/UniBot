@@ -2,14 +2,8 @@ package util
 
 import (
 	"errors"
-	"reflect"
 	"sync"
 	"time"
-
-	"unibot/internal/model"
-	"unibot/internal/repository"
-
-	"gorm.io/gorm"
 )
 
 // DictionaryCache はギルドごとの辞書エントリをキャッシュします
@@ -21,7 +15,7 @@ type DictionaryCache struct {
 }
 
 type cacheEntry struct {
-	entries   []*model.TTSDictionary
+	//entries   []*model.TTSDictionary
 	expiresAt time.Time
 }
 
@@ -31,8 +25,8 @@ type cacheKey struct {
 }
 
 type inFlight struct {
-	wg          sync.WaitGroup
-	entries     []*model.TTSDictionary
+	wg sync.WaitGroup
+	//entries     []*model.TTSDictionary
 	err         error
 	invalidated bool
 }
@@ -66,6 +60,7 @@ func NewDictionaryCache(ttl time.Duration) *DictionaryCache {
 
 // Get はキャッシュから辞書エントリを取得します
 // キャッシュミスまたは期限切れの場合はDBから取得し、キャッシュを更新します
+/*
 func (c *DictionaryCache) Get(db *gorm.DB, guildID string) ([]*model.TTSDictionary, error) {
 	for {
 		key := cacheKeyFor(db, guildID)
@@ -187,3 +182,4 @@ func cacheKeyFor(db *gorm.DB, guildID string) cacheKey {
 		guildID: guildID,
 	}
 }
+*/

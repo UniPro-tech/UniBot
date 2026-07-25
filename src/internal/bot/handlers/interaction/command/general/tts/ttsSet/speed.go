@@ -6,7 +6,6 @@ import (
 	"log"
 	"time"
 	"unibot/internal"
-	"unibot/internal/repository"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
@@ -48,54 +47,57 @@ func Speed(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDa
 }
 
 func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed int) error {
-	requester := e.User()
+	/*
+		requester := e.User()
 
-	memberID := requester.ID.String()
-	if speed < MinSpeakerSpeed || speed > MaxSpeakerSpeed {
-		responseEmbed := buildSpeedEmbed("エラー", fmt.Sprintf("再生速度は%d〜%dの範囲で指定してください。", MinSpeakerSpeed, MaxSpeakerSpeed), ctx.Config.Colors.Error, &requester)
-		_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
-		return err
-	}
+		memberID := requester.ID.String()
+		if speed < MinSpeakerSpeed || speed > MaxSpeakerSpeed {
+			responseEmbed := buildSpeedEmbed("エラー", fmt.Sprintf("再生速度は%d〜%dの範囲で指定してください。", MinSpeakerSpeed, MaxSpeakerSpeed), ctx.Config.Colors.Error, &requester)
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+			return err
+		}
 
-	memberRepo := repository.NewMemberRepository(ctx.DB)
-	if err := memberRepo.Create(memberID); err != nil {
-		log.Println("Error creating member:", err)
-		responseEmbed := buildSpeedEmbed("エラー", "メンバー情報の作成に失敗しました。", ctx.Config.Colors.Error, &requester)
-		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
-		return err
-	}
-
-	repo := repository.NewTTSPersonalSettingRepository(ctx.DB)
-	setting, err := repo.GetByMember(memberID)
-	if err != nil {
-		log.Println("Error fetching TTS personal setting:", err)
-		responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の取得に失敗しました。", ctx.Config.Colors.Error, &requester)
-		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
-		return err
-	}
-	if setting == nil {
-		defaultSetting := repository.DefaultTTSPersonalSetting
-		setting = &defaultSetting
-		setting.MemberID = memberID
-		setting.SpeakerSpeed = speed
-		err = repo.Create(setting)
-		if err != nil {
-			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の作成に失敗しました。", ctx.Config.Colors.Error, &requester)
+		memberRepo := repository.NewMemberRepository(ctx.DB)
+		if err := memberRepo.Create(memberID); err != nil {
+			log.Println("Error creating member:", err)
+			responseEmbed := buildSpeedEmbed("エラー", "メンバー情報の作成に失敗しました。", ctx.Config.Colors.Error, &requester)
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
 		}
-	} else {
-		setting.SpeakerSpeed = speed
-		err = repo.Update(setting)
+
+		repo := repository.NewTTSPersonalSettingRepository(ctx.DB)
+		setting, err := repo.GetByMember(memberID)
 		if err != nil {
-			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の更新に失敗しました。", ctx.Config.Colors.Error, &requester)
+			log.Println("Error fetching TTS personal setting:", err)
+			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の取得に失敗しました。", ctx.Config.Colors.Error, &requester)
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
 		}
-	}
-	responseEmbed := buildSpeedEmbed("TTS再生速度設定", "TTSの再生速度を設定しました: "+formatSpeed(speed), ctx.Config.Colors.Success, &requester)
-	_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
-	return err
+		if setting == nil {
+			defaultSetting := repository.DefaultTTSPersonalSetting
+			setting = &defaultSetting
+			setting.MemberID = memberID
+			setting.SpeakerSpeed = speed
+			err = repo.Create(setting)
+			if err != nil {
+				responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の作成に失敗しました。", ctx.Config.Colors.Error, &requester)
+				_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+				return err
+			}
+		} else {
+			setting.SpeakerSpeed = speed
+			err = repo.Update(setting)
+			if err != nil {
+				responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の更新に失敗しました。", ctx.Config.Colors.Error, &requester)
+				_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+				return err
+			}
+		}
+		responseEmbed := buildSpeedEmbed("TTS再生速度設定", "TTSの再生速度を設定しました: "+formatSpeed(speed), ctx.Config.Colors.Success, &requester)
+		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+		return err
+	*/
+	return nil
 }
 
 func buildSpeedEmbed(title, description string, color int, requester *discord.User) *discord.Embed {

@@ -45,11 +45,6 @@ func main() {
 		VoiceVox: voicevox.New(internal.LoadConfig().VoiceVoxURI, internal.LoadConfig().VoiceVoxAPIKey),
 	}
 
-	err = db.SetupDB(dbConnection)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	r := handler.New()
 
 	interaction_handler.RegistHandler(r, ctxData)

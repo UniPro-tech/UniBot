@@ -8,15 +8,13 @@ import (
 	"sync"
 	"time"
 	"unibot/internal"
-	"unibot/internal/model"
 
 	"github.com/disgoorg/disgo/voice"
 	"github.com/hraban/opus"
 )
 
 type QueueItem struct {
-	Text    string
-	Setting model.TTSPersonalSetting
+	Text string
 }
 
 type VoicePlayer struct {
@@ -106,17 +104,18 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 		select {
 		case <-p.Stop:
 			return
-		case item := <-p.TextQueue:
+		case _ = <-p.TextQueue:
 			cCtx, cCancel := context.WithCancel(context.Background())
 
 			p.cancelMu.Lock()
 			p.cancelFn = cCancel
 			p.cancelMu.Unlock()
 
-			audio, err := ctx.VoiceVox.Synthesize(cCtx, item.Text, item.Setting.SpeakerID, float64(item.Setting.SpeakerSpeed)/100.0)
+			/*audio, err := ctx.VoiceVox.Synthesize(cCtx, item.Text, item.Setting.SpeakerID, float64(item.Setting.SpeakerSpeed)/100.0)
 			if err != nil {
 				continue
 			}
+			*/
 
 			vc := p.GetVC()
 			if vc == nil || vc.ChannelID() == nil {
@@ -125,7 +124,7 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 
 			_ = vc.SetSpeaking(context.Background(), voice.SpeakingFlagMicrophone)
 
-			p.streamAudio(cCtx, audio)
+			// p.streamAudio(cCtx, audio)
 
 			// ffmpegの処理が終わってもチャネルにはバッファが残っているため、
 			// 全てDiscordに送信し終わるまで待機する (これがないと語尾がプツッと切断される)

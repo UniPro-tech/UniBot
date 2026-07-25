@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 	"unibot/internal"
-	"unibot/internal/model"
-	"unibot/internal/repository"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/disgoorg/disgo/bot"
@@ -91,26 +89,28 @@ func StatusResetHandler(ctx *internal.BotContext) func(data discord.SlashCommand
 		}
 
 		// DB Reset
-		database := ctx.DB
-		repo := repository.NewBotSystemSettingRepository(database)
-		err = repo.Delete("status")
-		if err != nil {
-			responseEmbed := discord.Embed{
-				Title:       "エラー",
-				Description: "ステータス設定の削除に失敗しました。",
-				Color:       config.Colors.Error,
-				Footer: &discord.EmbedFooter{
-					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-					IconURL: e.User().EffectiveAvatarURL(),
-				},
-				Timestamp: func() *time.Time {
-					t := time.Now()
-					return &t
-				}(),
+		/*
+			database := ctx.DB
+			repo := repository.NewBotSystemSettingRepository(database)
+			err = repo.Delete("status")
+			if err != nil {
+				responseEmbed := discord.Embed{
+					Title:       "エラー",
+					Description: "ステータス設定の削除に失敗しました。",
+					Color:       config.Colors.Error,
+					Footer: &discord.EmbedFooter{
+						Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+						IconURL: e.User().EffectiveAvatarURL(),
+					},
+					Timestamp: func() *time.Time {
+						t := time.Now()
+						return &t
+					}(),
+				}
+				_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed))
+				return err
 			}
-			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed))
-			return err
-		}
+		*/
 
 		responseEmbed := discord.Embed{
 			Title:       "ステータスリセット",
@@ -201,43 +201,14 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 				return &t
 			}(),
 		}
-
-		database := ctx.DB
-		repo := repository.NewBotSystemSettingRepository(database)
-		listSettings, err := repo.List()
-		if err != nil {
-			errorEmbed := discord.Embed{
-				Title:       "エラー",
-				Description: "設定の取得に失敗しました。",
-				Color:       config.Colors.Error,
-				Footer: &discord.EmbedFooter{
-					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-					IconURL: e.User().EffectiveAvatarURL(),
-				},
-				Timestamp: func() *time.Time {
-					t := time.Now()
-					return &t
-				}(),
-			}
-			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(errorEmbed))
-			return err
-		}
-
-		// list settings の中に status というキーがあれば更新、なければ新規作成
-		var statusSetting *model.BotSystemSetting
-		for _, setting := range listSettings {
-			if setting.ID == "status" {
-				statusSetting = setting
-				break
-			}
-		}
-		if statusSetting != nil {
-			statusSetting.Value.Set(StatusData{Text: statusText, Type: statusType, OnlineStatus: onlineStatus})
-			err = repo.Update(statusSetting)
+		/*
+			database := ctx.DB
+			repo := repository.NewBotSystemSettingRepository(database)
+			listSettings, err := repo.List()
 			if err != nil {
 				errorEmbed := discord.Embed{
 					Title:       "エラー",
-					Description: "設定の更新に失敗しました。",
+					Description: "設定の取得に失敗しました。",
 					Color:       config.Colors.Error,
 					Footer: &discord.EmbedFooter{
 						Text:    fmt.Sprintf("Requested by %s", e.User().Username),
@@ -251,30 +222,60 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 				_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(errorEmbed))
 				return err
 			}
-		} else {
-			newSetting := &model.BotSystemSetting{
-				ID: "status",
-			}
-			newSetting.Value.Set(StatusData{Text: statusText, Type: statusType, OnlineStatus: onlineStatus})
-			err = repo.Create(newSetting)
-			if err != nil {
-				errorEmbed := discord.Embed{
-					Title:       "エラー",
-					Description: "設定の更新に失敗しました。",
-					Color:       config.Colors.Error,
-					Footer: &discord.EmbedFooter{
-						Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-						IconURL: e.User().EffectiveAvatarURL(),
-					},
-					Timestamp: func() *time.Time {
-						t := time.Now()
-						return &t
-					}(),
+
+			// list settings の中に status というキーがあれば更新、なければ新規作成
+				var statusSetting *model.BotSystemSetting
+				for _, setting := range listSettings {
+					if setting.ID == "status" {
+						statusSetting = setting
+						break
+					}
 				}
-				_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(errorEmbed))
-				return err
-			}
-		}
+				if statusSetting != nil {
+					statusSetting.Value.Set(StatusData{Text: statusText, Type: statusType, OnlineStatus: onlineStatus})
+					err = repo.Update(statusSetting)
+					if err != nil {
+						errorEmbed := discord.Embed{
+							Title:       "エラー",
+							Description: "設定の更新に失敗しました。",
+							Color:       config.Colors.Error,
+							Footer: &discord.EmbedFooter{
+								Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+								IconURL: e.User().EffectiveAvatarURL(),
+							},
+							Timestamp: func() *time.Time {
+								t := time.Now()
+								return &t
+							}(),
+						}
+						_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(errorEmbed))
+						return err
+					}
+				} else {
+					newSetting := &model.BotSystemSetting{
+						ID: "status",
+					}
+					newSetting.Value.Set(StatusData{Text: statusText, Type: statusType, OnlineStatus: onlineStatus})
+					err = repo.Create(newSetting)
+					if err != nil {
+						errorEmbed := discord.Embed{
+							Title:       "エラー",
+							Description: "設定の更新に失敗しました。",
+							Color:       config.Colors.Error,
+							Footer: &discord.EmbedFooter{
+								Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+								IconURL: e.User().EffectiveAvatarURL(),
+							},
+							Timestamp: func() *time.Time {
+								t := time.Now()
+								return &t
+							}(),
+						}
+						_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(errorEmbed))
+						return err
+					}
+				}
+		*/
 
 		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed))
 		return err

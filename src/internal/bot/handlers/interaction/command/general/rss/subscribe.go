@@ -1,17 +1,9 @@
 package rss
 
 import (
-	"encoding/base64"
 	"fmt"
-	"io"
-	"net/http"
-	"slices"
-	"sort"
 	"time"
 	"unibot/internal"
-	"unibot/internal/model"
-	"unibot/internal/repository"
-	"unibot/internal/util"
 
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
@@ -59,139 +51,140 @@ func Subscribe(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 			_, err := client.Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
 			return err
 		}
-
-		guildID := *e.GuildID()
-		var title *string
-		var url string
-		for _, opt := range data.Options {
-			switch opt.Name {
-			case "title":
-				title = func() *string {
-					titleValue := opt.String()
-					return &titleValue
-				}()
-			case "url":
-				url = opt.String()
-			}
-		}
-
-		feed, err := util.FetchFeed(url)
-		if err != nil {
-			return errorSubscribeResponse(config, e, client)
-		}
-
-		if feed.Title != "" && title == nil {
-			title = &feed.Title
-		}
-		var hash *string
-		if len(feed.Items) != 0 {
-			// 新しい日時がindex:0
-			sort.SliceStable(feed.Items, func(i, j int) bool {
-				a := feed.Items[i].PublishedParsed
-				b := feed.Items[j].PublishedParsed
-
-				switch {
-				case a == nil && b == nil:
-					return false
-				case a == nil:
-					return false
-				case b == nil:
-					return true
-				default:
-					return a.After(*b)
+		/*
+				guildID := *e.GuildID()
+				var title *string
+				var url string
+				for _, opt := range data.Options {
+					switch opt.Name {
+					case "title":
+						title = func() *string {
+							titleValue := opt.String()
+							return &titleValue
+						}()
+					case "url":
+						url = opt.String()
+					}
 				}
-			})
-			hash = func() *string {
-				data := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", feed.Items[0].Title, feed.Items[0].Description)))
-				return &data
-			}()
-		}
 
-		var feedImage *discord.Icon
-		var feedImageURL string
-		if feed.Image != nil {
-			feedImageURL = feed.Image.URL
-		}
-		if feedImageURL != "" {
-			feedImageURL = "https://upload.wikimedia.org/wikipedia/commons/e/e8/Generic_Feed-icon.png"
-		}
-		resp, err := util.HttpGet(feedImageURL)
-		if err != nil {
-			return errorSubscribeResponse(config, e, client)
-		}
-		defer resp.Body.Close()
-		imageBytes, err := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
-		if err == nil {
-			mimeType := http.DetectContentType(imageBytes)
-			registeredMIME := []string{
-				"image/jpeg",
-				"image/png",
-				"image/webp",
-				"image/avif",
-				"image/gif",
-			}
-			if slices.Contains(registeredMIME, mimeType) {
-				feedImage = discord.NewIconRaw(discord.IconType(mimeType), imageBytes)
-			}
-		}
+				feed, err := util.FetchFeed(url)
+				if err != nil {
+					return errorSubscribeResponse(config, e, client)
+				}
 
-		var webhookCreateOptions discord.WebhookCreate
-		if title != nil {
-			webhookCreateOptions = discord.WebhookCreate{
-				Name:   fmt.Sprintf("RSS - %s", *title),
-				Avatar: feedImage,
-			}
-		} else {
-			webhookCreateOptions = discord.WebhookCreate{
-				Name:   "RSSフィード",
-				Avatar: feedImage,
-			}
-		}
-		webhookURL, err := client.Rest.CreateWebhook(e.Channel().ID(), webhookCreateOptions)
-		if err != nil {
-			return errorSubscribeResponse(config, e, client)
-		}
+				if feed.Title != "" && title == nil {
+					title = &feed.Title
+				}
+				var hash *string
+				if len(feed.Items) != 0 {
+					// 新しい日時がindex:0
+					sort.SliceStable(feed.Items, func(i, j int) bool {
+						a := feed.Items[i].PublishedParsed
+						b := feed.Items[j].PublishedParsed
 
-		db := ctx.DB
-		guildRepo := repository.NewGuildRepository(db)
-		if _, err := guildRepo.GetOrCreate(guildID.String()); err != nil {
-			return err
-		}
-		rssRepo := repository.NewRSSSettingRepository(db)
-		if err := rssRepo.Create(&model.RSSSetting{
-			GuildID:                      guildID.String(),
-			ChannelID:                    e.Channel().ID().String(),
-			WebhookURL:                   webhookURL.URL(),
-			URL:                          url,
-			Title:                        title,
-			LastItemTitleDescriptionHash: hash,
-		}); err != nil {
-			err := client.Rest.DeleteWebhook(webhookURL.ID())
-			return err
-		}
+						switch {
+						case a == nil && b == nil:
+							return false
+						case a == nil:
+							return false
+						case b == nil:
+							return true
+						default:
+							return a.After(*b)
+						}
+					})
+					hash = func() *string {
+						data := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", feed.Items[0].Title, feed.Items[0].Description)))
+						return &data
+					}()
+				}
 
-		// 成功レスポンス
-		responseEmbed := discord.Embed{
-			Title:       "RSS購読",
-			Description: "RSS購読設定が完了しました。",
-			Fields: []discord.EmbedField{
-				{
-					Name:  "URL",
-					Value: url,
+				var feedImage *discord.Icon
+				var feedImageURL string
+				if feed.Image != nil {
+					feedImageURL = feed.Image.URL
+				}
+				if feedImageURL != "" {
+					feedImageURL = "https://upload.wikimedia.org/wikipedia/commons/e/e8/Generic_Feed-icon.png"
+				}
+				resp, err := util.HttpGet(feedImageURL)
+				if err != nil {
+					return errorSubscribeResponse(config, e, client)
+				}
+				defer resp.Body.Close()
+				imageBytes, err := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024))
+				if err == nil {
+					mimeType := http.DetectContentType(imageBytes)
+					registeredMIME := []string{
+						"image/jpeg",
+						"image/png",
+						"image/webp",
+						"image/avif",
+						"image/gif",
+					}
+					if slices.Contains(registeredMIME, mimeType) {
+						feedImage = discord.NewIconRaw(discord.IconType(mimeType), imageBytes)
+					}
+				}
+
+				var webhookCreateOptions discord.WebhookCreate
+				if title != nil {
+					webhookCreateOptions = discord.WebhookCreate{
+						Name:   fmt.Sprintf("RSS - %s", *title),
+						Avatar: feedImage,
+					}
+				} else {
+					webhookCreateOptions = discord.WebhookCreate{
+						Name:   "RSSフィード",
+						Avatar: feedImage,
+					}
+				}
+				webhookURL, err := client.Rest.CreateWebhook(e.Channel().ID(), webhookCreateOptions)
+				if err != nil {
+					return errorSubscribeResponse(config, e, client)
+				}
+
+					db := ctx.DB
+					guildRepo := repository.NewGuildRepository(db)
+					if _, err := guildRepo.GetOrCreate(guildID.String()); err != nil {
+						return err
+					}
+					rssRepo := repository.NewRSSSettingRepository(db)
+					if err := rssRepo.Create(&model.RSSSetting{
+						GuildID:                      guildID.String(),
+						ChannelID:                    e.Channel().ID().String(),
+						WebhookURL:                   webhookURL.URL(),
+						URL:                          url,
+						Title:                        title,
+						LastItemTitleDescriptionHash: hash,
+					}); err != nil {
+						err := client.Rest.DeleteWebhook(webhookURL.ID())
+						return err
+					}
+			// 成功レスポンス
+			responseEmbed := discord.Embed{
+				Title:       "RSS購読",
+				Description: "RSS購読設定が完了しました。",
+				Fields: []discord.EmbedField{
+					{
+						Name:  "URL",
+						Value: url,
+					},
 				},
-			},
-			Color: config.Colors.Success,
-			Footer: &discord.EmbedFooter{
-				Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-				IconURL: e.User().EffectiveAvatarURL(),
-			},
-			Timestamp: func() *time.Time {
-				t := time.Now()
-				return &t
-			}(),
-		}
-		_, err = client.Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
-		return err
+				Color: config.Colors.Success,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}
+			_, err := client.Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+			return err
+		*/
+		return nil
 	}
 }
 

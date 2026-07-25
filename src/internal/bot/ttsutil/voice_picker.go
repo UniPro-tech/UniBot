@@ -7,7 +7,6 @@ import (
 	"time"
 	"unibot/internal"
 	"unibot/internal/api/voicevox"
-	"unibot/internal/repository"
 
 	"github.com/disgoorg/disgo/discord"
 )
@@ -174,12 +173,15 @@ func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID stri
 }
 
 func GetCurrentSpeakerID(ctx *internal.BotContext, memberID string) string {
-	repo := repository.NewTTSPersonalSettingRepository(ctx.DB)
-	setting, err := repo.GetByMember(memberID)
-	if err != nil || setting == nil {
-		return repository.DefaultTTSPersonalSetting.SpeakerID
-	}
-	return setting.SpeakerID
+	/*
+		repo := repository.NewTTSPersonalSettingRepository(ctx.DB)
+		setting, err := repo.GetByMember(memberID)
+		if err != nil || setting == nil {
+			return repository.DefaultTTSPersonalSetting.SpeakerID
+		}
+		return setting.SpeakerID
+	*/
+	return "0"
 }
 
 func ResolveSpeakerLabel(ctx *internal.BotContext, speakerID string) string {
