@@ -104,18 +104,18 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 		select {
 		case <-p.Stop:
 			return
-		case _ = <-p.TextQueue:
+		case item := <-p.TextQueue:
 			cCtx, cCancel := context.WithCancel(context.Background())
 
 			p.cancelMu.Lock()
 			p.cancelFn = cCancel
 			p.cancelMu.Unlock()
 
-			/*audio, err := ctx.VoiceVox.Synthesize(cCtx, item.Text, item.Setting.SpeakerID, float64(item.Setting.SpeakerSpeed)/100.0)
+			// audio, err := ctx.VoiceVox.Synthesize(cCtx, item.Text, item.Setting.SpeakerID, float64(item.Setting.SpeakerSpeed)/100.0)
+			audio, err := ctx.VoiceVox.Synthesize(cCtx, item.Text, "0", float64(100)/100.0)
 			if err != nil {
 				continue
 			}
-			*/
 
 			vc := p.GetVC()
 			if vc == nil || vc.ChannelID() == nil {
@@ -124,11 +124,11 @@ func (p *VoicePlayer) worker(ctx *internal.BotContext) {
 
 			_ = vc.SetSpeaking(context.Background(), voice.SpeakingFlagMicrophone)
 
-			// p.streamAudio(cCtx, audio)
+			p.streamAudio(cCtx, audio)
 
+		WaitLoop:
 			// ffmpegの処理が終わってもチャネルにはバッファが残っているため、
 			// 全てDiscordに送信し終わるまで待機する (これがないと語尾がプツッと切断される)
-		WaitLoop:
 			for len(p.opusChan) > 0 {
 				select {
 				case <-cCtx.Done(): // スキップされた場合は直ちに抜ける
