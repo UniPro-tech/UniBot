@@ -9,7 +9,7 @@ const TableNameTtsConnection = "tts_connections"
 // TtsConnection mapped from table <tts_connections>
 type TtsConnection struct {
 	GuildID   int64 `gorm:"column:guild_id;primaryKey" json:"guild_id"`
-	ChannelID int64 `gorm:"column:channel_id;primaryKey" json:"channel_id"`
+	ChannelID int64 `gorm:"column:channel_id;not null" json:"channel_id"`
 }
 
 // TableName TtsConnection's table name

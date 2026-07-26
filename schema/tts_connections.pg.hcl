@@ -9,7 +9,7 @@ table "tts_connections" {
     null = false
   }
   primary_key {
-    columns = [column.guild_id, column.channel_id]
+    columns = [column.guild_id]
   }
   foreign_key "fk_guild_id" {
     columns     = [column.guild_id]
