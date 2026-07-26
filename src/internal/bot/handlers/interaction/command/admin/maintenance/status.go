@@ -3,8 +3,10 @@ package maintenance
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 	"unibot/internal"
+	"unibot/internal/query"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/disgoorg/disgo/bot"
@@ -172,7 +174,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 			return err
 		}
 
-		statusTypeStr := activityTypeToString(statusType)
+		statusTypeStr := ActivityTypeToString(statusType)
 
 		responseEmbed := discord.Embed{
 			Title:       "ステータス更新",
@@ -282,7 +284,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 	}
 }
 
-func activityTypeToString(activityType discord.ActivityType) string {
+func ActivityTypeToString(activityType discord.ActivityType) string {
 	switch activityType {
 	case discord.ActivityTypeGame:
 		return "playing"
@@ -301,22 +303,39 @@ func activityTypeToString(activityType discord.ActivityType) string {
 	}
 }
 
-func stringToActivityType(typeStr string) discordgo.ActivityType {
+func StringToActivityType(typeStr string) discord.ActivityType {
 	switch typeStr {
-	case "playing":
-		return discordgo.ActivityTypeGame
+	case "game":
+		return discord.ActivityTypeGame
 	case "streaming":
-		return discordgo.ActivityTypeStreaming
+		return discord.ActivityTypeStreaming
 	case "listening":
-		return discordgo.ActivityTypeListening
+		return discord.ActivityTypeListening
 	case "watching":
-		return discordgo.ActivityTypeWatching
+		return discord.ActivityTypeWatching
 	case "competing":
-		return discordgo.ActivityTypeCompeting
+		return discord.ActivityTypeCompeting
 	case "custom":
-		return discordgo.ActivityTypeCustom
+		return discord.ActivityTypeCustom
 	default:
-		return discordgo.ActivityTypeGame
+		return discord.ActivityTypeGame
+	}
+}
+
+func StringToOnlineStatus(typeStr string) discord.OnlineStatus {
+	switch typeStr {
+	case "online":
+		return discord.OnlineStatusOnline
+	case "dnd":
+		return discord.OnlineStatusDND
+	case "idle":
+		return discord.OnlineStatusIdle
+	case "invisible":
+		return discord.OnlineStatusInvisible
+	case "offline":
+		return discord.OnlineStatusOffline
+	default:
+		return discord.OnlineStatusOnline
 	}
 }
 
@@ -334,15 +353,65 @@ func SetBotStatus(client *bot.Client, data StatusData) error {
 }
 
 func ResetBotStatus(client *bot.Client) error {
-	serverCounts := client.Caches.GuildsLen()
-	return client.SetPresence(context.Background(), gateway.PresenceOpt(func(p *gateway.MessageDataPresenceUpdate) {
-		p.Activities = []discord.Activity{
-			{
-				Type: discord.ActivityTypeGame,
-				Name: fmt.Sprintf("Serving %d servers | /help", serverCounts),
-			},
+	systemPreference, err := query.SystemPreference.FirstOrInit()
+	statusData := StatusData{
+		Text: *systemPreference.ActivitySummary,
+	}
+	if err != nil {
+		log.Printf("Error setting bot status: %v", err)
+	} else {
+		systemPreference.StatusType = "online"
+		t := "game"
+		systemPreference.ActivityType = &t
+		serverCounts := client.Caches.GuildsLen()
+		s := fmt.Sprintf("Serving %d servers | /help", serverCounts)
+		systemPreference.ActivitySummary = &s
+		err := query.SystemPreference.Save(systemPreference)
+		if err != nil {
+			log.Printf("Error setting bot status: %v", err)
 		}
-		p.Status = discord.OnlineStatusOnline
-		p.AFK = false
-	}))
+
+		// activity type switch
+		activityType := "game"
+		if systemPreference.ActivityType != nil {
+			activityType = *systemPreference.ActivityType
+		}
+		switch activityType {
+		case "custom":
+			statusData.Type = discord.ActivityTypeCustom
+		case "game":
+			statusData.Type = discord.ActivityTypeGame
+		case "competing":
+			statusData.Type = discord.ActivityTypeCompeting
+		case "watching":
+			statusData.Type = discord.ActivityTypeWatching
+		case "listening":
+			statusData.Type = discord.ActivityTypeListening
+		case "streaming":
+			statusData.Type = discord.ActivityTypeStreaming
+		default:
+			statusData.Type = discord.ActivityTypeGame
+		}
+
+		// status type switch
+		switch systemPreference.StatusType {
+		case "online":
+			statusData.OnlineStatus = discord.OnlineStatusOnline
+		case "dnd":
+			statusData.OnlineStatus = discord.OnlineStatusDND
+		case "idle":
+			statusData.OnlineStatus = discord.OnlineStatusIdle
+		case "invisible":
+			statusData.OnlineStatus = discord.OnlineStatusInvisible
+		case "offline":
+			statusData.OnlineStatus = discord.OnlineStatusOffline
+		default:
+			statusData.OnlineStatus = discord.OnlineStatusOnline
+		}
+	}
+	err = SetBotStatus(client, statusData)
+	if err != nil {
+		log.Printf("Error setting bot status: %v", err)
+	}
+	return err
 }
