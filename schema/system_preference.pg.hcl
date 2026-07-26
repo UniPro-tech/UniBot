@@ -23,6 +23,11 @@ enum "discord_activity_type" {
 
 table "system_preference" {
   schema = schema.public
+  column "id" {
+    type    = uuid
+    null    = false
+    default = sql("uuidv7()")
+  }
   column "status_type" {
     type    = enum.discord_status_type
     null    = false
@@ -37,5 +42,8 @@ table "system_preference" {
     type    = varchar(100)
     null    = true
     default = null
+  }
+  primary_key {
+    columns = [column.id]
   }
 }
