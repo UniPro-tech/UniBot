@@ -159,7 +159,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 			switch option.Name {
 			case "text":
 				if option.Type == discord.ApplicationCommandOptionTypeString {
-					statusText = string(option.Value)
+					statusText = string(option.String())
 				}
 			case "status":
 				if option.Type == discord.ApplicationCommandOptionTypeInt {
@@ -167,7 +167,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 				}
 			case "type":
 				if option.Type == discord.ApplicationCommandOptionTypeString {
-					onlineStatus = discord.OnlineStatus(option.Value)
+					onlineStatus = discord.OnlineStatus(option.String())
 				}
 			}
 		}
@@ -270,7 +270,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 func ActivityTypeToString(activityType discord.ActivityType) string {
 	switch activityType {
 	case discord.ActivityTypeGame:
-		return "playing"
+		return "game"
 	case discord.ActivityTypeStreaming:
 		return "streaming"
 	case discord.ActivityTypeListening:
@@ -337,59 +337,21 @@ func SetBotStatus(client *bot.Client, data StatusData) error {
 
 func ResetBotStatus(client *bot.Client) error {
 	systemPreference, err := query.SystemPreference.FirstOrInit()
+	serverCounts := client.Caches.GuildCache().Len()
 	statusData := StatusData{
-		Text: *systemPreference.ActivitySummary,
+		Text:         fmt.Sprintf("Serving %d servers | /help", serverCounts),
+		Type:         discord.ActivityTypeGame,
+		OnlineStatus: discord.OnlineStatusOnline,
 	}
 	if err != nil {
 		log.Printf("Error setting bot status: %v", err)
 	} else {
 		systemPreference.StatusType = "online"
-		t := "game"
-		systemPreference.ActivityType = &t
-		serverCounts := client.Caches.GuildsLen()
-		s := fmt.Sprintf("Serving %d servers | /help", serverCounts)
-		systemPreference.ActivitySummary = &s
+		systemPreference.ActivityType = nil
+		systemPreference.ActivitySummary = nil
 		err := query.SystemPreference.Save(systemPreference)
 		if err != nil {
 			log.Printf("Error setting bot status: %v", err)
-		}
-
-		// activity type switch
-		activityType := "game"
-		if systemPreference.ActivityType != nil {
-			activityType = *systemPreference.ActivityType
-		}
-		switch activityType {
-		case "custom":
-			statusData.Type = discord.ActivityTypeCustom
-		case "game":
-			statusData.Type = discord.ActivityTypeGame
-		case "competing":
-			statusData.Type = discord.ActivityTypeCompeting
-		case "watching":
-			statusData.Type = discord.ActivityTypeWatching
-		case "listening":
-			statusData.Type = discord.ActivityTypeListening
-		case "streaming":
-			statusData.Type = discord.ActivityTypeStreaming
-		default:
-			statusData.Type = discord.ActivityTypeGame
-		}
-
-		// status type switch
-		switch systemPreference.StatusType {
-		case "online":
-			statusData.OnlineStatus = discord.OnlineStatusOnline
-		case "dnd":
-			statusData.OnlineStatus = discord.OnlineStatusDND
-		case "idle":
-			statusData.OnlineStatus = discord.OnlineStatusIdle
-		case "invisible":
-			statusData.OnlineStatus = discord.OnlineStatusInvisible
-		case "offline":
-			statusData.OnlineStatus = discord.OnlineStatusOffline
-		default:
-			statusData.OnlineStatus = discord.OnlineStatusOnline
 		}
 	}
 	err = SetBotStatus(client, statusData)
