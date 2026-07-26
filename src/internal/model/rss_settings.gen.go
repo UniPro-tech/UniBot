@@ -12,13 +12,15 @@ const TableNameRssSetting = "rss_settings"
 
 // RssSetting mapped from table <rss_settings>
 type RssSetting struct {
-	ID        string     `gorm:"column:id;primaryKey;default:uuidv7()" json:"id"`
-	UserID    int64      `gorm:"column:user_id;not null" json:"user_id"`
-	ChannelID int64      `gorm:"column:channel_id;not null" json:"channel_id"`
-	URL       string     `gorm:"column:url;not null" json:"url"`
-	LastRun   *time.Time `gorm:"column:last_run" json:"last_run"`
-	CreatedAt time.Time  `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	GuildID   int64      `gorm:"column:guild_id;not null" json:"guild_id"`
+	ID         string    `gorm:"column:id;primaryKey;default:uuidv7()" json:"id"`
+	UserID     int64     `gorm:"column:user_id;not null" json:"user_id"`
+	ChannelID  int64     `gorm:"column:channel_id;not null" json:"channel_id"`
+	URL        string    `gorm:"column:url;not null" json:"url"`
+	LastRun    time.Time `gorm:"column:last_run;not null" json:"last_run"`
+	CreatedAt  time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	GuildID    int64     `gorm:"column:guild_id;not null" json:"guild_id"`
+	WebhookURL string    `gorm:"column:webhook_url;not null" json:"webhook_url"`
+	Title      *string   `gorm:"column:title" json:"title"`
 }
 
 // TableName RssSetting's table name
