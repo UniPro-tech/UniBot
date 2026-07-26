@@ -92,7 +92,7 @@ func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 				channelName = channel.Name()
 			}
 
-			player := voice.GetManager().GetOrCreate(guildID.String(), userVoiceState.ChannelID.String(), conn, ctx)
+			player := voice.GetManager().GetOrCreate(int64(guildID), int64(*userVoiceState.ChannelID), conn, ctx)
 
 			player.EnqueueText(voice.QueueItem{
 				Text: fmt.Sprintf("%sに、読み上げを接続しました。", channelName),

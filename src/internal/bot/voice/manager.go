@@ -8,7 +8,7 @@ import (
 )
 
 type Manager struct {
-	players map[string]*VoicePlayer
+	players map[int64]*VoicePlayer
 	mu      sync.Mutex
 }
 
@@ -21,21 +21,21 @@ var (
 func GetManager() *Manager {
 	managerOnce.Do(func() {
 		managerInstance = &Manager{
-			players: make(map[string]*VoicePlayer),
+			players: make(map[int64]*VoicePlayer),
 		}
 	})
 	return managerInstance
 }
 
-func (m *Manager) Get(guildID string) *VoicePlayer {
+func (m *Manager) Get(guildID int64) *VoicePlayer {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.players[guildID]
 }
 
 func (m *Manager) GetOrCreate(
-	guildID string,
-	channelID string,
+	guildID int64,
+	channelID int64,
 	vc voice.Conn,
 	ctx *internal.BotContext,
 ) *VoicePlayer {
@@ -55,7 +55,7 @@ func (m *Manager) GetOrCreate(
 	return p
 }
 
-func (m *Manager) Delete(guildID string) {
+func (m *Manager) Delete(guildID int64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

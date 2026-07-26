@@ -1,13 +1,17 @@
 package event_handlers
 
 import (
+	"log"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
 	"unibot/internal"
+	"unibot/internal/bot/voice"
+	"unibot/internal/query"
 
 	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/snowflake/v2"
 )
@@ -97,59 +101,57 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 	if e.GuildID == nil {
 		return
 	}
+	guildId := *e.GuildID
 
-	// TODO: ----- TTS -----
-	/*
-		repo := repository.NewTTSConnectionRepository(ctx.DB)
+	// ----- TTS -----
+	ttsConnectionData, err := query.TtsConnection.Where(query.TtsConnection.GuildID.Eq(int64(guildId))).First()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
-		ttsConnectionData, err := repo.GetByGuildID(e.GuildID.String())
-		if err != nil {
-			log.Println(err)
+	if e.Message.Flags&discord.MessageFlagSuppressNotifications != 0 {
+		return
+	}
+
+	if ttsConnectionData != nil {
+		//userID := e.Message.Author.ID
+
+		if e.Message.Author.Bot {
 			return
 		}
 
-		if e.Message.Flags&discord.MessageFlagSuppressNotifications != 0 {
-			return
-		}
-
-		if ttsConnectionData != nil {
-			userID := e.Message.Author.ID
-
-			if e.Message.Author.Bot {
-				return
+		inVC := false
+		for vs := range e.Client().Caches.VoiceStates(guildId) {
+			if vs.UserID == e.Client().ID() {
+				inVC = true
+				break
 			}
+		}
 
-			inVC := false
-			for vs := range e.Client().Caches.VoiceStates(*e.GuildID) {
+		if inVC {
+			var botChannelID *snowflake.ID
+			for vs := range e.Client().Caches.VoiceStates(guildId) {
 				if vs.UserID == e.Client().ID() {
-					inVC = true
+					botChannelID = vs.ChannelID
 					break
 				}
 			}
 
-			if inVC {
-				var botChannelID *snowflake.ID
-				for vs := range e.Client().Caches.VoiceStates(*e.GuildID) {
-					if vs.UserID == e.Client().ID() {
-						botChannelID = vs.ChannelID
-						break
-					}
-				}
-
-				if e.ChannelID.String() != ttsConnectionData.ChannelID &&
-					e.ChannelID != *botChannelID {
-					return
-				}
-			}
-
-			if e.Message.Content == "s" || e.Message.Content == "skip" {
-				player := voice.GetManager().Get(e.GuildID.String())
-				if player != nil {
-					player.SkipCurrent()
-				}
+			if int64(e.ChannelID) != ttsConnectionData.ChannelID &&
+				e.ChannelID != *botChannelID {
 				return
 			}
+		}
 
+		if e.Message.Content == "s" || e.Message.Content == "skip" {
+			player := voice.GetManager().Get(int64(guildId))
+			if player != nil {
+				player.SkipCurrent()
+			}
+			return
+		}
+		/*
 			personalSetting, err := repository.NewTTSPersonalSettingRepository(ctx.DB).GetByMember(userID.String())
 			if err != nil {
 				log.Println(err)
@@ -158,8 +160,9 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 			if personalSetting == nil {
 				personalSetting = &repository.DefaultTTSPersonalSetting
 			}
-			content := SanitizeMessageContent(e.Client(), e.GuildID, e.Message.Content)
-
+		*/
+		content := SanitizeMessageContent(e.Client(), e.GuildID, e.Message.Content)
+		/*
 			// 辞書を適用
 			content = util.ApplyDictionary(ctx.DB, e.GuildID.String(), content)
 
@@ -191,22 +194,22 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 				}
 				content += "、" + strings.Join(attachmentDescriptions, "、") + "添付されています。"
 			}
+		*/
 
-			vcConn := e.Client().VoiceManager.GetConn(*e.GuildID)
+		vcConn := e.Client().VoiceManager.GetConn(guildId)
 
-			vp := voice.GetManager().GetOrCreate(
-				e.GuildID.String(),
-				ttsConnectionData.ChannelID,
-				vcConn,
-				ctx,
-			)
+		vp := voice.GetManager().GetOrCreate(
+			int64(guildId),
+			ttsConnectionData.ChannelID,
+			vcConn,
+			ctx,
+		)
 
-			vp.EnqueueText(voice.QueueItem{
-				Text:    content,
-				Setting: *personalSetting,
-			})
-		}
-	*/
+		vp.EnqueueText(voice.QueueItem{
+			Text: content,
+			//Setting: *personalSetting,
+		})
+	}
 }
 
 // メッセージ内容をサニタイズする関数

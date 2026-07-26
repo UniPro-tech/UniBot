@@ -18,8 +18,8 @@ type QueueItem struct {
 }
 
 type VoicePlayer struct {
-	GuildID   string
-	ChannelID string
+	GuildID   int64
+	ChannelID int64
 	VC        voice.Conn
 
 	TextQueue chan QueueItem
@@ -36,7 +36,7 @@ type VoicePlayer struct {
 	closeOnce sync.Once
 }
 
-func NewVoicePlayer(guildID string, channelID string, vc voice.Conn, ctx *internal.BotContext) *VoicePlayer {
+func NewVoicePlayer(guildID int64, channelID int64, vc voice.Conn, ctx *internal.BotContext) *VoicePlayer {
 	enc, _ := opus.NewEncoder(48000, 2, opus.AppAudio)
 
 	p := &VoicePlayer{
