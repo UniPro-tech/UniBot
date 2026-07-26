@@ -17,13 +17,21 @@ table "rss_settings" {
     type = bigint
     null = false
   }
+  column "title" {
+    type = varchar(255)
+    null = true
+  }
+  column "webhook_url" {
+    type = varchar(255)
+    null = false
+  }
   column "url" {
     type = text
     null = false
   }
   column "last_run" {
     type = timestamptz
-    null = true
+    null = false
   }
   column "created_at" {
     type    = timestamptz
