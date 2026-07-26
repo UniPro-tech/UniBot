@@ -11,6 +11,7 @@ import (
 	"unibot/internal/bot/handlers/interaction/command/general/tts/dict"
 	"unibot/internal/bot/handlers/interaction/command/general/tts/ttsSet"
 	"unibot/internal/bot/handlers/interaction/messageComponent"
+	"unibot/internal/query"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
@@ -133,5 +134,25 @@ func DeferReplyMiddleware(ctx *internal.BotContext, ephemeral bool, update bool)
 				return next(e)
 			}
 		}
+	}
+}
+
+func CreateMasterRecordMiddleware(next handler.Handler) handler.Handler {
+	return func(e *handler.InteractionEvent) error {
+		guild, ok := e.Guild()
+		channel := e.Channel()
+		if ok {
+			if _, err := query.Guild.Where(query.Guild.ID.Eq(int64(guild.ID))).FirstOrInit(); err != nil {
+				return err
+			}
+			if _, err := query.Channel.Where(query.Channel.ID.Eq(int64(channel.ID())), query.Channel.GuildID.Eq(int64(guild.ID))).FirstOrInit(); err != nil {
+				return err
+			}
+		} else {
+			if _, err := query.Channel.Where(query.Channel.ID.Eq(int64(channel.ID()))).FirstOrInit(); err != nil {
+				return err
+			}
+		}
+		return next(e)
 	}
 }

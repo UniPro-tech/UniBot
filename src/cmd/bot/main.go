@@ -46,9 +46,10 @@ func main() {
 		VoiceVox: voicevox.New(internal.LoadConfig().VoiceVoxURI, internal.LoadConfig().VoiceVoxAPIKey),
 	}
 
-	r := handler.New()
-
 	query.SetDefault(dbConnection)
+
+	r := handler.New()
+	r.Use(interaction_handler.CreateMasterRecordMiddleware)
 
 	interaction_handler.RegistHandler(r, ctxData)
 
