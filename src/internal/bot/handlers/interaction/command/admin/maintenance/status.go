@@ -91,7 +91,7 @@ func StatusResetHandler(ctx *internal.BotContext) func(data discord.SlashCommand
 		}
 
 		// DB Reset
-		systemPrefData, err := query.SystemPreference.FirstOrInit()
+		systemPrefData, err := query.SystemPreference.FirstOrCreate()
 		if err != nil {
 			responseEmbed := discord.Embed{
 				Title:       "エラー",
@@ -191,7 +191,7 @@ func StatusSetHandler(ctx *internal.BotContext) func(data discord.SlashCommandIn
 			return err
 		}
 
-		systemPrefData, err := query.SystemPreference.FirstOrInit()
+		systemPrefData, err := query.SystemPreference.FirstOrCreate()
 		if err != nil {
 			errorEmbed := discord.Embed{
 				Title:       "エラー",
@@ -336,7 +336,7 @@ func SetBotStatus(client *bot.Client, data StatusData) error {
 }
 
 func ResetBotStatus(client *bot.Client) error {
-	systemPreference, err := query.SystemPreference.FirstOrInit()
+	systemPreference, err := query.SystemPreference.FirstOrCreate()
 	serverCounts := client.Caches.GuildCache().Len()
 	statusData := StatusData{
 		Text:         fmt.Sprintf("Serving %d servers | /help", serverCounts),

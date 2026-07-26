@@ -16,7 +16,7 @@ func Ready(ctx *internal.BotContext, e *events.Ready) {
 	log.Printf("Logged in as: %v#%v", e.User.Username, e.User.Discriminator)
 
 	// Get status
-	systemPreference, err := query.SystemPreference.FirstOrInit()
+	systemPreference, err := query.SystemPreference.FirstOrCreate()
 	if err != nil {
 		log.Printf("Error setting bot status: %v", err)
 		return

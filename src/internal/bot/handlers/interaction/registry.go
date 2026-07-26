@@ -142,14 +142,14 @@ func CreateMasterRecordMiddleware(next handler.Handler) handler.Handler {
 		guild, ok := e.Guild()
 		channel := e.Channel()
 		if ok {
-			if _, err := query.Guild.Where(query.Guild.ID.Eq(int64(guild.ID))).FirstOrInit(); err != nil {
+			if _, err := query.Guild.Where(query.Guild.ID.Eq(int64(guild.ID))).FirstOrCreate(); err != nil {
 				return err
 			}
-			if _, err := query.Channel.Where(query.Channel.ID.Eq(int64(channel.ID())), query.Channel.GuildID.Eq(int64(guild.ID))).FirstOrInit(); err != nil {
+			if _, err := query.Channel.Where(query.Channel.ID.Eq(int64(channel.ID())), query.Channel.GuildID.Eq(int64(guild.ID))).FirstOrCreate(); err != nil {
 				return err
 			}
 		} else {
-			if _, err := query.Channel.Where(query.Channel.ID.Eq(int64(channel.ID()))).FirstOrInit(); err != nil {
+			if _, err := query.Channel.Where(query.Channel.ID.Eq(int64(channel.ID()))).FirstOrCreate(); err != nil {
 				return err
 			}
 		}
