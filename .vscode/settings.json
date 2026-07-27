@@ -1,0 +1,1 @@
+{ "go.testFlags": ["-test.v", "-v"] }
