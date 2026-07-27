@@ -34,11 +34,9 @@ RSS_TARGET = cmd/rss_cron/main.go
 .PHONY: run run-rss build build-rss
 
 run:
-	set -a && source .env &&\
 	cd ./src && go run -ldflags "$(LDFLAGS)" $(BOT_TARGET)
 
 run-rss:
-	set -a && source .env &&\
 	cd ./src && go run -ldflags "$(LDFLAGS)" $(RSS_TARGET)
 
 build:

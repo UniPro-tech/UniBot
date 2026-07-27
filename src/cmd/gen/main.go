@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"unibot/internal/util"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -12,6 +13,7 @@ import (
 )
 
 func main() {
+	util.LoadProjectEnv()
 	//dsn := "user:password@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
 	dsn := os.Getenv("PG_DSN")
 

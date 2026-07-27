@@ -26,9 +26,11 @@ import (
 	"unibot/internal/bot/handlers/interaction/command"
 	"unibot/internal/db"
 	"unibot/internal/query"
+	"unibot/internal/util"
 )
 
 func main() {
+	util.LoadProjectEnv()
 	token := os.Getenv("DISCORD_TOKEN")
 	if token == "" {
 		log.Fatal("DISCORD_TOKEN is not set")
