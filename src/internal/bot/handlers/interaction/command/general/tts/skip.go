@@ -21,7 +21,7 @@ func Skip(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 		config := ctx.Config
 
-		player := voice.GetManager().Get(int64(*e.GuildID()))
+		player := voice.GetManager().GetPlayer(int64(*e.GuildID()))
 		if player == nil {
 			responseEmbed := discord.Embed{
 				Title:       "エラー",

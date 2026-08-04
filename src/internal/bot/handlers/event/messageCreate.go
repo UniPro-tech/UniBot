@@ -1,7 +1,6 @@
 package event_handlers
 
 import (
-	"log"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -106,7 +105,7 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 	// ----- TTS -----
 	ttsConnectionData, err := query.TtsConnection.Where(query.TtsConnection.GuildID.Eq(int64(guildId))).First()
 	if err != nil {
-		log.Println(err)
+		// TODO: log
 		return
 	}
 
@@ -145,7 +144,7 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 		}
 
 		if e.Message.Content == "s" || e.Message.Content == "skip" {
-			player := voice.GetManager().Get(int64(guildId))
+			player := voice.GetManager().GetPlayer(int64(guildId))
 			if player != nil {
 				player.SkipCurrent()
 			}
@@ -198,7 +197,7 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 
 		vcConn := e.Client().VoiceManager.GetConn(guildId)
 
-		vp := voice.GetManager().GetOrCreate(
+		vp := voice.GetManager().GetOrCreatePlayer(
 			int64(guildId),
 			ttsConnectionData.ChannelID,
 			vcConn,

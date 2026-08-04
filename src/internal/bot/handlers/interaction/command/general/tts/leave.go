@@ -40,9 +40,9 @@ func Leave(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDa
 
 		// 3. プレイヤーマネージャーやDBの掃除
 		mgr := voice.GetManager()
-		if player := mgr.Get(int64(guildID)); player != nil {
+		if player := mgr.GetPlayer(int64(guildID)); player != nil {
 			player.Close()
-			mgr.Delete(int64(guildID))
+			mgr.DeletePlayer(int64(guildID))
 		}
 
 		// DB処理

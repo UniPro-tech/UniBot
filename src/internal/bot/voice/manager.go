@@ -17,7 +17,9 @@ var (
 	managerOnce     sync.Once
 )
 
-// GetManager は sync.Once を用いて安全にシングルトンインスタンスを返します
+// GetManager は sync.Once を用いて安全にシングルトンインスタンスを返却する
+// これにより、複数の goroutine から同時にアクセスされても、
+// Manager のインスタンスが一度だけ生成されることが保証される
 func GetManager() *Manager {
 	managerOnce.Do(func() {
 		managerInstance = &Manager{
@@ -27,13 +29,19 @@ func GetManager() *Manager {
 	return managerInstance
 }
 
-func (m *Manager) Get(guildID int64) *VoicePlayer {
+// GetPlayer は、指定されたギルドIDに対応する VoicePlayer を取得する。
+// もし存在しない場合は nil を返す。
+// この関数はスレッドセーフであり、複数の goroutine から同時に呼び出されても安全に動作する。
+func (m *Manager) GetPlayer(guildID int64) *VoicePlayer {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.players[guildID]
 }
 
-func (m *Manager) GetOrCreate(
+// GetOrCreatePlayer は、指定されたギルドIDに対応する VoicePlayer を取得する。
+// もし存在しない場合は、新しい VoicePlayer を作成して返す。
+// この関数はスレッドセーフであり、複数の goroutine から同時に呼び出されても安全に動作する。
+func (m *Manager) GetOrCreatePlayer(
 	guildID int64,
 	channelID int64,
 	vc voice.Conn,
@@ -55,7 +63,10 @@ func (m *Manager) GetOrCreate(
 	return p
 }
 
-func (m *Manager) Delete(guildID int64) {
+// Delete は、指定されたギルドIDに対応する VoicePlayer を削除する。
+// もし存在しない場合は何も行わない。
+// この関数はスレッドセーフであり、複数の goroutine から同時に呼び出されても安全に動作する。
+func (m *Manager) DeletePlayer(guildID int64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
