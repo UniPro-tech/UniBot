@@ -1,9 +1,12 @@
 package event_handlers
 
 import (
+	"context"
 	"fmt"
+	"time"
 	"unibot/internal"
 	"unibot/internal/bot/voice"
+	"unibot/internal/query"
 
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
@@ -84,7 +87,7 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 	// --- 2. 退出・移動処理 ---
 	if changeType == "left" || changeType == "moved" {
 		// チャンネル内にまだ人間がいるかチェック
-		//var stillInChannel bool
+		var stillInChannel bool
 		states := e.Client().Caches.VoiceStates(conn.GuildID())
 		states(func(state discord.VoiceState) bool {
 			if state.ChannelID == nil {
@@ -108,26 +111,25 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 		})
 
 		// 誰もいなくなった場合（Botの切断処理）
-		/*if !stillInChannel {
+		if !stillInChannel {
 			defer func() {
 				closeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 				conn.Close(closeCtx)
 			}()
 
-			repo := repository.NewTTSConnectionRepository(ctx.DB)
-			data, err := repo.GetByGuildID(vsu.GuildID.String())
+			data, err := query.TtsConnection.Where(query.TtsConnection.GuildID.Eq(int64(vsu.GuildID))).First()
 
 			mgr := voice.GetManager()
-			player := mgr.Get(vsu.GuildID.String())
+			player := mgr.GetPlayer(int64(vsu.GuildID))
 			if player != nil {
 				player.Close()
-				mgr.Delete(vsu.GuildID.String())
+				mgr.DeletePlayer(int64(vsu.GuildID))
 			}
 
 			if err == nil && data != nil {
 				textChannelID := data.ChannelID
-				_ = repo.DeleteByGuildID(vsu.GuildID.String())
+				query.TtsConnection.Where(query.TtsConnection.GuildID.Eq(int64(vsu.GuildID))).Delete()
 
 				embed := discord.Embed{
 					Title:       "TTS接続解除",
@@ -139,12 +141,12 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 					}(),
 				}
 
-				_, _ = client.Rest.CreateMessage(snowflake.MustParse(textChannelID), discord.MessageCreate{
+				_, _ = client.Rest.CreateMessage(snowflake.MustParse(string(textChannelID)), discord.MessageCreate{
 					Embeds: []discord.Embed{embed},
 				})
 			}
 			return
-		}*/
+		}
 
 		// 単なる一人の退出、または移動通知
 		if oldChannelID != nil {
