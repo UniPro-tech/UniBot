@@ -1,8 +1,15 @@
 package util
 
-/*
+import (
+	"log"
+	"strings"
+	"unibot/internal/model"
+
+	"gorm.io/gorm"
+)
+
 // 辞書を適用する関数
-func ApplyDictionary(db *gorm.DB, guildID, content string) string {
+func ApplyDictionary(db *gorm.DB, guildID int64, content string) string {
 	entries, err := GetDictionaryCache().Get(db, guildID)
 	if err != nil {
 		log.Println("辞書の取得に失敗しました:", err)
@@ -13,15 +20,9 @@ func ApplyDictionary(db *gorm.DB, guildID, content string) string {
 }
 
 // 辞書エントリを適用する関数（テスト用に分離）
-func ApplyDictionaryEntries(content string, entries []*model.TTSDictionary) string {
+func ApplyDictionaryEntries(content string, entries []*model.TtsDictionary) string {
 	for _, entry := range entries {
-		if entry.CaseSensitive {
-			// 大文字小文字を区別して置換
-			content = strings.ReplaceAll(content, entry.Word, entry.Definition)
-		} else {
-			// 大文字小文字を区別せずに置換
-			content = replaceIgnoreCase(content, entry.Word, entry.Definition)
-		}
+		content = replaceIgnoreCase(content, entry.Word, entry.Yomi)
 	}
 
 	return content
@@ -82,4 +83,3 @@ Outer:
 	}
 	return -1
 }
-*/

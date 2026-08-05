@@ -1,6 +1,7 @@
 package event_handlers
 
 import (
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -8,6 +9,7 @@ import (
 	"unibot/internal"
 	"unibot/internal/bot/voice"
 	"unibot/internal/query"
+	"unibot/internal/util"
 
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
@@ -161,39 +163,37 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 			}
 		*/
 		content := SanitizeMessageContent(e.Client(), e.GuildID, e.Message.Content)
-		/*
-			// 辞書を適用
-			content = util.ApplyDictionary(ctx.DB, e.GuildID.String(), content)
+		// 辞書を適用
+		content = util.ApplyDictionary(ctx.DB, int64(*e.GuildID), content)
 
-			// 切り詰め
-			content = TruncateForTTS(content, 250)
+		// 切り詰め
+		content = TruncateForTTS(content, 250)
 
-			// 添付ファイル一覧を取得
-			attachmentCounts := map[string]*AttachementTypeList{}
+		// 添付ファイル一覧を取得
+		attachmentCounts := map[string]*AttachementTypeList{}
 
-			for _, attachment := range e.Message.Attachments {
-				attachmentType := DetectAttachmentType(attachment.Filename)
+		for _, attachment := range e.Message.Attachments {
+			attachmentType := DetectAttachmentType(attachment.Filename)
 
-				if data, exists := attachmentCounts[attachmentType.Yomi]; exists {
-					data.NumberOfAttachement++
-				} else {
-					attachmentCounts[attachmentType.Yomi] = &AttachementTypeList{
-						ExtentionData:       attachmentType,
-						NumberOfAttachement: 1,
-					}
+			if data, exists := attachmentCounts[attachmentType.Yomi]; exists {
+				data.NumberOfAttachement++
+			} else {
+				attachmentCounts[attachmentType.Yomi] = &AttachementTypeList{
+					ExtentionData:       attachmentType,
+					NumberOfAttachement: 1,
 				}
 			}
+		}
 
-			// 添付ファイルの説明を生成
-			if len(attachmentCounts) > 0 {
-				var attachmentDescriptions []string
-				for _, data := range attachmentCounts {
-					desc := fmt.Sprintf("%sが%dつ", data.ExtentionData.Yomi, data.NumberOfAttachement)
-					attachmentDescriptions = append(attachmentDescriptions, desc)
-				}
-				content += "、" + strings.Join(attachmentDescriptions, "、") + "添付されています。"
+		// 添付ファイルの説明を生成
+		if len(attachmentCounts) > 0 {
+			var attachmentDescriptions []string
+			for _, data := range attachmentCounts {
+				desc := fmt.Sprintf("%sが%dつ", data.ExtentionData.Yomi, data.NumberOfAttachement)
+				attachmentDescriptions = append(attachmentDescriptions, desc)
 			}
-		*/
+			content += "、" + strings.Join(attachmentDescriptions, "、") + "添付されています。"
+		}
 
 		vcConn := e.Client().VoiceManager.GetConn(guildId)
 
