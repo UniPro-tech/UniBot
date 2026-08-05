@@ -2,8 +2,13 @@ package util
 
 import (
 	"errors"
+	"reflect"
 	"sync"
 	"time"
+	"unibot/internal/model"
+	"unibot/internal/query"
+
+	"gorm.io/gorm"
 )
 
 // DictionaryCache はギルドごとの辞書エントリをキャッシュします
@@ -15,18 +20,18 @@ type DictionaryCache struct {
 }
 
 type cacheEntry struct {
-	//entries   []*model.TTSDictionary
+	entries   []*model.TtsDictionary
 	expiresAt time.Time
 }
 
 type cacheKey struct {
 	dbPtr   uintptr
-	guildID string
+	guildID int64
 }
 
 type inFlight struct {
-	wg sync.WaitGroup
-	//entries     []*model.TTSDictionary
+	wg          sync.WaitGroup
+	entries     []*model.TtsDictionary
 	err         error
 	invalidated bool
 }
@@ -60,8 +65,7 @@ func NewDictionaryCache(ttl time.Duration) *DictionaryCache {
 
 // Get はキャッシュから辞書エントリを取得します
 // キャッシュミスまたは期限切れの場合はDBから取得し、キャッシュを更新します
-/*
-func (c *DictionaryCache) Get(db *gorm.DB, guildID string) ([]*model.TTSDictionary, error) {
+func (c *DictionaryCache) Get(db *gorm.DB, guildID int64) ([]*model.TtsDictionary, error) {
 	for {
 		key := cacheKeyFor(db, guildID)
 		now := time.Now()
@@ -130,9 +134,8 @@ func (c *DictionaryCache) Get(db *gorm.DB, guildID string) ([]*model.TTSDictiona
 }
 
 // fetchFromDB はDBから辞書エントリを取得します
-func (c *DictionaryCache) fetchFromDB(db *gorm.DB, guildID string) ([]*model.TTSDictionary, error) {
-	repo := repository.NewTTSDictionaryRepository(db)
-	entries, err := repo.ListByGuild(guildID)
+func (c *DictionaryCache) fetchFromDB(db *gorm.DB, guildID int64) ([]*model.TtsDictionary, error) {
+	entries, err := query.TtsDictionary.Where(query.TtsDictionary.GuildID.Eq(guildID)).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +143,7 @@ func (c *DictionaryCache) fetchFromDB(db *gorm.DB, guildID string) ([]*model.TTS
 }
 
 // Invalidate は指定したギルドのキャッシュを無効化します
-func (c *DictionaryCache) Invalidate(guildID string) {
+func (c *DictionaryCache) Invalidate(guildID int64) {
 	c.mu.Lock()
 	for key := range c.entries {
 		if key.guildID == guildID {
@@ -164,7 +167,7 @@ func (c *DictionaryCache) InvalidateAll() {
 	c.mu.Unlock()
 }
 
-func cacheKeyFor(db *gorm.DB, guildID string) cacheKey {
+func cacheKeyFor(db *gorm.DB, guildID int64) cacheKey {
 	if db == nil {
 		return cacheKey{guildID: guildID}
 	}
@@ -182,4 +185,3 @@ func cacheKeyFor(db *gorm.DB, guildID string) cacheKey {
 		guildID: guildID,
 	}
 }
-*/

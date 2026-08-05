@@ -114,7 +114,7 @@ func Add(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData
 		}
 
 		// 辞書キャッシュを無効化
-		util.GetDictionaryCache().Invalidate(e.GuildID().String())
+		util.GetDictionaryCache().Invalidate(int64(*e.GuildID()))
 
 		responseEmbed := discord.Embed{
 			Title: "単語を辞書に追加しました！",
