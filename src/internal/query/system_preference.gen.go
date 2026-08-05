@@ -28,10 +28,10 @@ func newSystemPreference(db *gorm.DB, opts ...gen.DOOption) systemPreference {
 
 	tableName := _systemPreference.systemPreferenceDo.TableName()
 	_systemPreference.ALL = field.NewAsterisk(tableName)
+	_systemPreference.ID = field.NewString(tableName, "id")
 	_systemPreference.StatusType = field.NewString(tableName, "status_type")
 	_systemPreference.ActivityType = field.NewString(tableName, "activity_type")
 	_systemPreference.ActivitySummary = field.NewString(tableName, "activity_summary")
-	_systemPreference.ID = field.NewString(tableName, "id")
 
 	_systemPreference.fillFieldMap()
 
@@ -42,10 +42,10 @@ type systemPreference struct {
 	systemPreferenceDo
 
 	ALL             field.Asterisk
+	ID              field.String
 	StatusType      field.String
 	ActivityType    field.String
 	ActivitySummary field.String
-	ID              field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -62,10 +62,10 @@ func (s systemPreference) As(alias string) *systemPreference {
 
 func (s *systemPreference) updateTableName(table string) *systemPreference {
 	s.ALL = field.NewAsterisk(table)
+	s.ID = field.NewString(table, "id")
 	s.StatusType = field.NewString(table, "status_type")
 	s.ActivityType = field.NewString(table, "activity_type")
 	s.ActivitySummary = field.NewString(table, "activity_summary")
-	s.ID = field.NewString(table, "id")
 
 	s.fillFieldMap()
 
@@ -83,10 +83,10 @@ func (s *systemPreference) GetFieldByName(fieldName string) (field.OrderExpr, bo
 
 func (s *systemPreference) fillFieldMap() {
 	s.fieldMap = make(map[string]field.Expr, 4)
+	s.fieldMap["id"] = s.ID
 	s.fieldMap["status_type"] = s.StatusType
 	s.fieldMap["activity_type"] = s.ActivityType
 	s.fieldMap["activity_summary"] = s.ActivitySummary
-	s.fieldMap["id"] = s.ID
 }
 
 func (s systemPreference) clone(db *gorm.DB) systemPreference {

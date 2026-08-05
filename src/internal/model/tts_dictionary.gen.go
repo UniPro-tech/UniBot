@@ -12,10 +12,11 @@ const TableNameTtsDictionary = "tts_dictionary"
 
 // TtsDictionary mapped from table <tts_dictionary>
 type TtsDictionary struct {
+	ID        string    `gorm:"column:id;primaryKey;default:uuidv7()" json:"id"`
 	UserID    int64     `gorm:"column:user_id;not null" json:"user_id"`
-	GuildID   int64     `gorm:"column:guild_id;primaryKey" json:"guild_id"`
+	GuildID   int64     `gorm:"column:guild_id;not null" json:"guild_id"`
 	Yomi      string    `gorm:"column:yomi;not null" json:"yomi"`
-	Word      string    `gorm:"column:word;primaryKey" json:"word"`
+	Word      string    `gorm:"column:word;not null" json:"word"`
 	CreatedAt time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
 }
 

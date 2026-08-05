@@ -8,10 +8,10 @@ const TableNameSystemPreference = "system_preference"
 
 // SystemPreference mapped from table <system_preference>
 type SystemPreference struct {
+	ID              string  `gorm:"column:id;primaryKey;default:uuidv7()" json:"id"`
 	StatusType      string  `gorm:"column:status_type;not null;default:online" json:"status_type"`
 	ActivityType    *string `gorm:"column:activity_type" json:"activity_type"`
 	ActivitySummary *string `gorm:"column:activity_summary" json:"activity_summary"`
-	ID              string  `gorm:"column:id;primaryKey;default:uuidv7()" json:"id"`
 }
 
 // TableName SystemPreference's table name

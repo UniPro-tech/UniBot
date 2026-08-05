@@ -14,13 +14,13 @@ const TableNameRemindSetting = "remind_settings"
 type RemindSetting struct {
 	ID        string     `gorm:"column:id;primaryKey;default:uuidv7()" json:"id"`
 	UserID    int64      `gorm:"column:user_id;not null" json:"user_id"`
+	GuildID   int64      `gorm:"column:guild_id;not null" json:"guild_id"`
 	ChannelID int64      `gorm:"column:channel_id;not null" json:"channel_id"`
 	Content   string     `gorm:"column:content;not null" json:"content"`
 	LastRun   time.Time  `gorm:"column:last_run;not null" json:"last_run"`
 	NextRun   time.Time  `gorm:"column:next_run;not null" json:"next_run"`
 	CronExpr  *string    `gorm:"column:cron_expr" json:"cron_expr"`
 	CreatedAt *time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	GuildID   int64      `gorm:"column:guild_id;not null" json:"guild_id"`
 }
 
 // TableName RemindSetting's table name

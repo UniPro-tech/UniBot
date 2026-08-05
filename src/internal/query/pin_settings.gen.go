@@ -30,8 +30,8 @@ func newPinSetting(db *gorm.DB, opts ...gen.DOOption) pinSetting {
 	_pinSetting.ALL = field.NewAsterisk(tableName)
 	_pinSetting.ChannelID = field.NewInt64(tableName, "channel_id")
 	_pinSetting.UserID = field.NewInt64(tableName, "user_id")
-	_pinSetting.Content = field.NewString(tableName, "content")
 	_pinSetting.GuildID = field.NewInt64(tableName, "guild_id")
+	_pinSetting.Content = field.NewString(tableName, "content")
 
 	_pinSetting.fillFieldMap()
 
@@ -44,8 +44,8 @@ type pinSetting struct {
 	ALL       field.Asterisk
 	ChannelID field.Int64
 	UserID    field.Int64
-	Content   field.String
 	GuildID   field.Int64
+	Content   field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -64,8 +64,8 @@ func (p *pinSetting) updateTableName(table string) *pinSetting {
 	p.ALL = field.NewAsterisk(table)
 	p.ChannelID = field.NewInt64(table, "channel_id")
 	p.UserID = field.NewInt64(table, "user_id")
-	p.Content = field.NewString(table, "content")
 	p.GuildID = field.NewInt64(table, "guild_id")
+	p.Content = field.NewString(table, "content")
 
 	p.fillFieldMap()
 
@@ -85,8 +85,8 @@ func (p *pinSetting) fillFieldMap() {
 	p.fieldMap = make(map[string]field.Expr, 4)
 	p.fieldMap["channel_id"] = p.ChannelID
 	p.fieldMap["user_id"] = p.UserID
-	p.fieldMap["content"] = p.Content
 	p.fieldMap["guild_id"] = p.GuildID
+	p.fieldMap["content"] = p.Content
 }
 
 func (p pinSetting) clone(db *gorm.DB) pinSetting {

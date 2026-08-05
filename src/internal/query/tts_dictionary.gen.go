@@ -28,6 +28,7 @@ func newTtsDictionary(db *gorm.DB, opts ...gen.DOOption) ttsDictionary {
 
 	tableName := _ttsDictionary.ttsDictionaryDo.TableName()
 	_ttsDictionary.ALL = field.NewAsterisk(tableName)
+	_ttsDictionary.ID = field.NewString(tableName, "id")
 	_ttsDictionary.UserID = field.NewInt64(tableName, "user_id")
 	_ttsDictionary.GuildID = field.NewInt64(tableName, "guild_id")
 	_ttsDictionary.Yomi = field.NewString(tableName, "yomi")
@@ -43,6 +44,7 @@ type ttsDictionary struct {
 	ttsDictionaryDo
 
 	ALL       field.Asterisk
+	ID        field.String
 	UserID    field.Int64
 	GuildID   field.Int64
 	Yomi      field.String
@@ -64,6 +66,7 @@ func (t ttsDictionary) As(alias string) *ttsDictionary {
 
 func (t *ttsDictionary) updateTableName(table string) *ttsDictionary {
 	t.ALL = field.NewAsterisk(table)
+	t.ID = field.NewString(table, "id")
 	t.UserID = field.NewInt64(table, "user_id")
 	t.GuildID = field.NewInt64(table, "guild_id")
 	t.Yomi = field.NewString(table, "yomi")
@@ -85,7 +88,8 @@ func (t *ttsDictionary) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 }
 
 func (t *ttsDictionary) fillFieldMap() {
-	t.fieldMap = make(map[string]field.Expr, 5)
+	t.fieldMap = make(map[string]field.Expr, 6)
+	t.fieldMap["id"] = t.ID
 	t.fieldMap["user_id"] = t.UserID
 	t.fieldMap["guild_id"] = t.GuildID
 	t.fieldMap["yomi"] = t.Yomi
