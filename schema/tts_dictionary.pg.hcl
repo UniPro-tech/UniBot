@@ -1,5 +1,10 @@
 table "tts_dictionary" {
   schema = schema.public
+  column "id" {
+    type    = uuid
+    null    = false
+    default = sql("uuidv7()")
+  }
   column "user_id" {
     type = bigint
     null = false
@@ -22,6 +27,9 @@ table "tts_dictionary" {
     default = sql("CURRENT_TIMESTAMP")
   }
   primary_key {
+    columns = [column.id]
+  }
+  unique "uq_word_guild" {
     columns = [column.guild_id, column.word]
   }
   index "idx_tts_dictionary_word" {
