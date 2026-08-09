@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+  namespace: unibot
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: nfs-retain
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: unibot
+  labels:
+    app: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:6.0 # 必要に応じてバージョンを変更してください
+          ports:
+            - containerPort: 27017
+              name: mongodb
+          envFrom:
+            - secretRef:
+                name: mongodb-secret
+          volumeMounts:
+            - name: mongodb-data
+              mountPath: /data/db
+      volumes:
+        - name: mongodb-data
+          persistentVolumeClaim:
+            claimName: mongodb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-svc
+  namespace: unibot
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  selector:
+    app: mongodb
+  type: ClusterIP
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: mongodb-secret
+  namespace: unibot
+spec:
+  encryptedData:
+    MONGO_INITDB_DATABASE: AgAoYaoF6fHF/gyuUR8Cfte6t3y6bOcVQsd/s1pJmrg3eFcD/69Hdwf0RWkAQlI64W3HmZXmRlbDqdU4Es2J9/3PCUIaVnP/RlLWnPqYJoc6erVG7Q6s1EkxtPUfgb38/WtkJbrnwCe0Un29SXWSk++4s4W2+Lz6Qu/Y8gXPUF4FMg1MQM33JJ18Quz4fvalQYk23TbwqErKzESJSzvXT+mEtAS1n5MequflbdzeMlreyhw2OMbngUpWIr1e5xBumIiFOPTePHMqz53sDoff4tTDXKZmSznGefiPaim+oFkIupRgw1ZpfLeAixrwOCeURVs9y7Cvg/imO9DfMW37vwg28NUkEssPxmWrK3zxFAarU5dI6GjDU9sWG/REA8X9Cawd3yavUd1CTX198OcDMM4guJ8AKp/riSO3BDGtzkEoiyw4m5ANvolxKBeWjwKoPO4FnX5bjzqhk2CZ999dffnoNv4lCsZScv8IDb/+vzmo3zzaEiwqs/wi6KBB1n2q8UACdIDKoV7EtbgqvQY95mIgqSpiT8q72MSvWoqtGXW+UOuauknkFLcozZvr3oqXVYx6qo5K8bRlpdFm3OqVkUtoFKneY8eMsjLjulZTITtlu5krvTnoZQCtNLqmMfTpE8mWEGRq9sXvzSnsoAwUTmXEGf/H2pMFWVHs7ppvUSH1+j65DnPW9VUS+XbBSiTgCrvcFBjGMLE=
+    MONGO_INITDB_ROOT_PASSWORD: AgBXW8ME1u480bIsa2VVcRp007LXjm13TgAU+V9QQXIGTnddL+cg6ermmZuYoaUxrfQ+5E8Fsf7Rxi472wkavNpU92OWPvNrPuEXey4pErYRk/PqwjRkYIjIuZ3RJAIKo3fzCfkcQX9B4saj8Uu1WT9Muo6qj7DZlGvD5JwDndi+omVg+m2+SMQnEccWOFdGNXTu8s9QPlwL7QnYxBzTQAIf4dWtksBega4bc7aqtclY+Y5F6SF7Bp2gyCYj2O+w4wliQMno9edUXqFxhIyfeIioZmuLaxz4H0FnpjLK64gKmq1Mlovgco7cw8VZ2xrBZt59QaweBdT4+OFm+4tAEWpIZ8Cf8442pxobggMV4OrXOQR/7kWJyn07Y92MAhj2TH8OjXoHGRGLN4eGycorKIjLTddKHhBZ5kpSQosWhQkXAI7T0deziZa41G69Wm8tubdNUAz4u95F/EvuLbmn/2yeK5Tx+lQX7qBpHbbUkL1W8JnBUhGhX5n3P3Y0tHPf7jsRHW5c3ipwTYWvBz5H5CM/39JnvAAv+vzngJ8Jx/ssWTg5Gch17uUCDV9DntuA707uIQ+weRYCQ35Q6WYwr/KNx7CkAT535rTmlu3lRd0gr+Ts9Dk+Bn0q7zwcgRLZW9eun3IUUhGH8xy9SztxJwOLbXB9XJM0q+vZLd5xTVnhVDZ3tdiCmhCAzoATfmFsFbrt2Z2wsd5m4o9UIGD65LNsoLfnow==
+    MONGO_INITDB_ROOT_USERNAME: AgBq6NYy2MP+J9Us8icvO86dE+yfgU/gDrjWZe4bPEnGApIQUtJFRK2jRMcB2rkfXFgrGVOkwN6ikYmDzNtRYIRXhueSOInvGO6nOV/a2QddcX+zm2xCsJBGlYSBkI3UVTlu3oAUnIIhYhTbCGQA9lB/l7ht6BxCpMtSMKIg3r1JU2lVkEOwS+1D1PFz+ROTGNXEy7Mif9rIdK8BDl04u4YvNpH2KySe5wDj6JMg6oGb9EK7yceHhaFV2yxDBZMLHgquu7dVfFTAEPbuy8k3nY3AE244lKKlHpYwcYiaUgygvHJ/TReJxEVfRtTxQGzj4b7BFkV4b4mlrJBwT1nVLnc398nMR7HLBH9NWiiTDSuAHJb+BOO8SQem+3zCey0sqMP0c9keqlB3Bygj54prPba3K/90Orw94Twk/OBoUmLM2St96VvBUsvdTflIeyQHj3r0PjG+lPBWGBsCG9qUvcZpOBVMeI6Wn0sgsNIQi7m/tKeaiebrQpaqVuv+sGm9BvNZeTknwBDDRPMOMd6CSpo0osDFsUIurALzISUIYVthajJ/aT7XURj8jN0HTtAzWYMAKh5Rk8saNQxo3dQ7j0NRsAErky/Qpj5QkP3wDC8OeBMGSgAZHhTuVlEh6hd45YMzLZVCu6CLlJ6KF1XqefZN2aefhPT6SZNmY+tVeU2gl2X9BFDLh1CXxOvfFcb1zRWBxJd+Ufs=
+  template:
+    metadata:
+      name: mongodb-secret
+      namespace: unibot
+    type: Opaque
