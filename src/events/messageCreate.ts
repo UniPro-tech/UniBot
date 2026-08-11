@@ -13,6 +13,7 @@ import {
   Message,
   PartialGroupDMChannel,
   TextChannel,
+  InGuild,
 } from "discord.js";
 import { ALStorage, loggingSystem } from "..";
 import config from "@/config";
@@ -214,8 +215,11 @@ const resendPinnedMessage = async (message: Message, client: Client) => {
   const pinnedMessageConfig = await dataManager.getConfig("pinnedMessage", channelId);
   if (!pinnedMessageConfig || !pinnedMessageConfig.message) return;
   try {
-    const oldMessage = await message.channel.messages.fetch(pinnedMessageConfig.latestMessageId);
-    logger.info("getted old message");
+    let oldMessage: Message<InGuild> | undefined | null;
+    await message.channel.messages
+      .fetch(pinnedMessageConfig.latestMessageId)
+      .then((data: Message<InGuild>) => (oldMessage = data))
+      .catch(() => {});
     if (oldMessage) await oldMessage.delete();
     const embed = new EmbedBuilder()
       .setDescription(pinnedMessageConfig.message)
