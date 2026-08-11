@@ -221,7 +221,7 @@ const resendPinnedMessage = async (message: Message, client: Client) => {
       .setColor(config.color.success)
       .setFooter({ text: "Pinned Message" });
     const newSendedMessage = await message.channel.send({ embeds: [embed] });
-    dataManager.setConfig(
+    await dataManager.setConfig(
       "pinnedMessage",
       { message: pinnedMessageConfig.message, latestMessageId: newSendedMessage.id },
       channelId
