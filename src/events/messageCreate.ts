@@ -215,6 +215,7 @@ const resendPinnedMessage = async (message: Message, client: Client) => {
   if (!pinnedMessageConfig || !pinnedMessageConfig.message) return;
   try {
     const oldMessage = await message.channel.messages.fetch(pinnedMessageConfig.latestMessageId);
+    logger.info("getted old message");
     if (oldMessage) await oldMessage.delete();
     const embed = new EmbedBuilder()
       .setDescription(pinnedMessageConfig.message)
@@ -227,7 +228,7 @@ const resendPinnedMessage = async (message: Message, client: Client) => {
       channelId
     );
   } catch (error) {
-    logger.error("Failed to resend pinned message:", error as any);
+    logger.error("Failed to resend pinned message:", error);
   }
 };
 
