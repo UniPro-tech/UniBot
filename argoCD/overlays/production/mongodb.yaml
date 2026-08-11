@@ -35,6 +35,9 @@ spec:
           ports:
             - containerPort: 27017
               name: mongodb
+          env:
+            - name: GLIBC_TUNABLES
+              value: glibc.pthread.rseq=1
           envFrom:
             - secretRef:
                 name: mongodb-secret
