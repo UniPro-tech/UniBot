@@ -30,7 +30,8 @@ spec:
     spec:
       containers:
         - name: mongodb
-          image: mongo:6.0 # 必要に応じてバージョンを変更してください
+          image: mongo:8.3.4
+          command: ["mongod", "--replSet", "rs0"]
           ports:
             - containerPort: 27017
               name: mongodb
