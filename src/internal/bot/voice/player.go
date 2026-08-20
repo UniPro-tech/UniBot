@@ -4,16 +4,23 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
+	"log/slog"
 	"os/exec"
 	"sync"
 	"time"
+
 	"unibot/internal"
+	"unibot/internal/logger"
 
 	"github.com/disgoorg/disgo/voice"
 	"github.com/hraban/opus"
 )
 
 type QueueItem struct {
+	// Ctx は投入元のイベントの trace を引き継ぐためのもの。
+	// 読み上げは非同期に処理されるため、http.Request と同様に構造体で持ち回る。
+	// nil の場合は context.Background() として扱う。
+	Ctx  context.Context
 	Text string
 }
 
@@ -36,7 +43,7 @@ type VoicePlayer struct {
 	closeOnce sync.Once
 }
 
-func NewVoicePlayer(guildID int64, channelID int64, vc voice.Conn, ctx *internal.BotContext) *VoicePlayer {
+func NewVoicePlayer(guildID int64, channelID int64, vc voice.Conn, bctx *internal.BotContext) *VoicePlayer {
 	enc, _ := opus.NewEncoder(48000, 2, opus.AppAudio)
 
 	p := &VoicePlayer{
@@ -54,7 +61,7 @@ func NewVoicePlayer(guildID int64, channelID int64, vc voice.Conn, ctx *internal
 		vc.SetOpusFrameProvider(p)
 	}
 
-	go p.worker(ctx)
+	go p.worker(bctx)
 	return p
 }
 
@@ -107,20 +114,29 @@ func (p *VoicePlayer) SetVC(vc voice.Conn) {
 	vc.SetOpusFrameProvider(p)
 }
 
-func (p *VoicePlayer) worker(ctx *internal.BotContext) {
+func (p *VoicePlayer) worker(bctx *internal.BotContext) {
 	for {
 		select {
 		case <-p.Stop:
 			return
 		case item := <-p.TextQueue:
-			// TODO: log
-			p.processItem(ctx, item)
+			p.processItem(bctx, item)
 		}
 	}
 }
 
-func (p *VoicePlayer) processItem(ctx *internal.BotContext, item QueueItem) {
-	cCtx, cCancel := context.WithCancel(context.Background())
+func (p *VoicePlayer) processItem(bctx *internal.BotContext, item QueueItem) {
+	// 投入元の trace を引き継ぎつつ、処理単位として新しい request_id を発行する。
+	ctx, _ := logger.WithRequest(queueItemContext(item))
+
+	slog.DebugContext(ctx, "tts item dequeued",
+		slog.Int64("guild_id", p.GuildID),
+		// 本文は載せず、長さのみ記録する。
+		slog.Int("text_len", len([]rune(item.Text))),
+	)
+	start := time.Now()
+
+	cCtx, cCancel := context.WithCancel(ctx)
 	defer cCancel()
 
 	p.cancelMu.Lock()
@@ -135,15 +151,17 @@ func (p *VoicePlayer) processItem(ctx *internal.BotContext, item QueueItem) {
 	}()
 
 	// 2. 音声合成
-	audio, err := ctx.VoiceVox.Synthesize(cCtx, item.Text, "0", float64(100)/100.0)
+	audio, err := bctx.VoiceVox.Synthesize(cCtx, item.Text, "0", float64(100)/100.0)
 	if err != nil {
-		// TODO: log
+		slog.ErrorContext(ctx, "tts synthesis failed",
+			slog.Int64("guild_id", p.GuildID), slog.Any("err", err))
 		return
 	}
 
 	vc := p.GetVC()
 	if vc == nil {
-		// TODO: log
+		slog.WarnContext(ctx, "tts skipped: no voice connection",
+			slog.Int64("guild_id", p.GuildID))
 		return
 	}
 
@@ -156,14 +174,16 @@ WaitLoop:
 	for len(p.opusChan) > 0 {
 		select {
 		case <-cCtx.Done():
-			// TODO: log
+			slog.DebugContext(ctx, "tts playback cancelled", slog.Int64("guild_id", p.GuildID))
 			break WaitLoop
 		case <-maxWait:
-			// TODO: log
+			slog.WarnContext(ctx, "tts playback drain timeout",
+				slog.Int64("guild_id", p.GuildID), slog.Int("pending_frames", len(p.opusChan)))
 			break WaitLoop
 		default:
 			if !p.CanProvide() {
-				// TODO: log
+				slog.WarnContext(ctx, "tts playback aborted: connection lost",
+					slog.Int64("guild_id", p.GuildID))
 				break WaitLoop
 			}
 			time.Sleep(10 * time.Millisecond)
@@ -171,7 +191,19 @@ WaitLoop:
 	}
 
 	_ = vc.SetSpeaking(context.Background(), voice.SpeakingFlagNone)
-	// TODO: log
+
+	slog.DebugContext(ctx, "tts playback finished",
+		slog.Int64("guild_id", p.GuildID),
+		slog.Int64("duration_ms", time.Since(start).Milliseconds()),
+	)
+}
+
+// queueItemContext はキュー項目に載っている context を安全に取り出す。
+func queueItemContext(item QueueItem) context.Context {
+	if item.Ctx == nil {
+		return context.Background()
+	}
+	return item.Ctx
 }
 
 func (p *VoicePlayer) clearOpusChan() {
@@ -200,14 +232,20 @@ func (p *VoicePlayer) streamAudio(parentCtx context.Context, wav []byte) {
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to open ffmpeg stdin",
+			slog.Int64("guild_id", p.GuildID), slog.Any("err", err))
 		return
 	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to open ffmpeg stdout",
+			slog.Int64("guild_id", p.GuildID), slog.Any("err", err))
 		return
 	}
 
 	if err := cmd.Start(); err != nil {
+		slog.ErrorContext(ctx, "failed to start ffmpeg",
+			slog.Int64("guild_id", p.GuildID), slog.Any("err", err))
 		return
 	}
 
@@ -268,19 +306,23 @@ func (p *VoicePlayer) streamAudio(parentCtx context.Context, wav []byte) {
 
 func (p *VoicePlayer) EnqueueText(item QueueItem) {
 	// クローズ済みの場合はキューに入れない
+	ctx := queueItemContext(item)
+
 	select {
 	case <-p.Stop:
-		// TODO: log
+		slog.WarnContext(ctx, "tts enqueue on closed player", slog.Int64("guild_id", p.GuildID))
 		return
 	default:
 	}
 
 	select {
 	case p.TextQueue <- item:
-		// TODO: log
+		slog.DebugContext(ctx, "tts item enqueued",
+			slog.Int64("guild_id", p.GuildID), slog.Int("queue_len", len(p.TextQueue)))
 	default:
-		// キューが上限(50)に達している場合は破棄（またはエラーハンドリング）
-		// TODO: log
+		// キューが上限(50)に達している場合は破棄する。
+		slog.WarnContext(ctx, "tts queue full, dropping item",
+			slog.Int64("guild_id", p.GuildID), slog.Int("queue_cap", cap(p.TextQueue)))
 	}
 }
 

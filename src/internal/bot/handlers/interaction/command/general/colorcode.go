@@ -7,7 +7,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
-	"log"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -41,7 +41,9 @@ func ColorCode(ctx *internal.BotContext) func(data discord.SlashCommandInteracti
 
 		red, green, blue, hex, err := parseHexColor(codeOption)
 		if err != nil {
-			log.Print(err)
+			// ユーザーの入力ミスであってアプリのエラーではない。
+			// パースエラーには入力値そのものが含まれうるため err は載せない。
+			slog.DebugContext(e.Ctx, "invalid color code input", slog.String("outcome", "invalid_input"))
 			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEphemeral(true).WithEmbeds(discord.Embed{
 				Title:       "エラー",
 				Description: "無効なカラーコードです。例: `#FFAA00` または `FFAA00`",

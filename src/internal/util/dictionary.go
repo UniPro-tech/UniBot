@@ -1,18 +1,22 @@
 package util
 
 import (
-	"log"
+	"context"
+	"log/slog"
 	"strings"
+
 	"unibot/internal/model"
 
 	"gorm.io/gorm"
 )
 
 // 辞書を適用する関数
-func ApplyDictionary(db *gorm.DB, guildID int64, content string) string {
+func ApplyDictionary(ctx context.Context, db *gorm.DB, guildID int64, content string) string {
 	entries, err := GetDictionaryCache().Get(db, guildID)
 	if err != nil {
-		log.Println("辞書の取得に失敗しました:", err)
+		// 辞書が引けなくても読み上げ自体は続行する。
+		slog.WarnContext(ctx, "failed to load tts dictionary",
+			slog.Int64("guild_id", guildID), slog.Any("err", err))
 		return content
 	}
 

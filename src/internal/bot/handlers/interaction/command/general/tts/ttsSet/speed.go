@@ -3,7 +3,7 @@ package ttsSet
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 	"unibot/internal"
 
@@ -37,9 +37,10 @@ func Speed(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDa
 		speedValue := data.Options["speed"].Value
 
 		var speed int
-		err := json.Unmarshal(speedValue, &speed)
-		if err != nil {
-			log.Print(err)
+		if err := json.Unmarshal(speedValue, &speed); err != nil {
+			// 値が読めない状態で speed=0 のまま続行しない。
+			slog.WarnContext(e.Ctx, "failed to parse speed option", slog.Any("err", err))
+			return err
 		}
 
 		return handleSpeedCommand(e, ctx, speed)
@@ -59,7 +60,7 @@ func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed
 
 		memberRepo := repository.NewMemberRepository(ctx.DB)
 		if err := memberRepo.Create(memberID); err != nil {
-			log.Println("Error creating member:", err)
+			slog.ErrorContext(e.Ctx, "failed to create member", slog.Any("err", err))
 			responseEmbed := buildSpeedEmbed("エラー", "メンバー情報の作成に失敗しました。", ctx.Config.Colors.Error, &requester)
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
@@ -68,7 +69,7 @@ func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed
 		repo := repository.NewTTSPersonalSettingRepository(ctx.DB)
 		setting, err := repo.GetByMember(memberID)
 		if err != nil {
-			log.Println("Error fetching TTS personal setting:", err)
+			slog.ErrorContext(e.Ctx, "failed to fetch tts personal setting", slog.Any("err", err))
 			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の取得に失敗しました。", ctx.Config.Colors.Error, &requester)
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err

@@ -3,8 +3,9 @@ package tts
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
+
 	"unibot/internal"
 	"unibot/internal/bot/voice"
 	"unibot/internal/model"
@@ -72,17 +73,22 @@ func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 		// disgo の VoiceManager を使用する
 		conn := e.Client().VoiceManager.CreateConn(guildID)
 
+		// 接続処理はインタラクションの応答後も続くため、cancel を切って trace のみ引き継ぐ。
+		gctx := context.WithoutCancel(e.Ctx)
+
 		go func() {
-			conCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			conCtx, cancel := context.WithTimeout(gctx, 20*time.Second)
 			defer cancel()
 
 			// 非同期で実行することで、メインスレッドのイベントループを止めないようにする
 			err := conn.Open(conCtx, *userVoiceState.ChannelID, false, true)
 			if err != nil {
-				log.Printf("Voice connection failed: %v", err)
+				slog.ErrorContext(gctx, "voice connection failed",
+					slog.String("guild_id", guildID.String()), slog.Any("err", err))
+				notifyJoinFailure(gctx, e, config)
 				return
 			}
-			log.Println("Voice connection established with DAVE")
+			slog.DebugContext(gctx, "voice connection established with DAVE")
 
 			// 読み上げ開始の準備
 			channel, ok := e.Client().Caches.Channel(*userVoiceState.ChannelID)
@@ -95,6 +101,7 @@ func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 			player := voice.GetManager().GetOrCreatePlayer(int64(guildID), int64(*userVoiceState.ChannelID), conn, ctx)
 
 			player.EnqueueText(voice.QueueItem{
+				Ctx:  gctx,
 				Text: fmt.Sprintf("%sに、読み上げを接続しました。", channelName),
 			})
 
@@ -103,7 +110,10 @@ func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 				GuildID:   int64(guildID),
 				ChannelID: int64(e.Channel().ID()),
 			}
-			err = query.TtsConnection.Save(ttsConnection)
+			if err := query.TtsConnection.Save(ttsConnection); err != nil {
+				slog.ErrorContext(gctx, "failed to save tts connection",
+					slog.String("guild_id", guildID.String()), slog.Any("err", err))
+			}
 		}()
 
 		// 成功レスポンス
@@ -122,5 +132,23 @@ func Join(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDat
 		}
 		_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(false))
 		return err
+	}
+}
+
+// notifyJoinFailure は非同期の接続処理が失敗したことをユーザーへ伝える。
+// 成功レスポンスは既に送られているため、追加の followup で訂正する。
+func notifyJoinFailure(ctx context.Context, e *handler.CommandEvent, config *internal.Config) {
+	embed := discord.Embed{
+		Title:       "TTSボイスチャンネル接続",
+		Description: "ボイスチャンネルへの接続に失敗しました。もう一度お試しください。",
+		Color:       config.Colors.Error,
+		Timestamp: func() *time.Time {
+			t := time.Now()
+			return &t
+		}(),
+	}
+	if _, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(),
+		discord.NewMessageCreate().WithEmbeds(embed).WithEphemeral(true)); err != nil {
+		slog.WarnContext(ctx, "failed to notify voice connection failure", slog.Any("err", err))
 	}
 }
