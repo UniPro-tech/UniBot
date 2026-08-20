@@ -93,8 +93,6 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 // IsOwner は管理者ロールを持つメンバーかどうかを判定する。
 //
 // 設定はリクエストごとに読み直さず、呼び出し側から渡してもらう。
-// 以前は内部で LoadConfig() を呼んでおり、管理コマンドの実行のたびに
-// GitHub API を叩いてプロセスを落としうる状態だった。
 func IsOwner(config *internal.Config, member discord.Member) bool {
 	adminRoleID, err := snowflake.Parse(config.AdminRoleID)
 	if err != nil {
