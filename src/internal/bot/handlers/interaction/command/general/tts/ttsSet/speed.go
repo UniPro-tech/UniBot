@@ -2,7 +2,6 @@ package ttsSet
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"time"
 	"unibot/internal"
@@ -65,32 +64,40 @@ func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed
 	if isGlobal {
 		setting, err := query.TtsUserPreference.Where(query.TtsUserPreference.UserID.Eq(int64(memberID))).First()
 		if err != nil && err != gorm.ErrRecordNotFound {
-			slog.ErrorContext(e.Ctx, "failed to fetch tts personal setting", slog.Any("err", err))
+			slog.ErrorContext(e.Ctx, "failed to fetch user tts preference", slog.Any("err", err))
 			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の取得に失敗しました。", ctx.Config.Colors.Error, &requester)
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
 		}
+		setting.UserID = int64(memberID)
 		setting.Speed = *speed
 		err = query.TtsUserPreference.Save(setting)
 		if err != nil {
-			log.Println("Error fetching TTS personal setting:", err)
+			slog.Error("failed to save user tts preference", slog.Any("err", err))
 			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の保存に失敗しました。", ctx.Config.Colors.Error, &requester)
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
 		}
 	} else {
 		guildID := e.GuildID()
+		if guildID == nil {
+			responseEmbed := buildSpeedEmbed("エラー", "DMでは実行できません。", ctx.Config.Colors.Error, &requester)
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+			return err
+		}
 		setting, err := query.TtsMemberPreference.Where(query.TtsMemberPreference.UserID.Eq(int64(memberID)), query.TtsMemberPreference.GuildID.Eq(int64(*guildID))).First()
 		if err != nil && err != gorm.ErrRecordNotFound {
-			log.Println("Error fetching TTS personal setting:", err)
+			slog.Error("failed to fetch member tts preference", slog.Any("err", err))
 			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の取得に失敗しました。", ctx.Config.Colors.Error, &requester)
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
 		}
+		setting.GuildID = int64(*guildID)
+		setting.UserID = int64(*guildID)
 		setting.Speed = speed
 		err = query.TtsMemberPreference.Save(setting)
 		if err != nil {
-			log.Println("Error fetching TTS personal setting:", err)
+			slog.Error("failed to save member tts preference", slog.Any("err", err))
 			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の保存に失敗しました。", ctx.Config.Colors.Error, &requester)
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
