@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"os/exec"
+	"strconv"
 	"sync"
 	"time"
 
@@ -164,7 +165,7 @@ func (p *VoicePlayer) processItem(bctx *internal.BotContext, item QueueItem) {
 	}
 
 	// 2. 音声合成
-	audio, err := bctx.VoiceVox.Synthesize(cCtx, item.Text, string(*speakerID), float64(*speed)/100.0)
+	audio, err := bctx.VoiceVox.Synthesize(cCtx, item.Text, strconv.FormatInt(int64(*speakerID), 10), float64(*speed)/100.0)
 	if err != nil {
 		slog.ErrorContext(ctx, "tts synthesis failed",
 			slog.Int64("guild_id", p.GuildID), slog.Any("err", err))
