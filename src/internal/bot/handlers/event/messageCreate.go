@@ -1,11 +1,15 @@
 package event_handlers
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
+
 	"unibot/internal"
 	"unibot/internal/bot/voice"
 	"unibot/internal/query"
@@ -15,6 +19,7 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/snowflake/v2"
+	"gorm.io/gorm"
 )
 
 // 正規表現パターン
@@ -92,7 +97,7 @@ var attachmentCategories = []ExtentionConstant{
 	executableExtensions,
 }
 
-func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
+func MessageCreate(ctx context.Context, bctx *internal.BotContext, e *events.MessageCreate) {
 	// Ignore bot itself
 	if e.Message.Author.ID == e.Client().ID() {
 		return
@@ -107,7 +112,12 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 	// ----- TTS -----
 	ttsConnectionData, err := query.TtsConnection.Where(query.TtsConnection.GuildID.Eq(int64(guildId))).First()
 	if err != nil {
-		// TODO: log
+		// TTS 未設定のギルドでは毎メッセージこの分岐に入るため、
+		// レコード無しはエラーとして扱わない。
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			slog.WarnContext(ctx, "failed to load tts connection",
+				slog.String("guild_id", guildId.String()), slog.Any("err", err))
+		}
 		return
 	}
 
@@ -139,8 +149,9 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 				}
 			}
 
+			// botChannelID は VoiceState 次第で nil になりうる。
 			if int64(e.ChannelID) != ttsConnectionData.ChannelID &&
-				e.ChannelID != *botChannelID {
+				(botChannelID == nil || e.ChannelID != *botChannelID) {
 				return
 			}
 		}
@@ -155,7 +166,7 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 		/*
 			personalSetting, err := repository.NewTTSPersonalSettingRepository(ctx.DB).GetByMember(userID.String())
 			if err != nil {
-				log.Println(err)
+				slog.WarnContext(ctx, "failed to load tts personal setting", slog.Any("err", err))
 				return
 			}
 			if personalSetting == nil {
@@ -164,7 +175,7 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 		*/
 		content := SanitizeMessageContent(e.Client(), e.GuildID, e.Message.Content)
 		// 辞書を適用
-		content = util.ApplyDictionary(ctx.DB, int64(*e.GuildID), content)
+		content = util.ApplyDictionary(ctx, bctx.DB, int64(*e.GuildID), content)
 
 		// 切り詰め
 		content = TruncateForTTS(content, 250)
@@ -201,10 +212,12 @@ func MessageCreate(ctx *internal.BotContext, e *events.MessageCreate) {
 			int64(guildId),
 			ttsConnectionData.ChannelID,
 			vcConn,
-			ctx,
+			bctx,
 		)
 
 		vp.EnqueueText(voice.QueueItem{
+			// 読み上げは非同期に処理されるため、cancel を切って trace のみ引き継ぐ。
+			Ctx:  context.WithoutCancel(ctx),
 			Text: content,
 			//Setting: *personalSetting,
 		})
