@@ -235,9 +235,9 @@ func MessageCreate(ctx context.Context, bctx *internal.BotContext, e *events.Mes
 
 		vp.EnqueueText(voice.QueueItem{
 			// 読み上げは非同期に処理されるため、cancel を切って trace のみ引き継ぐ。
-			Ctx:  context.WithoutCancel(ctx),
-			Text: content,
-			//Setting: *personalSetting,
+			Ctx:                context.WithoutCancel(ctx),
+			Text:               content,
+			ResolvedPreference: *preference,
 		})
 	}
 }

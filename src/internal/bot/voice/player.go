@@ -11,6 +11,7 @@ import (
 
 	"unibot/internal"
 	"unibot/internal/logger"
+	"unibot/internal/model"
 
 	"github.com/disgoorg/disgo/voice"
 	"github.com/hraban/opus"
@@ -20,8 +21,9 @@ type QueueItem struct {
 	// Ctx は投入元のイベントの trace を引き継ぐためのもの。
 	// 読み上げは非同期に処理されるため、http.Request と同様に構造体で持ち回る。
 	// nil の場合は context.Background() として扱う。
-	Ctx  context.Context
-	Text string
+	Ctx                context.Context
+	Text               string
+	ResolvedPreference model.TtsMemberPreference
 }
 
 type VoicePlayer struct {
@@ -150,8 +152,19 @@ func (p *VoicePlayer) processItem(bctx *internal.BotContext, item QueueItem) {
 		p.clearOpusChan()
 	}()
 
+	speed := item.ResolvedPreference.Speed
+	if speed == nil {
+		tmpSpeed := int32(100)
+		speed = &tmpSpeed
+	}
+	speakerID := item.ResolvedPreference.SpeakerID
+	if speakerID == nil {
+		tmpSpeakerID := int32(0)
+		speakerID = &tmpSpeakerID
+	}
+
 	// 2. 音声合成
-	audio, err := bctx.VoiceVox.Synthesize(cCtx, item.Text, "0", float64(100)/100.0)
+	audio, err := bctx.VoiceVox.Synthesize(cCtx, item.Text, string(*speakerID), float64(*speed)/100.0)
 	if err != nil {
 		slog.ErrorContext(ctx, "tts synthesis failed",
 			slog.Int64("guild_id", p.GuildID), slog.Any("err", err))
