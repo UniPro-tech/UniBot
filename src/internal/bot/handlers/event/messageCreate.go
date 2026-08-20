@@ -184,11 +184,13 @@ func MessageCreate(ctx context.Context, bctx *internal.BotContext, e *events.Mes
 				// 必要なフィールドを userPreference から設定
 			}
 		}
-		if preference.SpeakerID == nil {
-			preference.SpeakerID = &userPreference.SpeakerID
-		}
-		if preference.Speed == nil {
-			preference.Speed = &userPreference.Speed
+		if userPreference != nil {
+			if preference.SpeakerID == nil {
+				preference.SpeakerID = &userPreference.SpeakerID
+			}
+			if preference.Speed == nil {
+				preference.Speed = &userPreference.Speed
+			}
 		}
 
 		content := SanitizeMessageContent(e.Client(), e.GuildID, e.Message.Content)
