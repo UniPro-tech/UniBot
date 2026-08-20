@@ -1,14 +1,16 @@
 package ttsSet
 
 import (
-	"encoding/json"
 	"fmt"
+	"log"
 	"log/slog"
 	"time"
 	"unibot/internal"
+	"unibot/internal/query"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
+	"gorm.io/gorm"
 )
 
 const (
@@ -28,77 +30,76 @@ func LoadSpeedCommandContext() discord.ApplicationCommandOptionSubCommand {
 				MinValue:    intPtr(MinSpeakerSpeed),
 				MaxValue:    intPtr(MaxSpeakerSpeed),
 			},
+			discord.ApplicationCommandOptionBool{
+				Name:        "global",
+				Description: "グローバルに設定するか",
+				Required:    false,
+			},
 		},
 	}
 }
 
 func Speed(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
-		speedValue := data.Options["speed"].Value
+		speed := data.Options["speed"].Int()
 
-		var speed int
-		if err := json.Unmarshal(speedValue, &speed); err != nil {
-			// 値が読めない状態で speed=0 のまま続行しない。
-			slog.WarnContext(e.Ctx, "failed to parse speed option", slog.Any("err", err))
-			return err
+		global := false
+		if value, ok := data.Options["global"]; ok {
+			global = value.Bool()
 		}
 
-		return handleSpeedCommand(e, ctx, speed)
+		return handleSpeedCommand(e, ctx, speed, global)
 	}
 }
 
-func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed int) error {
-	/*
-		requester := e.User()
+func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed int, isGlobal bool) error {
+	requester := e.User()
 
-		memberID := requester.ID.String()
-		if speed < MinSpeakerSpeed || speed > MaxSpeakerSpeed {
-			responseEmbed := buildSpeedEmbed("エラー", fmt.Sprintf("再生速度は%d〜%dの範囲で指定してください。", MinSpeakerSpeed, MaxSpeakerSpeed), ctx.Config.Colors.Error, &requester)
-			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
-			return err
-		}
+	memberID := requester.ID
+	if speed < MinSpeakerSpeed || speed > MaxSpeakerSpeed {
+		responseEmbed := buildSpeedEmbed("エラー", fmt.Sprintf("再生速度は%d〜%dの範囲で指定してください。", MinSpeakerSpeed, MaxSpeakerSpeed), ctx.Config.Colors.Error, &requester)
+		_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+		return err
+	}
 
-		memberRepo := repository.NewMemberRepository(ctx.DB)
-		if err := memberRepo.Create(memberID); err != nil {
-			slog.ErrorContext(e.Ctx, "failed to create member", slog.Any("err", err))
-			responseEmbed := buildSpeedEmbed("エラー", "メンバー情報の作成に失敗しました。", ctx.Config.Colors.Error, &requester)
-			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
-			return err
-		}
-
-		repo := repository.NewTTSPersonalSettingRepository(ctx.DB)
-		setting, err := repo.GetByMember(memberID)
-		if err != nil {
+	if isGlobal {
+		setting, err := query.TtsUserPreference.Where(query.TtsUserPreference.UserID.Eq(int64(memberID))).First()
+		if err != nil && err != gorm.ErrRecordNotFound {
 			slog.ErrorContext(e.Ctx, "failed to fetch tts personal setting", slog.Any("err", err))
 			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の取得に失敗しました。", ctx.Config.Colors.Error, &requester)
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
 		}
-		if setting == nil {
-			defaultSetting := repository.DefaultTTSPersonalSetting
-			setting = &defaultSetting
-			setting.MemberID = memberID
-			setting.SpeakerSpeed = speed
-			err = repo.Create(setting)
-			if err != nil {
-				responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の作成に失敗しました。", ctx.Config.Colors.Error, &requester)
-				_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
-				return err
-			}
-		} else {
-			setting.SpeakerSpeed = speed
-			err = repo.Update(setting)
-			if err != nil {
-				responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の更新に失敗しました。", ctx.Config.Colors.Error, &requester)
-				_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
-				return err
-			}
+		setting.Speed = int32(speed)
+		err = query.TtsUserPreference.Save(setting)
+		if err != nil {
+			log.Println("Error fetching TTS personal setting:", err)
+			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の保存に失敗しました。", ctx.Config.Colors.Error, &requester)
+			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+			return err
 		}
-		responseEmbed := buildSpeedEmbed("TTS再生速度設定", "TTSの再生速度を設定しました: "+formatSpeed(speed), ctx.Config.Colors.Success, &requester)
-		_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
-		return err
-	*/
-	return nil
+	} else {
+		guildID := e.GuildID()
+		setting, err := query.TtsMemberPreference.Where(query.TtsMemberPreference.UserID.Eq(int64(memberID)), query.TtsMemberPreference.GuildID.Eq(int64(*guildID))).First()
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Println("Error fetching TTS personal setting:", err)
+			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の取得に失敗しました。", ctx.Config.Colors.Error, &requester)
+			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+			return err
+		}
+		setting.Speed = int32(speed)
+		err = query.TtsMemberPreference.Save(setting)
+		if err != nil {
+			log.Println("Error fetching TTS personal setting:", err)
+			responseEmbed := buildSpeedEmbed("エラー", "TTS個人設定の保存に失敗しました。", ctx.Config.Colors.Error, &requester)
+			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+			return err
+		}
+	}
+
+	responseEmbed := buildSpeedEmbed("TTS再生速度設定", "TTSの再生速度を設定しました: "+formatSpeed(speed), ctx.Config.Colors.Success, &requester)
+	_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
+	return err
 }
 
 func buildSpeedEmbed(title, description string, color int, requester *discord.User) *discord.Embed {
