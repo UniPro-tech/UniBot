@@ -10,13 +10,11 @@ table "tts_member_preference" {
   }
   column "speaker_id" {
     type    = int
-    default = 0
-    null    = false
+    null    = true
   }
   column "speed" {
     type    = int
-    default = 100
-    null    = false
+    null    = true
   }
   primary_key {
     columns = [column.user_id, column.guild_id]
