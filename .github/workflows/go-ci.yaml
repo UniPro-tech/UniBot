@@ -1,0 +1,65 @@
+name: Go CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+      - feat/go
+  push:
+    branches:
+      - feat/go
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+
+      - name: Setup Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version-file: src/go.mod
+          cache-dependency-path: src/go.sum
+
+      # opus / opusfile は internal/bot/voice が cgo 経由で必要とする。
+      - name: Install C dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libopus-dev libopusfile-dev
+
+      # libdave は cmd/bot(golibdave)のみが必要とし、ビルドに時間がかかるため
+      # CI では cmd/bot を除外して検証する。
+      - name: Resolve packages
+        id: packages
+        working-directory: src
+        run: |
+          echo "list=$(go list ./... | grep -v '/cmd/bot$' | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: gofmt
+        working-directory: src
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "gofmt が必要なファイル:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Build
+        working-directory: src
+        run: go build ${{ steps.packages.outputs.list }}
+
+      - name: Vet
+        working-directory: src
+        run: go vet ${{ steps.packages.outputs.list }}
+
+      - name: Test
+        working-directory: src
+        # VOICEVOX の実サーバーを必要とするテストは CI では実行しない。
+        run: go test $(go list ./... | grep -v '/cmd/bot$' | grep -v '/api/voicevox$')
