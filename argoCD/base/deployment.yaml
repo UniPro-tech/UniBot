@@ -21,5 +21,23 @@ spec:
           env:
             - name: TZ
               value: Asia/Tokyo
+            # ロギング設定。秘密情報ではないためここで平文管理する。
+            # 明示的な env は envFrom より優先されるため、下記のキーは
+            # Secret 側に同名の値を置いても上書きされない。
+            # Secret で管理したくなった場合は、ここの定義を削除すること。
+            - name: CONFIG_LOG_LEVEL
+              value: "info"
+            - name: CONFIG_LOG_FORMAT
+              value: "json"
+            - name: CONFIG_LOG_SQL
+              value: "warn"
+            - name: CONFIG_LOG_DISCORD_LEVEL
+              value: "notice"
+            # 未設定の間は Discord への通知が無効になるだけで、Bot は正常に動作する。
+            # 運用側でチャンネル ID を設定すること。
+            # - name: CONFIG_LOG_ERROR_CHANNEL_ID
+            #   value: ""
+            # - name: CONFIG_LOG_READY_CHANNEL_ID
+            #   value: ""
       imagePullSecrets:
         - name: internal-harbor

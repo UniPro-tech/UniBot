@@ -1,15 +1,27 @@
 package internal
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"sync"
+	"time"
+
 	"unibot/internal/api/voicevox"
 
 	"gorm.io/gorm"
+)
+
+const (
+	// contributorsTimeout は GitHub API の呼び出しに許す時間。
+	// 起動を無期限に待たせないために設ける。
+	contributorsTimeout = 10 * time.Second
+	// maxContributorsBody は読み込むレスポンス本文の上限。
+	maxContributorsBody = 1 << 20
 )
 
 type Colors struct {
@@ -88,7 +100,20 @@ var (
 	VoiceVoxAPIKey = ""
 )
 
+var (
+	configOnce   sync.Once
+	cachedConfig *Config
+)
+
+// LoadConfig は設定を読み込む。結果はプロセス内で1度だけ構築され、以降は再利用される。
 func LoadConfig() *Config {
+	configOnce.Do(func() {
+		cachedConfig = loadConfig()
+	})
+	return cachedConfig
+}
+
+func loadConfig() *Config {
 	version := Version
 
 	if Version == "latest" {
@@ -135,38 +160,11 @@ func LoadConfig() *Config {
 		VoiceVoxAPIKeyEnv = VoiceVoxAPIKey
 	}
 
-	// GitHub APIからコントリビューターを取得する
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://api.github.com/repos/"+GitHubRepoEnv+"/contributors", nil)
-	if os.Getenv("GITHUB_OAUTH_ID") != "" && os.Getenv("GITHUB_OAUTH_SECRET") != "" {
-		req.SetBasicAuth(os.Getenv("GITHUB_OAUTH_ID"), os.Getenv("GITHUB_OAUTH_SECRET"))
-	}
-	res, err := client.Do(req)
+	// コントリビューターの取得に失敗しても致命的ではない（/about の表示が欠けるだけ）。
+	contributors, err := fetchContributors(context.Background(), GitHubRepoEnv)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var bodyJson []GitHubContributorsResponse
-	err = json.Unmarshal(body, &bodyJson)
-	if err != nil {
-		fmt.Println(string(body))
-		log.Print("https://api.github.com/repos/" + GitHubRepoEnv + "/contributors")
-		log.Fatal(err)
-	}
-
-	contributors := []Contributors{}
-	for _, contributor := range bodyJson {
-		contributors = append(contributors, Contributors{
-			Username: contributor.Login,
-			Profile:  contributor.HTMLURL,
-			IsBot:    contributor.UserType == "Bot",
-		})
+		slog.Warn("failed to fetch contributors from github",
+			slog.String("repo", GitHubRepoEnv), slog.Any("err", err))
 	}
 
 	return &Config{
@@ -188,4 +186,52 @@ func LoadConfig() *Config {
 		VoiceVoxURI:    VoiceVoxURIEnv,
 		VoiceVoxAPIKey: VoiceVoxAPIKeyEnv,
 	}
+}
+
+// fetchContributors は GitHub API からコントリビューター一覧を取得する。
+// 失敗しても呼び出し側が継続できるよう、エラーを返すだけでプロセスは落とさない。
+func fetchContributors(ctx context.Context, repo string) ([]Contributors, error) {
+	url := "https://api.github.com/repos/" + repo + "/contributors"
+
+	ctx, cancel := context.WithTimeout(ctx, contributorsTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	if id, secret := os.Getenv("GITHUB_OAUTH_ID"), os.Getenv("GITHUB_OAUTH_SECRET"); id != "" && secret != "" {
+		req.SetBasicAuth(id, secret)
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("github api returned %s", res.Status)
+	}
+
+	body, err := io.ReadAll(io.LimitReader(res.Body, maxContributorsBody))
+	if err != nil {
+		return nil, err
+	}
+
+	var response []GitHubContributorsResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		// レスポンス本文にはトークン等が含まれうるため、内容は出力しない。
+		return nil, fmt.Errorf("failed to decode contributors response: %w", err)
+	}
+
+	contributors := make([]Contributors, 0, len(response))
+	for _, contributor := range response {
+		contributors = append(contributors, Contributors{
+			Username: contributor.Login,
+			Profile:  contributor.HTMLURL,
+			IsBot:    contributor.UserType == "Bot",
+		})
+	}
+	return contributors, nil
 }

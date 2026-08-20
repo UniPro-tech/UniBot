@@ -2,8 +2,11 @@ package event_handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"time"
+
 	"unibot/internal"
 	"unibot/internal/bot/voice"
 	"unibot/internal/query"
@@ -12,9 +15,10 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/snowflake/v2"
+	"gorm.io/gorm"
 )
 
-func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate) {
+func VoiceStateUpdate(ctx context.Context, bctx *internal.BotContext, e *events.GuildVoiceStateUpdate) {
 	client := e.Client()
 	vsu := e.VoiceState
 	oldVsu := e.OldVoiceState
@@ -76,9 +80,11 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 			int64(vsu.GuildID),
 			int64(*botChannelID),
 			conn,
-			ctx,
+			bctx,
 		)
 		vp.EnqueueText(voice.QueueItem{
+			// 読み上げは非同期に処理されるため、cancel を切って trace のみ引き継ぐ。
+			Ctx:  context.WithoutCancel(ctx),
 			Text: text,
 		})
 		return
@@ -119,6 +125,10 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 			}()
 
 			data, err := query.TtsConnection.Where(query.TtsConnection.GuildID.Eq(int64(vsu.GuildID))).First()
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				slog.ErrorContext(ctx, "failed to load tts connection",
+					slog.String("guild_id", vsu.GuildID.String()), slog.Any("err", err))
+			}
 
 			mgr := voice.GetManager()
 			player := mgr.GetPlayer(int64(vsu.GuildID))
@@ -129,21 +139,29 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 
 			if err == nil && data != nil {
 				textChannelID := data.ChannelID
-				query.TtsConnection.Where(query.TtsConnection.GuildID.Eq(int64(vsu.GuildID))).Delete()
+				if _, err := query.TtsConnection.Where(query.TtsConnection.GuildID.Eq(int64(vsu.GuildID))).Delete(); err != nil {
+					slog.ErrorContext(ctx, "failed to delete tts connection",
+						slog.String("guild_id", vsu.GuildID.String()), slog.Any("err", err))
+				}
 
 				embed := discord.Embed{
 					Title:       "TTS接続解除",
 					Description: "ボイスチャンネルから誰もいなくなったため、TTSの接続を解除しました。",
-					Color:       ctx.Config.Colors.Success,
+					Color:       bctx.Config.Colors.Success,
 					Timestamp: func() *time.Time {
 						t := time.Now()
 						return &t
 					}(),
 				}
 
-				_, _ = client.Rest.CreateMessage(snowflake.MustParse(string(textChannelID)), discord.MessageCreate{
+				// textChannelID は int64。string(int64) はルーン変換になってしまうため、
+				// snowflake.ID へ直接変換する。
+				if _, err := client.Rest.CreateMessage(snowflake.ID(textChannelID), discord.MessageCreate{
 					Embeds: []discord.Embed{embed},
-				})
+				}); err != nil {
+					slog.ErrorContext(ctx, "failed to send tts disconnect notice",
+						slog.String("channel_id", snowflake.ID(textChannelID).String()), slog.Any("err", err))
+				}
 			}
 			return
 		}
@@ -165,8 +183,9 @@ func VoiceStateUpdate(ctx *internal.BotContext, e *events.GuildVoiceStateUpdate)
 					text = fmt.Sprintf("%sが %s から退出しました。", e.Member.EffectiveName(), channel.Name())
 				}
 
-				vp := voice.GetManager().GetOrCreatePlayer(int64(vsu.GuildID), int64(*botChannelID), conn, ctx)
+				vp := voice.GetManager().GetOrCreatePlayer(int64(vsu.GuildID), int64(*botChannelID), conn, bctx)
 				vp.EnqueueText(voice.QueueItem{
+					Ctx:  context.WithoutCancel(ctx),
 					Text: text,
 				})
 			}

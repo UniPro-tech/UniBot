@@ -13,6 +13,31 @@ A Discord Bot that manages and operates within All-Japan Digital Creative Club U
 - `VOICEVOX_URI` - (Optional) VOICEVOX Engine URI. Default: localhost:53000
 - `VOICEVOX_API_KEY` - (Optional) API Key passed as Authorization: ApiKey when communicating with VOICEVOX Engine
 
+### Logging
+
+Logs are written to stdout as one JSON object per line, intended to be collected by
+Kubernetes and shipped to Grafana / Loki. Every record carries a `trace_id` and
+`request_id` so a single Discord event can be followed across goroutines.
+
+- `CONFIG_LOG_LEVEL` - (Optional) `debug` / `info` / `notice` / `warn` / `error`. Default: `info`
+- `CONFIG_LOG_FORMAT` - (Optional) `json` or `text`. Use `text` for local development. Default: `json`
+- `CONFIG_LOG_SOURCE` - (Optional) `true` to include the source file and line of each record. Default: `false`
+- `CONFIG_LOG_SQL` - (Optional) `silent` / `error` / `warn` / `info` for gorm. `info` logs every query at debug level. Default: `warn`
+- `CONFIG_LOG_SQL_SLOW_MS` - (Optional) Queries slower than this are logged as `slow sql`. Default: `200`
+- `CONFIG_LOG_ERROR_CHANNEL_ID` - (Optional) Discord channel to notify about Error / Warn / Notice logs. **Unset disables Discord notification entirely.**
+- `CONFIG_LOG_DISCORD_LEVEL` - (Optional) Minimum level forwarded to Discord. Default: `notice`
+- `CONFIG_LOG_READY_CHANNEL_ID` - (Optional) Discord channel for startup / shutdown notices. Falls back to `CONFIG_LOG_ERROR_CHANNEL_ID`
+
+Discord notifications intentionally contain **only** `trace_id`, `request_id`, `level` and
+a timestamp - never the log message, the error text, or any attribute. Log bodies can
+contain user message content, dictionary words and SQL, so the details are looked up in
+Grafana by `trace_id` instead.
+
+> [!WARNING]
+> `CONFIG_LOG_LEVEL=debug` makes disgo log the **body of every REST request and response**,
+> which includes the content of messages the bot sends and receives.
+> Never use it in production.
+
 ## Running with Docker
 
 You can use Docker Image, but you need to build it locally.
@@ -68,7 +93,7 @@ cd src
 
 ## Built With
 
-- [discordgo](https://pkg.go.dev/github.com/bwmarrin/discordgo) - The Discord SDK for Golang.
+- [disgo](https://pkg.go.dev/github.com/disgoorg/disgo) - The Discord API wrapper for Golang.
 - [ohraban/opus](https://pkg.go.dev/github.com/hraban/opus) - The Golang bindings for the xiph.org C libraries libopus and libopusfile.
 - [gorm](https://gorm.io/ja_JP/) - The fantastic ORM library for Golang.
 

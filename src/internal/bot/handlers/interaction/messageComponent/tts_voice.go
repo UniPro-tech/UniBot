@@ -18,7 +18,7 @@ func HandleTTSSetVoice(ctx *internal.BotContext) func(data discord.SelectMenuInt
 			config := ctx.Config
 			values := e.StringSelectMenuInteractionData().Values
 			if len(values) == 0 {
-				log.Println("HandleTTSSetVoice: no speakerID selected")
+				slog.WarnContext(e.Ctx, "no speaker selected", slog.String("outcome", "invalid_input"))
 				_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
 					Title:       "エラー",
 					Description: "話者が選択されていません。もう一度お試しください。",

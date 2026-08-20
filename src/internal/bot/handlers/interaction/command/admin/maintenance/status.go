@@ -3,7 +3,7 @@ package maintenance
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 	"unibot/internal"
 	"unibot/internal/query"
@@ -344,19 +344,18 @@ func ResetBotStatus(client *bot.Client) error {
 		OnlineStatus: discord.OnlineStatusOnline,
 	}
 	if err != nil {
-		log.Printf("Error setting bot status: %v", err)
+		slog.Error("failed to load system preference", slog.Any("err", err))
 	} else {
 		systemPreference.StatusType = "online"
 		systemPreference.ActivityType = nil
 		systemPreference.ActivitySummary = nil
-		err := query.SystemPreference.Save(systemPreference)
-		if err != nil {
-			log.Printf("Error setting bot status: %v", err)
+		if err := query.SystemPreference.Save(systemPreference); err != nil {
+			slog.Error("failed to save system preference", slog.Any("err", err))
 		}
 	}
 	err = SetBotStatus(client, statusData)
 	if err != nil {
-		log.Printf("Error setting bot status: %v", err)
+		slog.Error("failed to set bot presence", slog.Any("err", err))
 	}
 	return err
 }
