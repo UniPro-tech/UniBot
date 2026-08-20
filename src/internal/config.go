@@ -106,9 +106,6 @@ var (
 )
 
 // LoadConfig は設定を読み込む。結果はプロセス内で1度だけ構築され、以降は再利用される。
-//
-// 以前はコマンド実行のたびに呼ばれて GitHub API を叩いていたため、
-// API の一時的な不調がユーザー操作でプロセスを落とす原因になっていた。
 func LoadConfig() *Config {
 	configOnce.Do(func() {
 		cachedConfig = loadConfig()
