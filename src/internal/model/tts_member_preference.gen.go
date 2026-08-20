@@ -8,10 +8,10 @@ const TableNameTtsMemberPreference = "tts_member_preference"
 
 // TtsMemberPreference mapped from table <tts_member_preference>
 type TtsMemberPreference struct {
-	UserID    int64 `gorm:"column:user_id;primaryKey" json:"user_id"`
-	GuildID   int64 `gorm:"column:guild_id;primaryKey" json:"guild_id"`
-	SpeakerID int32 `gorm:"column:speaker_id;not null" json:"speaker_id"`
-	Speed     int32 `gorm:"column:speed;not null;default:100" json:"speed"`
+	UserID    int64  `gorm:"column:user_id;primaryKey" json:"user_id"`
+	GuildID   int64  `gorm:"column:guild_id;primaryKey" json:"guild_id"`
+	SpeakerID *int32 `gorm:"column:speaker_id" json:"speaker_id"`
+	Speed     *int32 `gorm:"column:speed" json:"speed"`
 }
 
 // TableName TtsMemberPreference's table name
