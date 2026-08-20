@@ -1,8 +1,10 @@
 package interaction_handler
 
 import (
+	"log/slog"
 	"slices"
 	"time"
+
 	"unibot/internal"
 	"unibot/internal/bot/handlers/interaction/command/admin/maintenance"
 	"unibot/internal/bot/handlers/interaction/command/general"
@@ -88,23 +90,34 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 	})
 }
 
-func IsOwner(member discord.Member) bool {
-	config := internal.LoadConfig()
-	adminRoleID := config.AdminRoleID
-	return slices.Contains(member.RoleIDs, snowflake.MustParse(adminRoleID))
+// IsOwner は管理者ロールを持つメンバーかどうかを判定する。
+//
+// 設定はリクエストごとに読み直さず、呼び出し側から渡してもらう。
+// 以前は内部で LoadConfig() を呼んでおり、管理コマンドの実行のたびに
+// GitHub API を叩いてプロセスを落としうる状態だった。
+func IsOwner(config *internal.Config, member discord.Member) bool {
+	adminRoleID, err := snowflake.Parse(config.AdminRoleID)
+	if err != nil {
+		slog.Error("invalid admin role id, denying admin access",
+			slog.String("value", config.AdminRoleID), slog.Any("err", err))
+		return false
+	}
+	return slices.Contains(member.RoleIDs, adminRoleID)
 }
 
 func AdminOnlyMiddleware(ctx *internal.BotContext) func(next handler.Handler) handler.Handler {
 	return func(next handler.Handler) handler.Handler {
 		return func(e *handler.InteractionEvent) error {
 			config := ctx.Config
-			if !IsOwner(e.Member().Member) {
+			member := e.Member()
+			if member == nil || !IsOwner(config, member.Member) {
 				errorEmbed := discord.Embed{
 					Title:       "権限エラー",
 					Description: "権限がありません。",
 					Color:       config.Colors.Error,
 					Footer: &discord.EmbedFooter{
-						Text:    "Requested by " + *e.Member().Nick,
+						// Nick は未設定のことがあるため EffectiveName を使う。
+						Text:    "Requested by " + e.User().EffectiveName(),
 						IconURL: e.User().EffectiveAvatarURL(),
 					},
 					Timestamp: func() *time.Time {
@@ -125,16 +138,29 @@ func DeferReplyMiddleware(ctx *internal.BotContext, ephemeral bool, update bool)
 	return func(next handler.Handler) handler.Handler {
 		if !update {
 			return func(e *handler.InteractionEvent) error {
-				e.DeferCreateMessage(ephemeral)
+				deferInteraction(e, func() error { return e.DeferCreateMessage(ephemeral) })
 				return next(e)
 			}
 		} else {
 			return func(e *handler.InteractionEvent) error {
-				e.DeferUpdateMessage()
+				deferInteraction(e, func() error { return e.DeferUpdateMessage() })
 				return next(e)
 			}
 		}
 	}
+}
+
+// deferInteraction は応答を保留し、その結果を記録する。
+//
+// 保留に失敗すると以降の followup もすべて失敗するため、
+// 握り潰さずに警告として残す。成功した場合はエラー応答の送り方を
+// 切り替えられるよう context に印を付ける。
+func deferInteraction(e *handler.InteractionEvent, deferFn func() error) {
+	if err := deferFn(); err != nil {
+		slog.WarnContext(e.Ctx, "failed to defer interaction response", slog.Any("err", err))
+		return
+	}
+	e.Ctx = markDeferred(e.Ctx)
 }
 
 func CreateMasterRecordMiddleware(next handler.Handler) handler.Handler {
