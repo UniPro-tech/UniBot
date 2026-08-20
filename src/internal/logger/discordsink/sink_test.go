@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -202,4 +203,66 @@ func fieldValue(t *testing.T, e discord.Embed, name string) string {
 	}
 	t.Fatalf("field %q not found", name)
 	return ""
+}
+
+// Embed の枠に収まらない group を黙って捨てないこと。
+func TestSinkCountsGroupsBeyondEmbedLimit(t *testing.T) {
+	sink, sender := newTestSink(t, discordsink.Config{ChannelID: 123, MaxEmbeds: 3})
+	lg := slog.New(logger.NewContextHandler(sink))
+
+	// 11 個の異なる trace を投入する。
+	const total = 11
+	for i := 0; i < total; i++ {
+		ctx, _ := logger.WithNewTrace(context.Background())
+		ctx, _ = logger.WithRequest(ctx)
+		lg.ErrorContext(ctx, "boom")
+	}
+
+	closeSink(t, sink)
+
+	messages := sender.snapshot()
+	require.Len(t, messages, 1)
+
+	embeds := messages[0].Embeds
+	assert.LessOrEqual(t, len(embeds), 3, "Discord の Embed 上限を超えない")
+
+	// 最後の Embed は溢れ通知で、載せられなかった件数が出ている。
+	last := embeds[len(embeds)-1]
+	require.Equal(t, "🧯 log sink overflow", last.Title)
+	assert.Equal(t, strconv.Itoa(total-(len(embeds)-1)), fieldValue(t, last, "dropped"))
+}
+
+// MaxEmbeds が 1 でも Discord の上限を超えるメッセージを作らないこと。
+func TestSinkRespectsMaxEmbedsOfOne(t *testing.T) {
+	sink, sender := newTestSink(t, discordsink.Config{ChannelID: 123, MaxEmbeds: 1})
+	lg := slog.New(logger.NewContextHandler(sink))
+
+	for i := 0; i < 5; i++ {
+		ctx, _ := logger.WithNewTrace(context.Background())
+		lg.ErrorContext(ctx, "boom")
+	}
+
+	closeSink(t, sink)
+
+	messages := sender.snapshot()
+	require.Len(t, messages, 1)
+	require.Len(t, messages[0].Embeds, 1)
+	assert.Equal(t, "🧯 log sink overflow", messages[0].Embeds[0].Title)
+	assert.Equal(t, "5", fieldValue(t, messages[0].Embeds[0], "dropped"))
+}
+
+// 再試行で通知が重複しないよう nonce が付いていること。
+func TestSinkSetsNonceForIdempotency(t *testing.T) {
+	sink, sender := newTestSink(t, discordsink.Config{ChannelID: 123})
+	lg := slog.New(logger.NewContextHandler(sink))
+
+	ctx, _ := logger.WithTrace(context.Background())
+	lg.ErrorContext(ctx, "boom")
+
+	closeSink(t, sink)
+
+	messages := sender.snapshot()
+	require.Len(t, messages, 1)
+	assert.NotEmpty(t, messages[0].Nonce)
+	assert.True(t, messages[0].EnforceNonce)
 }

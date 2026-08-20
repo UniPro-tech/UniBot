@@ -21,8 +21,10 @@ spec:
           env:
             - name: TZ
               value: Asia/Tokyo
-            # ロギング設定。秘密情報ではないため SealedSecret ではなくここで管理する。
-            # env は envFrom より優先されるため、必要なら Secret 側で上書きできる。
+            # ロギング設定。秘密情報ではないためここで平文管理する。
+            # 明示的な env は envFrom より優先されるため、下記のキーは
+            # Secret 側に同名の値を置いても上書きされない。
+            # Secret で管理したくなった場合は、ここの定義を削除すること。
             - name: CONFIG_LOG_LEVEL
               value: "info"
             - name: CONFIG_LOG_FORMAT

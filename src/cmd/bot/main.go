@@ -195,12 +195,14 @@ func shutdown(client *bot.Client, ctxData *internal.BotContext, sig os.Signal) {
 
 	notify.Shutdown(ctx, client, ctxData.Config, sig.String())
 
-	client.Close(ctx)
-
+	// client.Close は client.Rest も閉じるため、シンクのフラッシュを先に行う。
+	// 順序を逆にすると、キューに残ったログを送信できない。
 	if err := logger.Shutdown(ctx); err != nil {
 		// シンクが閉じられないだけなので stdout に残して終了する。
 		logger.Plain("shutdown").Warn("failed to flush log sink", slog.Any("err", err))
 	}
+
+	client.Close(ctx)
 }
 
 // fatal はエラーを記録し、Discord シンクを吐き出してからプロセスを終了する。

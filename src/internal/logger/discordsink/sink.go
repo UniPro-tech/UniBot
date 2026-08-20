@@ -66,11 +66,16 @@ type Sink struct {
 	cfg      Config
 	disabled bool
 
-	ch     chan entry
-	done   chan struct{}
-	wg     sync.WaitGroup
-	once   sync.Once
-	closed atomic.Bool
+	ch   chan entry
+	done chan struct{}
+	wg   sync.WaitGroup
+	once sync.Once
+
+	// closedMu は closed の確認とキュー投入を同期する。
+	// これが無いと「Handle が closed を確認 → Close が worker を終了 →
+	// Handle が s.ch に投入」の順で、受理したレコードが失われる。
+	closedMu sync.RWMutex
+	closed   bool
 
 	senderMu sync.RWMutex
 	sender   MessageSender
@@ -118,10 +123,12 @@ func (s *Sink) Attach(sender MessageSender) {
 func (s *Sink) Dropped() uint64 { return s.dropped.Load() }
 
 func (s *Sink) Enabled(_ context.Context, level slog.Level) bool {
-	if s.disabled || s.closed.Load() {
+	if s.disabled || level < s.cfg.MinLevel {
 		return false
 	}
-	return level >= s.cfg.MinLevel
+	s.closedMu.RLock()
+	defer s.closedMu.RUnlock()
+	return !s.closed
 }
 
 // Handle はレコードから ID・レベル・時刻だけを取り出してキューへ積む。
@@ -129,7 +136,7 @@ func (s *Sink) Enabled(_ context.Context, level slog.Level) bool {
 // リクエストパスを絶対に止めないため、キューが満杯なら破棄する（ノンブロッキング）。
 // 戻り値は常に nil。非 nil を返すと slog が stderr に生ログを吐いてしまう。
 func (s *Sink) Handle(ctx context.Context, r slog.Record) error {
-	if s.disabled || s.closed.Load() {
+	if s.disabled {
 		return nil
 	}
 
@@ -142,6 +149,13 @@ func (s *Sink) Handle(ctx context.Context, r slog.Record) error {
 	}
 	if e.At.IsZero() {
 		e.At = time.Now()
+	}
+
+	// closed の確認と投入を不可分にする。RLock なので複数の Handle は並行できる。
+	s.closedMu.RLock()
+	defer s.closedMu.RUnlock()
+	if s.closed {
+		return nil
 	}
 
 	select {
@@ -164,7 +178,10 @@ func (s *Sink) Close(ctx context.Context) error {
 		return nil
 	}
 	s.once.Do(func() {
-		s.closed.Store(true)
+		// 進行中の Handle が投入を終えるまで待ってから worker を止める。
+		s.closedMu.Lock()
+		s.closed = true
+		s.closedMu.Unlock()
 		close(s.done)
 	})
 
@@ -242,6 +259,10 @@ func (s *Sink) flush(ctx context.Context, batch []entry, attempts int) {
 		return
 	}
 
+	// CreateMessage はメッセージ作成後にエラーを返すことがある。
+	// 再試行で通知が重複しないよう、バッチごとに固定の nonce を付ける。
+	msg = msg.WithNonce(string(logger.NewRequestID())).WithEnforceNonce(true)
+
 	var lastErr error
 	backoff := time.Second
 	for attempt := 0; attempt < attempts; attempt++ {
@@ -294,7 +315,7 @@ type group struct {
 
 // coalesce は (level, trace_id, request_id) が同じレコードをまとめる。
 // エラーストーム時に1つのインタラクションが Embed を埋め尽くすのを防ぐ。
-func coalesce(batch []entry, limit int) []group {
+func coalesce(batch []entry) []group {
 	type key struct {
 		level   slog.Level
 		trace   logger.TraceID
@@ -314,20 +335,33 @@ func coalesce(batch []entry, limit int) []group {
 		groups = append(groups, group{entry: e, count: 1})
 	}
 
-	if limit > 0 && len(groups) > limit {
-		groups = groups[:limit]
-	}
 	return groups
 }
 
 func buildMessage(batch []entry, dropped uint64, maxEmbeds int) discord.MessageCreate {
-	limit := maxEmbeds
-	if dropped > 0 {
-		// 溢れ通知の分を1枠空けておく。
-		limit--
+	if maxEmbeds <= 0 || maxEmbeds > defaultMaxEmbeds {
+		maxEmbeds = defaultMaxEmbeds
 	}
 
-	groups := coalesce(batch, limit)
+	groups := coalesce(batch)
+
+	limit := maxEmbeds
+	if dropped > 0 || len(groups) > limit {
+		// 溢れ通知の分を1枠空けておく。
+		limit = maxEmbeds - 1
+	}
+	if limit < 0 {
+		limit = 0
+	}
+
+	// 枠に収まらない group は黙って捨てず、破棄件数として計上する。
+	if len(groups) > limit {
+		for _, g := range groups[limit:] {
+			dropped += uint64(g.count)
+		}
+		groups = groups[:limit]
+	}
+
 	embeds := make([]discord.Embed, 0, len(groups)+1)
 	for _, g := range groups {
 		embeds = append(embeds, buildEmbed(g))

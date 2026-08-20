@@ -100,8 +100,13 @@ func (l *slogLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 
 	case l.cfg.Level >= gormlogger.Info:
 		// 正常なクエリは Debug。本番で全クエリを吐かないための格下げ。
+		// fc() は SQL 文字列を組み立てるため、出力しないなら呼ばない。
+		lg := l.log()
+		if !lg.Enabled(ctx, slog.LevelDebug) {
+			return
+		}
 		sql, rows := fc()
-		l.log().DebugContext(ctx, "sql", l.attrs(sql, rows, elapsed)...)
+		lg.DebugContext(ctx, "sql", l.attrs(sql, rows, elapsed)...)
 	}
 }
 

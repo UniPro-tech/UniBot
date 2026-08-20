@@ -138,12 +138,16 @@ func DeferReplyMiddleware(ctx *internal.BotContext, ephemeral bool, update bool)
 	return func(next handler.Handler) handler.Handler {
 		if !update {
 			return func(e *handler.InteractionEvent) error {
-				deferInteraction(e, func() error { return e.DeferCreateMessage(ephemeral) })
+				if err := deferInteraction(e, func() error { return e.DeferCreateMessage(ephemeral) }); err != nil {
+					return err
+				}
 				return next(e)
 			}
 		} else {
 			return func(e *handler.InteractionEvent) error {
-				deferInteraction(e, func() error { return e.DeferUpdateMessage() })
+				if err := deferInteraction(e, func() error { return e.DeferUpdateMessage() }); err != nil {
+					return err
+				}
 				return next(e)
 			}
 		}
@@ -152,15 +156,17 @@ func DeferReplyMiddleware(ctx *internal.BotContext, ephemeral bool, update bool)
 
 // deferInteraction は応答を保留し、その結果を記録する。
 //
-// 保留に失敗すると以降の followup もすべて失敗するため、
-// 握り潰さずに警告として残す。成功した場合はエラー応答の送り方を
-// 切り替えられるよう context に印を付ける。
-func deferInteraction(e *handler.InteractionEvent, deferFn func() error) {
+// 保留に失敗すると以降の followup もすべて失敗するため、エラーを返して
+// ハンドラ本体を実行させない。呼び出し元が返した error は
+// ObservabilityMiddleware が受け取り、未応答の状態からユーザーへ通知する。
+// 成功した場合はエラー応答の送り方を切り替えられるよう context に印を付ける。
+func deferInteraction(e *handler.InteractionEvent, deferFn func() error) error {
 	if err := deferFn(); err != nil {
 		slog.WarnContext(e.Ctx, "failed to defer interaction response", slog.Any("err", err))
-		return
+		return err
 	}
 	e.Ctx = markDeferred(e.Ctx)
+	return nil
 }
 
 func CreateMasterRecordMiddleware(next handler.Handler) handler.Handler {

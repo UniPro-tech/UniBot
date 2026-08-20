@@ -22,6 +22,7 @@ import (
 
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/rest"
 	"github.com/disgoorg/snowflake/v2"
 )
 
@@ -112,9 +113,11 @@ func send(ctx context.Context, client *bot.Client, embed discord.Embed) {
 		return
 	}
 
+	// ctx を渡さないと context.TODO() が使われ、終了時のキャンセルや
+	// タイムアウトがレート制限待機や再試行に効かない。
 	if _, err := client.Rest.CreateMessage(id, discord.MessageCreate{
 		Embeds: []discord.Embed{embed},
-	}); err != nil {
+	}, rest.WithCtx(ctx)); err != nil {
 		// 通知の失敗自体は Warn として記録する。ここはログハンドラではないので再帰しない。
 		slog.WarnContext(ctx, "failed to send notification to discord",
 			slog.String("channel_id", id.String()), slog.Any("err", err))
