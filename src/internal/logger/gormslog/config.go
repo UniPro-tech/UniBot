@@ -22,7 +22,13 @@ const defaultSlowThreshold = 200 * time.Millisecond
 
 // Config は gorm ロガーの設定。
 //
-// 危険側に倒れないよう、ゼロ値が最も安全な設定になるようにフィールドを定義している。
+// bool のフィールドは「true にすると出力が増える」向きで命名している。
+// そのため Config{} をそのまま渡しても、SQL にバインド変数を展開せず
+// （＝ユーザー入力をログに載せず）、ErrRecordNotFound も記録しない。
+//
+// 逆向きの命名（ParameterizedQueries / IgnoreRecordNotFound）にすると、
+// ゼロ値が「展開する」「記録する」を意味してしまい、フィールドの設定漏れが
+// そのままログへの情報漏洩になる。
 type Config struct {
 	// Level は gorm 側の閾値。ゼロ値は Warn（遅いクエリとエラーのみ）として扱う。
 	Level gormlogger.LogLevel
