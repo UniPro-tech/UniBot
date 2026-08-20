@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	MinSpeakerSpeed int = 50
-	MaxSpeakerSpeed int = 200
+	MinSpeakerSpeed int32 = 50
+	MaxSpeakerSpeed int32 = 200
 )
 
 func LoadSpeedCommandContext() discord.ApplicationCommandOptionSubCommand {
@@ -27,8 +27,8 @@ func LoadSpeedCommandContext() discord.ApplicationCommandOptionSubCommand {
 				Name:        "speed",
 				Description: "再生速度（50-200、100=通常速度）",
 				Required:    true,
-				MinValue:    intPtr(MinSpeakerSpeed),
-				MaxValue:    intPtr(MaxSpeakerSpeed),
+				MinValue:    intPtr(int(MinSpeakerSpeed)),
+				MaxValue:    intPtr(int(MaxSpeakerSpeed)),
 			},
 			discord.ApplicationCommandOptionBool{
 				Name:        "global",
@@ -41,22 +41,22 @@ func LoadSpeedCommandContext() discord.ApplicationCommandOptionSubCommand {
 
 func Speed(ctx *internal.BotContext) func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
-		speed := data.Options["speed"].Int()
+		speed := int32(data.Options["speed"].Int())
 
 		global := false
 		if value, ok := data.Options["global"]; ok {
 			global = value.Bool()
 		}
 
-		return handleSpeedCommand(e, ctx, speed, global)
+		return handleSpeedCommand(e, ctx, &speed, global)
 	}
 }
 
-func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed int, isGlobal bool) error {
+func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed *int32, isGlobal bool) error {
 	requester := e.User()
 
 	memberID := requester.ID
-	if speed < MinSpeakerSpeed || speed > MaxSpeakerSpeed {
+	if *speed < MinSpeakerSpeed || *speed > MaxSpeakerSpeed {
 		responseEmbed := buildSpeedEmbed("エラー", fmt.Sprintf("再生速度は%d〜%dの範囲で指定してください。", MinSpeakerSpeed, MaxSpeakerSpeed), ctx.Config.Colors.Error, &requester)
 		_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 		return err
@@ -70,7 +70,7 @@ func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
 		}
-		setting.Speed = int32(speed)
+		setting.Speed = *speed
 		err = query.TtsUserPreference.Save(setting)
 		if err != nil {
 			log.Println("Error fetching TTS personal setting:", err)
@@ -87,7 +87,7 @@ func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed
 			_, err = e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 			return err
 		}
-		setting.Speed = int32(speed)
+		setting.Speed = speed
 		err = query.TtsMemberPreference.Save(setting)
 		if err != nil {
 			log.Println("Error fetching TTS personal setting:", err)
@@ -97,7 +97,7 @@ func handleSpeedCommand(e *handler.CommandEvent, ctx *internal.BotContext, speed
 		}
 	}
 
-	responseEmbed := buildSpeedEmbed("TTS再生速度設定", "TTSの再生速度を設定しました: "+formatSpeed(speed), ctx.Config.Colors.Success, &requester)
+	responseEmbed := buildSpeedEmbed("TTS再生速度設定", "TTSの再生速度を設定しました: "+formatSpeed(*speed), ctx.Config.Colors.Success, &requester)
 	_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(*responseEmbed))
 	return err
 }
@@ -121,7 +121,7 @@ func buildSpeedEmbed(title, description string, color int, requester *discord.Us
 }
 
 // formatSpeed はSpeedScale値(100 = 1.0倍)を読みやすい形式に変換する
-func formatSpeed(speed int) string {
+func formatSpeed(speed int32) string {
 	return fmt.Sprintf("%.2f倍速", float64(speed)/100.0)
 }
 
