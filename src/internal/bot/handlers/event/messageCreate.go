@@ -12,6 +12,7 @@ import (
 
 	"unibot/internal"
 	"unibot/internal/bot/voice"
+	"unibot/internal/model"
 	"unibot/internal/query"
 	"unibot/internal/util"
 
@@ -126,7 +127,7 @@ func MessageCreate(ctx context.Context, bctx *internal.BotContext, e *events.Mes
 	}
 
 	if ttsConnectionData != nil {
-		//userID := e.Message.Author.ID
+		userID := e.Message.Author.ID
 
 		if e.Message.Author.Bot {
 			return
@@ -163,16 +164,35 @@ func MessageCreate(ctx context.Context, bctx *internal.BotContext, e *events.Mes
 			}
 			return
 		}
-		/*
-			personalSetting, err := repository.NewTTSPersonalSettingRepository(ctx.DB).GetByMember(userID.String())
-			if err != nil {
-				slog.WarnContext(ctx, "failed to load tts personal setting", slog.Any("err", err))
-				return
+
+		memberPreference, err := query.TtsMemberPreference.Where(query.TtsMemberPreference.GuildID.Eq(int64(guildId)), query.TtsMemberPreference.UserID.Eq(int64(userID))).First()
+		if err != nil && err != gorm.ErrRecordNotFound {
+			slog.WarnContext(ctx, "failed to load tts personal setting", slog.Any("err", err))
+			return
+		}
+		userPreference, err := query.TtsUserPreference.Where(query.TtsUserPreference.UserID.Eq(int64(userID))).First()
+		if err != nil && err != gorm.ErrRecordNotFound {
+			slog.WarnContext(ctx, "failed to load tts personal setting", slog.Any("err", err))
+			return
+		}
+
+		// memberPreference を優先し、未設定なら userPreference を使用
+		preference := memberPreference
+
+		if preference == nil {
+			preference = &model.TtsMemberPreference{
+				// 必要なフィールドを userPreference から設定
 			}
-			if personalSetting == nil {
-				personalSetting = &repository.DefaultTTSPersonalSetting
+		}
+		if userPreference != nil {
+			if preference.SpeakerID == nil {
+				preference.SpeakerID = &userPreference.SpeakerID
 			}
-		*/
+			if preference.Speed == nil {
+				preference.Speed = &userPreference.Speed
+			}
+		}
+
 		content := SanitizeMessageContent(e.Client(), e.GuildID, e.Message.Content)
 		// 辞書を適用
 		content = util.ApplyDictionary(ctx, bctx.DB, int64(*e.GuildID), content)
@@ -217,9 +237,9 @@ func MessageCreate(ctx context.Context, bctx *internal.BotContext, e *events.Mes
 
 		vp.EnqueueText(voice.QueueItem{
 			// 読み上げは非同期に処理されるため、cancel を切って trace のみ引き継ぐ。
-			Ctx:  context.WithoutCancel(ctx),
-			Text: content,
-			//Setting: *personalSetting,
+			Ctx:                context.WithoutCancel(ctx),
+			Text:               content,
+			ResolvedPreference: *preference,
 		})
 	}
 }
