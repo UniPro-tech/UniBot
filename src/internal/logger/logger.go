@@ -3,10 +3,6 @@
 // 出力は JSON 1行 = 1レコードで stdout に書き出され、Kubernetes 経由で
 // Grafana / Loki に収集される。context 上の trace_id / request_id は
 // ContextHandler が自動的に全レコードへ付与する。
-//
-// 依存ルール: このパッケージは標準ライブラリ以外を import してはならない。
-// unibot/internal (config.go) がこのパッケージを使うため、逆向きの import は
-// 循環参照になる。
 package logger
 
 import (
