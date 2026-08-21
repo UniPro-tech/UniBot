@@ -29,6 +29,24 @@ func Voice(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDa
 	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 		config := ctx.Config
 
+		if _, ok := e.Guild(); ok {
+			responseEmbed := discord.Embed{
+				Title:       "エラー",
+				Description: "DMで実行することはできません。",
+				Color:       config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(responseEmbed).WithEphemeral(true))
+			return err
+		}
+
 		speakers, err := ttsutil.FetchSpeakers(ctx)
 		if err != nil {
 			slog.ErrorContext(e.Ctx, "failed to fetch tts speaker list", slog.Any("err", err))
