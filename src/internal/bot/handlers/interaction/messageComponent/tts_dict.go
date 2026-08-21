@@ -2,6 +2,7 @@ package messageComponent
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 	"unibot/internal"
 	"unibot/internal/query"
@@ -43,6 +44,7 @@ func HandleTTSDictRemove(ctx *internal.BotContext) func(data discord.SelectMenuI
 		// 削除実行
 		_, err = query.TtsDictionary.Where(query.TtsDictionary.ID.Eq(selected)).Delete()
 		if err != nil {
+			slog.ErrorContext(e.Ctx, "failed to delete dictionary data", slog.Any("err", err))
 			responseEmbed := discord.Embed{
 				Title:       "エラー",
 				Description: "単語の削除に失敗しました。",
