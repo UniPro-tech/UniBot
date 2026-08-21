@@ -79,14 +79,14 @@ func RegistHandler(r *handler.Mux, ctxData *internal.BotContext) {
 		r.Use(DeferReplyMiddleware(ctxData, true, true))
 		r.SelectMenuComponent("/", messageComponent.HandleTTSDictRemove(ctxData))
 	})
-	r.Route("/tts_set_voice_select", func(r handler.Router) {
+	r.Route("/tts_set_voice_select/{global}", func(r handler.Router) {
 		r.Use(DeferReplyMiddleware(ctxData, true, true))
 		r.SelectMenuComponent("/", messageComponent.HandleTTSSetVoice(ctxData))
 	})
 	// button
 	r.Route("/tts_set_voice_page/{pageIndex}", func(r handler.Router) {
 		r.Use(DeferReplyMiddleware(ctxData, true, true))
-		r.ButtonComponent("/", messageComponent.HandleTTSSetVoicePage(ctxData))
+		r.ButtonComponent("/{global}", messageComponent.HandleTTSSetVoicePage(ctxData))
 	})
 }
 
