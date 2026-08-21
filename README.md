@@ -58,13 +58,24 @@ Discordの通知には意図的に `trace_id`、 `request_id`、 `level`、 `tim
 - opusfile-dev
 - ffmpeg
 
-### Configuration
+### Makefile
 
-`make run` を行うことで起動できます。
+- `make run[-rss]` - `go dev` を実行します。
+- `make build[-rss]` - `go dev` を実行します。
+- `make schema-lint` - Atlasのスキーマを検証します。
+- `make schema-lint` - Atlasのマイグレーションファイルを作成せずに適用します。
+- `make migration-diff` - schemaファイルとDBの差分からマイグレーションファイルを作成します。
+- `make migration-apply` - DBマイグレーションを適用します。
+- `make migration-hash` - 手動でマイグレーションファイルに書き加えた場合、ハッシュを更新します。
+- `make model-gen` - gormのモデルを生成します。
+- `make db-clean` - データベースを初期化します。
 
 ### About Database
 
-The database uses PostgreSQL, and you can start only the database using `docker-compose.dev.yaml`.
+データベースにはMySQLを使用しています。
+詳しくは、`docker-compose.dev.yaml` をご覧ください。
+
+また、マイグレーションツールとして、[Atlas](https://atlasgo.io/) を使用しています。
 
 ### Installing Go Dependencies
 
@@ -99,7 +110,6 @@ make build-rss
 ## Built With
 
 - [disgo](https://pkg.go.dev/github.com/disgoorg/disgo) - The Discord API wrapper for Golang.
-- [ohraban/opus](https://pkg.go.dev/github.com/hraban/opus) - The Golang bindings for the xiph.org C libraries libopus and libopusfile.
 - [gorm](https://gorm.io/ja_JP/) - The fantastic ORM library for Golang.
 
 ## Contributing
