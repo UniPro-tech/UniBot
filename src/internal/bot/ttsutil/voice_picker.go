@@ -205,7 +205,7 @@ func GetCurrentSpeakerID(ctx *internal.BotContext, memberID snowflake.ID, isGlob
 		}
 		return setting.SpeakerID, nil
 	} else {
-		if guildID != nil {
+		if guildID == nil {
 			return 0, fmt.Errorf("guild id not set")
 		}
 		setting, err := query.TtsMemberPreference.Where(query.TtsMemberPreference.UserID.Eq(int64(memberID))).First()
