@@ -166,7 +166,7 @@ func BuildVoiceMessage(ctx *internal.BotContext, pageIndex int, pages []SpeakerP
 		discord.ActionRowComponent{
 			Components: []discord.InteractiveComponent{
 				discord.NewStringSelectMenu(
-					fmt.Sprint("%s/%s", VoiceSelectCustomID, globalModeText),
+					fmt.Sprintf("%s/%s", VoiceSelectCustomID, globalModeText),
 					"話者を選択してください",
 				).SetOptions(pages[pageIndex].Options...),
 			},
