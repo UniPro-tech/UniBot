@@ -29,7 +29,7 @@ func Voice(ctx *internal.BotContext) func(data discord.SlashCommandInteractionDa
 	return func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 		config := ctx.Config
 
-		if _, ok := e.Guild(); ok {
+		if _, ok := e.Guild(); !ok {
 			responseEmbed := discord.Embed{
 				Title:       "エラー",
 				Description: "DMで実行することはできません。",
