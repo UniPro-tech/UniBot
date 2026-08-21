@@ -11,6 +11,7 @@ import (
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
+	"gorm.io/gorm"
 )
 
 // HandleTTSSetVoice は話者選択のセレクトメニューを処理します
@@ -63,7 +64,7 @@ func HandleTTSSetVoice(ctx *internal.BotContext) func(data discord.SelectMenuInt
 		modeValue := e.Vars["global"]
 		if modeValue == "true" {
 			setting, err := query.TtsUserPreference.Where(query.TtsUserPreference.UserID.Eq(int64(userID))).First()
-			if err != nil {
+			if err != nil && err != gorm.ErrRecordNotFound {
 				slog.ErrorContext(e.Ctx, "failed to fetch user tts preference", slog.Any("any", err))
 				_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
 					Title:       "エラー",
@@ -103,7 +104,7 @@ func HandleTTSSetVoice(ctx *internal.BotContext) func(data discord.SelectMenuInt
 		} else {
 			{
 				setting, err := query.TtsMemberPreference.Where(query.TtsMemberPreference.UserID.Eq(int64(userID))).First()
-				if err != nil {
+				if err != nil && err != gorm.ErrRecordNotFound {
 					slog.ErrorContext(e.Ctx, "failed to fetch member tts preference", slog.Any("any", err))
 					_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
 						Title:       "エラー",
