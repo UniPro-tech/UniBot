@@ -61,7 +61,7 @@ func HandleTTSSetVoice(ctx *internal.BotContext) func(data discord.SelectMenuInt
 		userID := e.Member().User.ID
 
 		modeValue := e.Vars["global"]
-		if modeValue == "global" {
+		if modeValue == "true" {
 			setting, err := query.TtsUserPreference.Where(query.TtsUserPreference.UserID.Eq(int64(userID))).First()
 			if err != nil {
 				slog.ErrorContext(e.Ctx, "failed to fetch user tts preference", slog.Any("any", err))
