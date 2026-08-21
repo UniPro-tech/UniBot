@@ -166,12 +166,29 @@ func HandleTTSSetVoicePage(ctx *internal.BotContext) func(data discord.ButtonInt
 	return func(_ discord.ButtonInteractionData, e *handler.ComponentEvent) error {
 		pageIndexString := e.Vars["pageIndex"]
 		pageIndex, err := strconv.Atoi(pageIndexString)
+		if err != nil {
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
+				Title:       "エラー",
+				Description: "無効なページ番号です。",
+				Color:       ctx.Config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}).WithFlags(discord.MessageFlagEphemeral))
+			return err
+		}
+
 		globalModeString := e.Vars["global"]
 		isGlobal, err := strconv.ParseBool(globalModeString)
 		if err != nil {
 			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
 				Title:       "エラー",
-				Description: "無効なページ番号です。",
+				Description: "無効な引数です。",
 				Color:       ctx.Config.Colors.Error,
 				Footer: &discord.EmbedFooter{
 					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
