@@ -12,6 +12,7 @@ import (
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/snowflake/v2"
+	"gorm.io/gorm"
 )
 
 const (
@@ -209,7 +210,7 @@ func GetCurrentSpeakerID(ctx *internal.BotContext, memberID snowflake.ID, isGlob
 			return 0, fmt.Errorf("guild id not set")
 		}
 		setting, err := query.TtsMemberPreference.Where(query.TtsMemberPreference.UserID.Eq(int64(memberID)), query.TtsMemberPreference.GuildID.Eq(int64(*guildID))).First()
-		if err != nil || setting == nil || setting.SpeakerID == nil {
+		if (err != nil && err != gorm.ErrRecordNotFound) || setting == nil || setting.SpeakerID == nil {
 			return 0, err
 		}
 		return *setting.SpeakerID, nil
