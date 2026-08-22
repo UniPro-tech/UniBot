@@ -102,45 +102,45 @@ func HandleTTSSetVoice(ctx *internal.BotContext) func(data discord.SelectMenuInt
 				return err
 			}
 		} else {
-			{
-				setting, err := query.TtsMemberPreference.Where(query.TtsMemberPreference.UserID.Eq(int64(userID))).First()
-				if err != nil && err != gorm.ErrRecordNotFound {
-					slog.ErrorContext(e.Ctx, "failed to fetch member tts preference", slog.Any("any", err))
-					_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
-						Title:       "エラー",
-						Description: "TTS個人設定の取得に失敗しました。",
-						Color:       config.Colors.Error,
-						Footer: &discord.EmbedFooter{
-							Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-							IconURL: e.User().EffectiveAvatarURL(),
-						},
-						Timestamp: func() *time.Time {
-							t := time.Now()
-							return &t
-						}(),
-					}).WithFlags(discord.MessageFlagEphemeral))
-					return err
-				}
+			guildID := e.GuildID()
+			setting, err := query.TtsMemberPreference.Where(query.TtsMemberPreference.UserID.Eq(int64(userID)), query.TtsMemberPreference.GuildID.Eq(int64(*guildID))).First()
+			if err != nil && err != gorm.ErrRecordNotFound {
+				slog.ErrorContext(e.Ctx, "failed to fetch member tts preference", slog.Any("any", err))
+				_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
+					Title:       "エラー",
+					Description: "TTS個人設定の取得に失敗しました。",
+					Color:       config.Colors.Error,
+					Footer: &discord.EmbedFooter{
+						Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+						IconURL: e.User().EffectiveAvatarURL(),
+					},
+					Timestamp: func() *time.Time {
+						t := time.Now()
+						return &t
+					}(),
+				}).WithFlags(discord.MessageFlagEphemeral))
+				return err
+			}
 
-				setting.UserID = int64(userID)
-				setting.SpeakerID = &speakerID
-				if err := query.TtsMemberPreference.Save(setting); err != nil {
-					slog.ErrorContext(e.Ctx, "failed save member tts preference", slog.Any("err", err))
-					_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
-						Title:       "エラー",
-						Description: "TTS個人設定の更新に失敗しました。",
-						Color:       config.Colors.Error,
-						Footer: &discord.EmbedFooter{
-							Text:    fmt.Sprintf("Requested by %s", e.User().Username),
-							IconURL: e.User().EffectiveAvatarURL(),
-						},
-						Timestamp: func() *time.Time {
-							t := time.Now()
-							return &t
-						}(),
-					}).WithFlags(discord.MessageFlagEphemeral))
-					return err
-				}
+			setting.UserID = int64(userID)
+			setting.GuildID = int64(*guildID)
+			setting.SpeakerID = &speakerID
+			if err := query.TtsMemberPreference.Save(setting); err != nil {
+				slog.ErrorContext(e.Ctx, "failed save member tts preference", slog.Any("err", err))
+				_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
+					Title:       "エラー",
+					Description: "TTS個人設定の更新に失敗しました。",
+					Color:       config.Colors.Error,
+					Footer: &discord.EmbedFooter{
+						Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+						IconURL: e.User().EffectiveAvatarURL(),
+					},
+					Timestamp: func() *time.Time {
+						t := time.Now()
+						return &t
+					}(),
+				}).WithFlags(discord.MessageFlagEphemeral))
+				return err
 			}
 		}
 
