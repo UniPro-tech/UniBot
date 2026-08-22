@@ -39,8 +39,27 @@ func HandleTTSSetVoice(ctx *internal.BotContext) func(data discord.SelectMenuInt
 
 		speakerIDstring := values[0]
 		speakerIDraw, err := strconv.Atoi(speakerIDstring)
+		if err != nil {
+			if err != nil {
+				slog.ErrorContext(e.Ctx, "failed to parse speaker id", slog.Any("err", err))
+			}
+			_, err := e.Client().Rest.CreateFollowupMessage(e.ApplicationID(), e.Token(), discord.NewMessageCreate().WithEmbeds(discord.Embed{
+				Title:       "エラー",
+				Description: "不正な話者IDが選択されました。もう一度お試しください。",
+				Color:       config.Colors.Error,
+				Footer: &discord.EmbedFooter{
+					Text:    fmt.Sprintf("Requested by %s", e.User().Username),
+					IconURL: e.User().EffectiveAvatarURL(),
+				},
+				Timestamp: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+			}).WithFlags(discord.MessageFlagEphemeral))
+			return err
+		}
 		speakerID := int32(speakerIDraw)
-		if !ttsutil.IsSpeakerIDValid(ctx, speakerIDstring) || err != nil {
+		if !ttsutil.IsSpeakerIDValid(ctx, speakerIDstring) {
 			if err != nil {
 				slog.ErrorContext(e.Ctx, "failed to parse speaker id", slog.Any("err", err))
 			}
