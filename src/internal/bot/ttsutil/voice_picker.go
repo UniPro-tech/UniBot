@@ -3,12 +3,16 @@ package ttsutil
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 	"unibot/internal"
 	"unibot/internal/api/voicevox"
+	"unibot/internal/query"
 
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/snowflake/v2"
+	"gorm.io/gorm"
 )
 
 const (
@@ -123,10 +127,10 @@ func BuildSpeakerPages(speakers []voicevox.Speaker, perPage int) []SpeakerPage {
 	return pages
 }
 
-func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID string) (string, []discord.LayoutComponent) {
+func BuildVoiceMessage(ctx *internal.BotContext, pageIndex int, pages []SpeakerPage, currentSpeakerID int32, global bool) (*discord.Embed, []discord.LayoutComponent, error) {
 	maxPage := len(pages)
 	if maxPage == 0 {
-		return "話者情報が取得できませんでした。", []discord.LayoutComponent{}
+		return nil, []discord.LayoutComponent{}, fmt.Errorf("page length is 0")
 	}
 	if pageIndex < 0 {
 		pageIndex = 0
@@ -135,13 +139,35 @@ func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID stri
 		pageIndex = maxPage - 1
 	}
 
-	content := fmt.Sprintf("話者を選択してください。\n現在の話者ID: %s\nページ %d/%d", currentSpeakerID, pageIndex+1, maxPage)
+	content := &discord.Embed{
+		Title: "読み上げに使用する話者を選択してください",
+		Fields: []discord.EmbedField{
+			{
+				Name:  "現在の話者ID",
+				Value: strconv.Itoa(int(currentSpeakerID)),
+			},
+			{
+				Name:  "ページ数",
+				Value: fmt.Sprintf("%d/%d", pageIndex+1, maxPage),
+			},
+		},
+		Color: ctx.Config.Colors.Primary,
+		Timestamp: func() *time.Time {
+			t := time.Now()
+			return &t
+		}(),
+	}
+
+	globalModeText := "false"
+	if global {
+		globalModeText = "true"
+	}
 
 	components := []discord.LayoutComponent{
 		discord.ActionRowComponent{
 			Components: []discord.InteractiveComponent{
 				discord.NewStringSelectMenu(
-					VoiceSelectCustomID,
+					fmt.Sprintf("%s/%s", VoiceSelectCustomID, globalModeText),
 					"話者を選択してください",
 				).SetOptions(pages[pageIndex].Options...),
 			},
@@ -149,8 +175,8 @@ func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID stri
 	}
 
 	if maxPage > 1 {
-		prevID := fmt.Sprintf("%s/%d", VoicePageCustomIDPrefix, pageIndex-1)
-		nextID := fmt.Sprintf("%s/%d", VoicePageCustomIDPrefix, pageIndex+1)
+		prevID := fmt.Sprintf("%s/%d/%s", VoicePageCustomIDPrefix, pageIndex-1, globalModeText)
+		nextID := fmt.Sprintf("%s/%d/%s", VoicePageCustomIDPrefix, pageIndex+1, globalModeText)
 		components = append(components, discord.ActionRowComponent{
 			Components: []discord.InteractiveComponent{
 				discord.ButtonComponent{
@@ -169,19 +195,28 @@ func BuildVoiceMessage(pageIndex int, pages []SpeakerPage, currentSpeakerID stri
 		})
 	}
 
-	return content, components
+	return content, components, nil
 }
 
-func GetCurrentSpeakerID(ctx *internal.BotContext, memberID string) string {
-	/*
-		repo := repository.NewTTSPersonalSettingRepository(ctx.DB)
-		setting, err := repo.GetByMember(memberID)
+func GetCurrentSpeakerID(ctx *internal.BotContext, memberID snowflake.ID, isGlobal bool, guildID *snowflake.ID) (int32, error) {
+	if isGlobal {
+		setting, err := query.TtsUserPreference.Where(query.TtsUserPreference.UserID.Eq(int64(memberID))).First()
 		if err != nil || setting == nil {
-			return repository.DefaultTTSPersonalSetting.SpeakerID
+			return 0, nil
 		}
-		return setting.SpeakerID
-	*/
-	return "0"
+		return setting.SpeakerID, nil
+	} else {
+		if guildID == nil {
+			return 0, fmt.Errorf("guild id not set")
+		}
+		setting, err := query.TtsMemberPreference.Where(query.TtsMemberPreference.UserID.Eq(int64(memberID)), query.TtsMemberPreference.GuildID.Eq(int64(*guildID))).First()
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return 0, err
+		} else if setting == nil || setting.SpeakerID == nil {
+			return 0, nil
+		}
+		return *setting.SpeakerID, nil
+	}
 }
 
 func ResolveSpeakerLabel(ctx *internal.BotContext, speakerID string) string {
