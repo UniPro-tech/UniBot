@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
   name: unibot
 spec:
   selector:
@@ -21,10 +23,6 @@ spec:
           env:
             - name: TZ
               value: Asia/Tokyo
-            # ロギング設定。秘密情報ではないためここで平文管理する。
-            # 明示的な env は envFrom より優先されるため、下記のキーは
-            # Secret 側に同名の値を置いても上書きされない。
-            # Secret で管理したくなった場合は、ここの定義を削除すること。
             - name: CONFIG_LOG_LEVEL
               value: "info"
             - name: CONFIG_LOG_FORMAT
@@ -33,11 +31,16 @@ spec:
               value: "warn"
             - name: CONFIG_LOG_DISCORD_LEVEL
               value: "notice"
-            # 未設定の間は Discord への通知が無効になるだけで、Bot は正常に動作する。
-            # 運用側でチャンネル ID を設定すること。
-            # - name: CONFIG_LOG_ERROR_CHANNEL_ID
-            #   value: ""
-            # - name: CONFIG_LOG_READY_CHANNEL_ID
-            #   value: ""
+            - name: CONFIG_LOG_READY_CHANNEL_ID
+              value: "1228574771856543835"
+            - name: CONFIG_LOG_ERROR_CHANNEL_ID
+              value: "1236638014919147570"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
       imagePullSecrets:
         - name: internal-harbor
