@@ -54,7 +54,7 @@ ssh-add /root/.ssh/privatekey
 
 ## Built With
 
-- [Discord.js](https://discordjs.dev/#/) - The flame work.
+- [Discord.js](https://discordjs.dev/#/) - A framework.
 
 ## Contributing
 
