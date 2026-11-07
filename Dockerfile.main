@@ -28,6 +28,8 @@ WORKDIR /app/src
 RUN --mount=type=cache,target=/go/pkg/mod/,sharing=locked \
     go mod download -x
 
+WORKDIR /app
+
 RUN make build
 
 RUN curl -sSf https://atlasgo.sh | sh -s -- -y
