@@ -7,7 +7,6 @@ import (
 	"unibot/internal/model"
 	"unibot/internal/query"
 
-	"github.com/bwmarrin/discordgo"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -25,7 +24,7 @@ func Remove(ctx *internal.BotContext) func(data discord.SlashCommandInteractionD
 
 		// 管理者かどうか確認
 		perms := e.Member().Permissions
-		isAdmin := perms&discordgo.PermissionAdministrator != 0
+		isAdmin := perms&discord.PermissionAdministrator != 0
 
 		// 辞書エントリを取得
 		var entries []*model.TtsDictionary

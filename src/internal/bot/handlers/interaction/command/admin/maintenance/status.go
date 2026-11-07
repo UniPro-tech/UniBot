@@ -8,7 +8,6 @@ import (
 	"unibot/internal"
 	"unibot/internal/query"
 
-	"github.com/bwmarrin/discordgo"
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/gateway"
@@ -40,12 +39,12 @@ func LoadStatusCommandContext() discord.ApplicationCommandOptionSubCommandGroup 
 						Description: "ステータス種類",
 						Required:    true,
 						Choices: []discord.ApplicationCommandOptionChoiceInt{
-							{Name: "playing", Value: int(discordgo.ActivityTypeGame)},
-							{Name: "streaming", Value: int(discordgo.ActivityTypeStreaming)},
-							{Name: "listening", Value: int(discordgo.ActivityTypeListening)},
-							{Name: "watching", Value: int(discordgo.ActivityTypeWatching)},
-							{Name: "competing", Value: int(discordgo.ActivityTypeCompeting)},
-							{Name: "custom", Value: int(discordgo.ActivityTypeCustom)},
+							{Name: "playing", Value: int(discord.ActivityTypeGame)},
+							{Name: "streaming", Value: int(discord.ActivityTypeStreaming)},
+							{Name: "listening", Value: int(discord.ActivityTypeListening)},
+							{Name: "watching", Value: int(discord.ActivityTypeWatching)},
+							{Name: "competing", Value: int(discord.ActivityTypeCompeting)},
+							{Name: "custom", Value: int(discord.ActivityTypeCustom)},
 						},
 					},
 					discord.ApplicationCommandOptionString{

@@ -3,7 +3,6 @@ module unibot
 go 1.26.4
 
 require (
-	github.com/bwmarrin/discordgo v0.29.0
 	github.com/disgoorg/disgo v0.20.0
 	github.com/disgoorg/godave/golibdave v0.3.0
 	github.com/disgoorg/snowflake/v2 v2.0.3
