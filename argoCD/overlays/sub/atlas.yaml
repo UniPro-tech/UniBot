@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration-job
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
+  template:
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: my-registry-secret
+      containers:
+        - name: db-migration-job
+          image: "registry.uniproject.jp/infra/unibot-atlas:latest"
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: unibot-env
+                key: PG_DSN
+    imagePullSecrets:
+      - name: internal-harbor

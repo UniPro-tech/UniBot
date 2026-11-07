@@ -26,10 +26,17 @@ spec:
           volumeMounts:
             - name: postgre-storage
               mountPath: /var/lib/postgresql
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
       volumes:
         - name: postgre-storage
           persistentVolumeClaim:
-            claimName: postgre-pvc
+            claimName: postgre-second-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -47,7 +54,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgre-pvc
+  name: postgre-second-pvc
 spec:
   accessModes:
     - ReadWriteOnce
