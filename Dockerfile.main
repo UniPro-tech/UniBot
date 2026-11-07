@@ -1,6 +1,6 @@
 # check=error=true
 # syntax=docker/dockerfile:1
-FROM golang:1.26.4-alpine3.24 AS builder
+FROM golang:1.26.10-alpine3.24 AS builder
 WORKDIR /app
 
 RUN apk update && apk add --no-cache \
@@ -28,10 +28,12 @@ WORKDIR /app/src
 RUN --mount=type=cache,target=/go/pkg/mod/,sharing=locked \
     go mod download -x
 
-RUN ../scripts/_build.sh
+RUN make build
 
-FROM alpine:3.24.0
-WORKDIR /root/
+RUN curl -sSf https://atlasgo.sh | sh -s -- -y
+
+FROM alpine:3.24.4
+WORKDIR /app/src
 
 RUN apk update && apk add --no-cache \
     opus \
@@ -42,13 +44,19 @@ RUN apk update && apk add --no-cache \
 
 ENV PKG_CONFIG_PATH=/root/.local/lib/pkgconfig
 ENV LD_LIBRARY_PATH=/root/.local/lib/
+
+COPY --from=builder /usr/local/bin/atlas /usr/local/bin/atlas
+
 COPY --from=builder /root/.local/ /root/.local/
 RUN chmod -R 755 /root/.local
 
-COPY --from=builder /app/src/main .
-RUN chmod 755 ./main
+COPY --from=builder /app/src/main /app/main
+RUN chmod 755 /app/main
 
-CMD ["/root/main"]
+COPY --from=builder /app/src/atlas.hcl ./atlas.hcl
+COPY --from=builder /app/src/migrations ./migrations
+
+CMD ["sh", "-c", "atlas migrate apply --env deploy && exec /app/main"]
 
 # OCI Metadata
 
